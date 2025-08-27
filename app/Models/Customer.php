@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
+    const TYPE_NORMAL = "normal";
+    const TYPE_ESPECIAL = "especial";
+    const TYPE_MAYORISTA = "mayorista";
+
     protected $fillable = [
         'name',
         'nit',

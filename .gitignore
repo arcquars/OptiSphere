@@ -23,3 +23,6 @@ yarn-error.log
 /.zed
 /draft.yaml
 /.blueprint
+composer.lock
+/lang
+/public/*

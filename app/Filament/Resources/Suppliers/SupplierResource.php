@@ -21,7 +21,9 @@ class SupplierResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'fas-industry';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Catálogos';
-    
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $modelLabel = 'Proveedor';
 
     protected static ?string $pluralModelLabel = 'Proveedores';
