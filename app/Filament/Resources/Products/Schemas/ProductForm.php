@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Models\BaseCode;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -45,20 +47,25 @@ class ProductForm
                 // Agrega el Fieldset para la tabla optical_properties
                 Fieldset::make('Propiedades Opticas')
                     ->schema([
+                        Select::make('base_code')
+                            ->label('Código Base')
+                            ->options(BaseCode::all()->pluck('name', 'name'))
+                            ->required()
+                            ->searchable(),
+                        Radio::make('type')
+                            ->label('Tipo?')
+                            ->options([
+                                '+' => 'Positivo',
+                                '-' => 'Negativo',
+                            ])
+                            ->default('+')
+                            ->inline(),
                         TextInput::make('sphere')
                             ->label('Esfera')
                             ->numeric()
                             ->required(),
                         TextInput::make('cylinder')
                             ->label('Cilindro')
-                            ->numeric()
-                            ->required(),
-                        TextInput::make('axis')
-                            ->label('Eje')
-                            ->integer()
-                            ->required(),
-                        TextInput::make('add')
-                            ->label('Adicion')
                             ->numeric()
                             ->required(),
                     ])

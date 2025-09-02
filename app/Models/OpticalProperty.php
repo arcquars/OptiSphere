@@ -11,10 +11,10 @@ class OpticalProperty extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'base_code',
+        'type',
         'sphere',
         'cylinder',
-        'axis',
-        'add'
     ];
 
     public function product(): BelongsTo

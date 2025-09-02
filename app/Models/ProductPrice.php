@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductPrice extends Model
 {
+    const TYPE_NORMAL = "normal";
+    const TYPE_ESPECIAL = "especial";
+    const TYPE_MAYORISTA = "mayorista";
+
     /**
      * @var list<string>
      */

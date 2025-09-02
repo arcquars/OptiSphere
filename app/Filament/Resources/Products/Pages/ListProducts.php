@@ -14,8 +14,10 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('test')
-                ->label('Test')->color('success'),
+            Action::make('create-base-code')
+                ->label('Crear con códigos Base')
+                ->url(fn (): string => route('filament.admin.resources.products.generate'))
+                ->color('success'),
             CreateAction::make()
         ];
     }

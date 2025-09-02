@@ -24,6 +24,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Facades\Filament;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -68,6 +69,8 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => '/branch-manager')
                     ->icon('heroicon-o-cog-6-tooth')
                 ->visible(fn (): bool => auth()->user()->hasRole('admin'))
-            ]);
+            ])
+            ->viteTheme('resources/css/filament/admin/theme.css');
     }
+
 }

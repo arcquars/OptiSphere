@@ -1,0 +1,31 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@plugin "daisyui";
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../app/Livewire/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/livewire/**/*';
+
+
+.form-group {
+    @apply mb-4
+}
+
+.form-label{
+    @apply mb-1 font-medium text-gray-700
+}
+
+.form-control{
+    @apply rounded-lg border border-gray-300 p-2 text-sm
+    focus:border-blue-500 focus:ring-2 focus:ring-blue-500
+    focus:outline-none
+}
+
+.form-error{
+    @apply text-red-500 text-xs mt-1
+}
+
+.label-azteris {
+    @apply after:content-['*'] after:ml-1 after:text-red-500 block
+}
