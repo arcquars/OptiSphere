@@ -26,6 +26,12 @@ class WarehouseResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = "c-square-3-stack-3d";
 
+    // Cambia el nombre singular que aparece en el menú
+    protected static ?string $modelLabel = 'Almacén';
+
+    // Cambia el nombre plural que aparece en el menú
+    protected static ?string $pluralModelLabel = 'Almacenes';
+
     protected static ?string $recordTitleAttribute = 'Warehouse';
 
     public static function form(Schema $schema): Schema

@@ -21,4 +21,13 @@ class OpticalProperty extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function stockByWarehouse($warehouseId){
+        $warehouseStock = WarehouseStock::where('product_id', $this->id)
+            ->where('warehouse_id', $warehouseId)->first();
+        $quantity = 0;
+        if($warehouseStock)
+            $quantity = $warehouseStock->quantity;
+        return $quantity;
+    }
 }

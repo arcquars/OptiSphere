@@ -13,7 +13,11 @@ use Filament\Navigation\MenuItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -22,12 +26,24 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Facades\Filament;
 
 class AdminPanelProvider extends PanelProvider
 {
+
+    public function boot(): void
+    {
+//        FilamentView::registerRenderHook(
+//            'panels::head.end',
+//            fn () => <<<'HTML'
+//        @vite(['resources/css/app.css', 'resources/js/app.js'])
+//    HTML,
+//        );
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -70,6 +86,10 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-cog-6-tooth')
                 ->visible(fn (): bool => auth()->user()->hasRole('admin'))
             ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render("@vite(['resources/css/app.css', 'resources/js/app.js'])"),
+            )
             ->viteTheme('resources/css/filament/admin/theme.css');
     }
 
