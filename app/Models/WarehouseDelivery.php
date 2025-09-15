@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Warehouse extends Model
+class WarehouseDelivery extends Model
 {
     use HasFactory;
 
@@ -13,9 +13,9 @@ class Warehouse extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'location',
-        'is_active'
+        'warehouse_id',
+        'branch_id',
+        'user_id',
+        'delivery_date'
     ];
-
 }

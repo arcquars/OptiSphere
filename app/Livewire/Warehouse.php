@@ -2,9 +2,15 @@
 
 namespace App\Livewire;
 
+use App\Models\Branch;
+use App\Models\InventoryMovement;
 use App\Models\OpticalProperty;
+use App\Models\ProductStock;
+use App\Models\WarehouseDelivery;
+use App\Models\WarehouseIncome;
 use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
+use Carbon\Carbon;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
@@ -12,6 +18,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
@@ -22,8 +29,9 @@ class Warehouse extends Component implements HasSchemas
     public $key;
 
     public $warehouseId;
+    public $branchId;
     public $baseCode;
-    public $action;
+    public $action = "";
     public $type;
 
     public $matrix = [];
@@ -32,9 +40,12 @@ class Warehouse extends Component implements HasSchemas
 
     public ?array $data = [];
 
+    public $branches;
+
     public function mount($warehouseId): void
     {
         $this->warehouseId = $warehouseId;
+        $this->branches = Branch::where('is_active', "=",true)->get();
         $this->form->fill();
     }
 
@@ -61,7 +72,7 @@ class Warehouse extends Component implements HasSchemas
                         ->where('sphere', $sphere)
                         ->where('cylinder', $cylinder)
                         ->first();
-                    if(!strcmp($this->action, "saldo")) {
+                    if(strcmp($this->action, "ingreso")) {
                         $row[] = [
                             'id' => $op->id,
                             'type' => $op->type,
@@ -97,6 +108,7 @@ class Warehouse extends Component implements HasSchemas
                                 'saldo' => 'Saldo',
                                 'ingreso' => 'Ingreso',
                                 'precios' => 'Precios',
+                                'entregas' => 'Entregas a Sucursal',
                             ])
                         ->required(),
                         ToggleButtons::make('type')
@@ -125,8 +137,33 @@ class Warehouse extends Component implements HasSchemas
         $this->dispatch('clear-markedcells');
     }
 
+    public function save($celdas, $branchId = null){
+        switch ($this->action){
+            case "ingreso":
+                $this->saveIncome($celdas);
+                break;
+            case "entregas":
+                $this->saveDelivery($celdas, $branchId);
+                break;
+
+        }
+        $this->loadCylinders();
+        Notification::make()
+            ->title('Éxito')
+            ->body('El registro se ha guardado correctamente.')
+            ->success()
+            ->send();
+        $this->dispatch('clear-markedcells');
+    }
+
     public function saveIncome($celdas){
         DB::transaction(function () use ($celdas) {
+            $warehouseIncome = WarehouseIncome::create([
+                'warehouse_id' => $this->warehouseId,
+                'user_id' => Auth::id(),
+                'income_date' => Carbon::now()
+            ]);
+
             foreach ($celdas as $data) {
                 // 'id' es el ID de la tabla 'product_stocks'.
                 $stockId = $data['id'];
@@ -153,17 +190,86 @@ class Warehouse extends Component implements HasSchemas
                         'old_quantity' => $oldQuantity,
                         'new_quantity' => $newQuantity,
                         'difference' => $amount,
+                        'movement_type' => WarehouseStockHistory::MOVEMENT_TYPE_INCOME,
+                        'type_id' => $warehouseIncome->id
                     ]);
                 }
             }
         });
-        Notification::make()
-            ->title('Éxito')
-            ->body('El registro se ha guardado correctamente.')
-            ->success()
-            ->send();
-        $this->dispatch('clear-markedcells');
-//        dd($celdas);
+    }
+
+    public function saveDelivery($celdas, $branchId){
+        DB::transaction(function () use ($celdas, $branchId) {
+            $warehouseDelivery = WarehouseDelivery::create([
+                'warehouse_id' => $this->warehouseId,
+                'branch_id' => $branchId,
+                'user_id' => Auth::id(),
+                'delivery_date' => Carbon::now()
+            ]);
+
+            foreach ($celdas as $data) {
+                // 'id' es el ID de la tabla 'product_stocks'.
+                $stockId = $data['id'];
+                // 'amount' es la nueva cantidad que viene del input.
+                $amount = (int) $data['amount'];
+
+                $attributes = [
+                    'product_id' => $stockId,
+                    'warehouse_id' => $this->warehouseId, // Ejemplo: asume que es el almacén 1
+                ];
+                // Buscar el registro de stock por su ID.
+                $warehouseStock = WarehouseStock::firstOrCreate($attributes, [
+                    'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
+                ]);;
+
+                $oldQuantity = $warehouseStock->quantity;
+                $newQuantity = $oldQuantity - $amount;
+
+                $warehouseStock->increment('quantity', ($amount*(-1)));
+
+                if ($amount != 0) {
+                    WarehouseStockHistory::create([
+                        'warehouse_stock_id' => $warehouseStock->id,
+                        'old_quantity' => $oldQuantity,
+                        'new_quantity' => $newQuantity,
+                        'difference' => $amount,
+                        'movement_type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        'type_id' => $warehouseDelivery->id
+                    ]);
+                }
+
+                // Buscar registro de stock en sucursal
+                $attrProd = [
+                    'product_id' => $stockId,
+                    'branch_id' => $branchId, // Ejemplo: asume que es el almacén 1
+                ];
+                $productStock = ProductStock::firstOrCreate($attrProd, [
+                    'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
+                ]);;
+
+                $oldQuantity = $productStock->quantity;
+                $newQuantity = $oldQuantity + $amount;
+
+                $productStock->increment('quantity', $amount);
+
+                if ($amount != 0) {
+                    InventoryMovement::create([
+                        'product_id' => $stockId,
+                        'from_location_type' => InventoryMovement::LOCATION_TYPE_warehouse,
+                        'from_location_id' => $this->warehouseId,
+                        'to_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
+                        'to_location_id' => $branchId,
+                        'old_quantity' => $oldQuantity,
+                        'new_quantity' => $newQuantity,
+                        'difference' => $amount,
+                        'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        'user_id' => Auth::id(),
+                    ]);
+                }
+
+
+            }
+        });
     }
 
     public function render()

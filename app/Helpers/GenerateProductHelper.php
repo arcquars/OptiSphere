@@ -19,7 +19,7 @@ class GenerateProductHelper
             while ($cylinder <= $cylinderRange[1]){
                 $sphere = $sphereRange[0];
                 while($sphere <= $sphereRange[1]){
-                    $code = $baseCode . $type . $sphere . "-" . $cylinder;
+                    $code = $baseCode . $type . GenerateProductHelper::formatNumberCode($sphere) . "-" . GenerateProductHelper::formatNumberCode($cylinder);
                     $products[] = [
                         "name" => $code,
                         "code" => $code,
@@ -38,5 +38,16 @@ class GenerateProductHelper
         }
 
         return $products;
+    }
+
+    public static function formatNumberCode($num){
+        $string = (string) $num;
+        $cadenaSinPunto = str_replace('.', '', $string);
+
+        if (strlen($cadenaSinPunto) < 3) {
+            $cadenaSinPunto = str_pad($cadenaSinPunto, 3, '0', STR_PAD_RIGHT);
+        }
+
+        return $cadenaSinPunto;
     }
 }

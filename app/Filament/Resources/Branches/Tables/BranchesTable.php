@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\Branches\Tables;
 
+use App\Models\Branch;
+use App\Models\Warehouse;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -38,6 +41,11 @@ class BranchesTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('create-base-code')
+                    ->label('Inventario')
+                    ->icon('c-square-3-stack-3d')
+                    ->url(fn (Branch $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
+                    ->color('success'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

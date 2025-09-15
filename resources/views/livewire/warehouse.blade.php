@@ -8,6 +8,8 @@
                     currentX: 0,
                     currentY: 0,
                     cells: {},
+                    branchId: null,
+                    messageError: "",
                     init() {
                         console.log(`ccc2`, this.cells);
                     },
@@ -23,14 +25,33 @@
                         this.markedCells.push(id)
                     }
                 },
-                changeSelected() {
-                    if (this.amount === "") return  // no hacer nada si está vacío
+                changeSelected(action) {
+                    this.messageError = "";
+                    if (this.amount === ""){
+                        this.messageError = "Cantidad es requerido";
+                        return  // no hacer nada si está vacío
+                    }
                     this.markedCells.forEach(id => {
-                        this.cells[id] = this.amount
-                        if (this.markedAmountCells.some(item => item.id === id)) {
-                            this.markedAmountCells = this.markedAmountCells.filter(item => item.id !== id)
+                        if(action === "entregas"){
+                            console.log(action + " | " + this.cells[id] + " | " + this.amount);
+                            if (this.markedAmountCells.some(item => item.id === id)) {
+                                    this.markedAmountCells = this.markedAmountCells.filter(item => item.id !== id)
+                            }
+                            if(this.validateAmountInTable(id, this.amount)){
+                                this.cells[id] = this.amount
+                                this.markedAmountCells.push({id, amount: this.amount, state: "success"});
+                            } else {
+                                this.markedAmountCells.push({id, amount: "-", state: "danger"});
+                                this.messageError = "Existen productos que su cantidad en inventario es menor al asignado";
+                            }
+
+                        } else {
+                            this.cells[id] = this.amount
+                            if (this.markedAmountCells.some(item => item.id === id)) {
+                                this.markedAmountCells = this.markedAmountCells.filter(item => item.id !== id)
+                            }
+                            this.markedAmountCells.push({id, amount: this.amount, state: "success"});
                         }
-                        this.markedAmountCells.push({id, amount: this.amount});
                     })
                     this.markedCells = [];
                 },
@@ -82,6 +103,25 @@
                     this.markedAmountCells = [];
                     this.cells = {};
                     this.amount = "";
+                    this.messageError = "";
+                },
+                validateAmountInTable(id, amount){
+                    let cellAmount = null;
+                    const cells = this.$refs.table.querySelectorAll("[data-cell-id]");
+                    for (const cell of cells) {
+                        const cellId = parseInt(cell.getAttribute("data-cell-id"));
+
+                        if (cellId === id) {
+                            cellAmount = parseInt(cell.getAttribute("data-cell-amount"));
+                            break;
+                        }
+                    }
+
+                    if(cellAmount !== null && cellAmount >= amount){
+                        return true;
+                    }
+
+                    return false;
                 }
 }'
 
@@ -121,13 +161,14 @@
         @case('ingreso')
             <p class="text-xl text-success text-center"><b>Ingresos</b></p>
         <fieldset class="fieldset">
-{{--            <legend class="fieldset-legend">Ingreso</legend>--}}
             <label class="label label-azteris">Cantidad</label>
             <div class="join">
                 <input type="number" x-model="amount" min="1" class="input input-sm" />
-                <button class="btn btn-sm join-item" @click="changeSelected">Cambiar</button>
+                <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
                 <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
-                <button class="btn btn-primary btn-sm join-item" @click="$wire.call('saveIncome', markedAmountCells)"
+                <button class="btn btn-primary btn-sm join-item"
+                        @click="modal_confirm_income.showModal()"
+{{--                        @click="$wire.call('saveIncome', markedAmountCells)"--}}
                         :disabled="markedAmountCells.length === 0"
                 >
                     Registrar
@@ -139,8 +180,32 @@
         @case('precios')
         Precios::
         @break
+        @case('entregas')
+        <p class="text-xl text-success text-center"><b>Entregas</b></p>
+            <fieldset class="fieldset">
+                <label class="label label-azteris">Cantidad</label>
+                <div class="join">
+                    <input type="number" x-model="amount" min="1" class="input input-sm" />
+                    <select class="select select-sm join-item" x-model="branchId" x-on:change="clearCells();">
+                        <option disabled selected>Sucursal</option>
+                        @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                    <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
+                    <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
+                    <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_delivery.showModal()"
+{{--                            :disabled="markedAmountCells.length === 0"--}}
+                            :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger')"
+                    >
+                        Registrar
+                    </button>
+                </div>
+            </fieldset>
+        @break
     @endswitch
 
+    <div x-text="messageError" class="text-error text-sm"></div>
     <hr class="my-2 border-t border-gray-300">
 
     <div class="table-container border border-gray-200 rounded-lg relative select-none"
@@ -176,11 +241,13 @@
                     @foreach($row as $i => $opticalProperty)
                         <td
                             data-cell-id="{{ $opticalProperty['id'] }}"
+                            data-cell-amount="{{ $opticalProperty['amount'] }}"
                             @click="toggleCell({{ (int) $opticalProperty['id'] }})"
                             :class="markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }})
-                                ? 'bg-green-400' : markedCells.includes({{ (int) $opticalProperty['id'] }})
-                                ? 'bg-green-100'
-                                : 'bg-white'"
+                                ? (markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }} && item.state=== 'success')
+                                ? 'bg-green-400' : 'bg-red-400') : (markedCells.includes({{ (int) $opticalProperty['id'] }})
+                                ? 'bg-green-200'
+                                : 'bg-white')"
                             class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border"
                         >
                             <div
@@ -208,6 +275,34 @@
 {{--            <strong>Cells:</strong>--}}
 {{--            <span x-text="cells"></span>--}}
 {{--        </div>--}}
+
+        <dialog id="modal_confirm_income" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">Registrar ingreso de productos</h3>
+                <p class="py-4">Confirme que se va a registrar las cantidades de los productos</p>
+                <div class="modal-action">
+                    <form method="dialog">
+                        <!-- if there is a button in form, it will close the modal -->
+                        <button class="btn btn-sm btn-secondary">Cerrar</button>
+                        <button class="btn btn-sm btn-primary" @click="$wire.call('save', markedAmountCells)" >Confirmar</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="modal_confirm_delivery" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">Entrega de sucursal</h3>
+                <p class="py-4">Confirme la entrega de productos a la sucursal seleccionada</p>
+                <div class="modal-action">
+                    <form method="dialog">
+                        <!-- if there is a button in form, it will close the modal -->
+                        <button class="btn btn-sm btn-secondary">Cerrar</button>
+                        <button class="btn btn-sm btn-primary" @click="$wire.call('save', markedAmountCells, branchId)" >Confirmar</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
 
     </div>
 @endif

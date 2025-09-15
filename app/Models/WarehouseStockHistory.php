@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class WarehouseStockHistory extends Model
 {
+    const MOVEMENT_TYPE_INCOME = "INGRESO";
+    const MOVEMENT_TYPE_DELIVERY = "ENTREGA_SUCURSAL";
     /**
      * @var list<string>
      */
@@ -13,6 +15,8 @@ class WarehouseStockHistory extends Model
         'warehouse_stock_id',
         'old_quantity',
         'new_quantity',
-        'difference'
+        'difference',
+        'movement_type',
+        'type_id'
     ];
 }
