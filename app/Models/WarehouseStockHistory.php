@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class WarehouseStockHistory extends Model
 {
     const MOVEMENT_TYPE_INCOME = "INGRESO";
+    const MOVEMENT_TYPE_REFUND = "DEVOLUCION";
     const MOVEMENT_TYPE_DELIVERY = "ENTREGA_SUCURSAL";
     /**
      * @var list<string>

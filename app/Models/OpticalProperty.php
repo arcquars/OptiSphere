@@ -30,4 +30,12 @@ class OpticalProperty extends Model
             $quantity = $warehouseStock->quantity;
         return $quantity;
     }
+
+    public function stockByBranch($brachId){
+        $warehouseStock = ProductStock::where('product_id', $this->id)
+            ->where('branch_id', $brachId)->first();
+        if($warehouseStock)
+            return $warehouseStock->quantity;
+        return 0;
+    }
 }

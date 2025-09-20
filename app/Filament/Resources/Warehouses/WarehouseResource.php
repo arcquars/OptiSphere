@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Warehouses;
 
+use App\Filament\Resources\Warehouses\Pages\InventoryWarehouse;
 use App\Filament\Resources\Warehouses\Pages\ManageWarehouses;
 use App\Filament\Resources\Warehouses\Pages\ViewWarehouse;
 use App\Models\Warehouse;
@@ -72,6 +73,11 @@ class WarehouseResource extends Resource
             ])
             ->recordActions([
                 Action::make('create-base-code')
+                    ->label('Matriz')
+                    ->icon('c-square-3-stack-3d')
+                    ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.matrix', ['warehouse_id' => $record->id]))
+                    ->color('success'),
+                Action::make('create-base-code')
                     ->label('Inventario')
                     ->icon('c-square-3-stack-3d')
                     ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
@@ -90,7 +96,8 @@ class WarehouseResource extends Resource
     {
         return [
             'index' => ManageWarehouses::route('/'),
-            'inventory' => ViewWarehouse::route('/{warehouse_id}/inventory')
+            'matrix' => ViewWarehouse::route('/{warehouse_id}/matrix'),
+            'inventory' => InventoryWarehouse::route('/{warehouse_id}/inventory')
         ];
     }
 }

@@ -19,7 +19,8 @@
                         this.markedAmountCells = this.markedAmountCells.filter(item => item.id !== id)
 
                         if(this.cells[id]){
-                            this.cells[id] = "-"
+                            // this.cells[id] = "-"
+                            this.cells[id] = this.getAmountInTableCell(id);
                         }
                     } else {
                         this.markedCells.push(id)
@@ -122,11 +123,34 @@
                     }
 
                     return false;
+                },
+                getAmountInTableCell(id){
+                    let cellAmount = null;
+                    const cells = this.$refs.table.querySelectorAll("[data-cell-id]");
+                    for (const cell of cells) {
+                        const cellId = parseInt(cell.getAttribute("data-cell-id"));
+                        if (cellId === id) {
+                            cellAmount = parseInt(cell.getAttribute("data-cell-amount"));
+                            break;
+                        }
+                    }
+                    if(cellAmount !== null){
+                        return cellAmount;
+                    }
+
+                    return "";
+                },
+                async setPositionYMatrix(){
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const element = document.getElementById("t-matrix");
+                    if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                    }
                 }
 }'
 
      @clear-markedcells.window="
-        // Actualiza la variable 'stock' con el dato recibido del evento
+        setPositionYMatrix();
         clearCells();
      "
 >
@@ -177,26 +201,48 @@
         </fieldset>
 
         @break
-        @case('precios')
-        Precios::
-        @break
+{{--        @case('precios')--}}
+{{--            <p class="text-xl text-success text-center"><b>Precios</b></p>--}}
+{{--            <fieldset class="fieldset">--}}
+{{--                <label class="label label-azteris">Sucursal</label>--}}
+{{--                <div class="join">--}}
+{{--                    <select class="select select-sm join-item" x-model="branchId" x-on:change="clearCells();">--}}
+{{--                        <option disabled selected>Sucursal</option>--}}
+{{--                        @foreach($branches as $branch)--}}
+{{--                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>--}}
+{{--                        @endforeach--}}
+{{--                    </select>--}}
+{{--                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="Precio normal" />--}}
+{{--                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="Precio especial" />--}}
+{{--                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="Mayorista" />--}}
+{{--                    <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>--}}
+{{--                    <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>--}}
+{{--                    <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_delivery.showModal()"--}}
+{{--                            --}}{{--                            :disabled="markedAmountCells.length === 0"--}}
+{{--                            :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger')"--}}
+{{--                    >--}}
+{{--                        Registrar--}}
+{{--                    </button>--}}
+{{--                </div>--}}
+{{--            </fieldset>--}}
+{{--        @break--}}
         @case('entregas')
-        <p class="text-xl text-success text-center"><b>Entregas</b></p>
+            <p class="text-xl text-success text-center"><b>Entregas</b></p>
             <fieldset class="fieldset">
-                <label class="label label-azteris">Cantidad</label>
+                <label class="label label-azteris">Sucursal</label>
                 <div class="join">
-                    <input type="number" x-model="amount" min="1" class="input input-sm" />
                     <select class="select select-sm join-item" x-model="branchId" x-on:change="clearCells();">
-                        <option disabled selected>Sucursal</option>
+                        <option value="" selected>Sucursal</option>
                         @foreach($branches as $branch)
-                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
                     </select>
+                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="cantidad" />
                     <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
                     <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
                     <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_delivery.showModal()"
 {{--                            :disabled="markedAmountCells.length === 0"--}}
-                            :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger')"
+                            :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger') || branchId=== null"
                     >
                         Registrar
                     </button>
@@ -208,18 +254,18 @@
     <div x-text="messageError" class="text-error text-sm"></div>
     <hr class="my-2 border-t border-gray-300">
 
-    <div class="table-container border border-gray-200 rounded-lg relative select-none"
+    <div class="table-container border border-gray-200 rounded-lg relative select-none overflow-x-auto"
          @mousedown.window="startSelection($event)"
          @mousemove.window="updateSelection($event)"
          @mouseup.window="endSelection"
     >
         <table x-ref="table" class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50 sticky-header">
-            <tr>
+            <tr id="t-matrix">
                 <th scope="col" class="">
                 </th>
                 @foreach ($uniqueCylinders as $cylinder)
-                    <th scope="col" class="px-2 py-2 text-center text-xs font-semibold text-white uppercase tracking-wider bg-success">
+                    <th scope="col" class="px-1 py-1 text-center text-xs font-semibold text-white uppercase tracking-wider bg-success">
                         {{ number_format($cylinder, 2) }}
                     </th>
                 @endforeach
@@ -232,7 +278,7 @@
                 <tr class="hover:bg-gray-50">
                     @foreach($row as $i => $opticalProperty)
                         @if($opticalProperty)
-                            <td class="px-2 py-2 whitespace-nowrap text-xs font-medium text-white @if($type) bg-blue-500 @else bg-red-500 @endif" >
+                            <td class="px-1 py-1 whitespace-nowrap text-xs text-center font-medium text-white @if($type) bg-blue-500 @else bg-red-500 @endif" >
                                 {{ number_format($opticalProperty['sphere'], 2) }}
                             </td>
                             @break
@@ -248,7 +294,7 @@
                                 ? 'bg-green-400' : 'bg-red-400') : (markedCells.includes({{ (int) $opticalProperty['id'] }})
                                 ? 'bg-green-200'
                                 : 'bg-white')"
-                            class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border"
+                            class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border border"
                         >
                             <div
                                 x-text="uploadText({{ $opticalProperty['id'] }}, {{ $opticalProperty['amount'] }})"
@@ -263,19 +309,6 @@
         </table>
 
         <!-- Mostrar IDs seleccionados -->
-{{--        <div class="mt-3">--}}
-{{--            <strong>Celdas marcadas:</strong>--}}
-{{--            <span x-text="markedCells.join(', ')"></span>--}}
-{{--        </div>--}}
-{{--        <div class="mt-3">--}}
-{{--            <strong>Celdas con cantidad:</strong>--}}
-{{--            <span x-text="markedAmountCells.join(', ')"></span>--}}
-{{--        </div>--}}
-{{--        <div class="mt-3">--}}
-{{--            <strong>Cells:</strong>--}}
-{{--            <span x-text="cells"></span>--}}
-{{--        </div>--}}
-
         <dialog id="modal_confirm_income" class="modal">
             <div class="modal-box">
                 <h3 class="text-lg font-bold">Registrar ingreso de productos</h3>

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Branches\Tables;
 
+use App\Filament\Resources\Branches\Pages\ManageBranch;
 use App\Models\Branch;
 use App\Models\Warehouse;
 use Filament\Actions\Action;
@@ -41,10 +42,11 @@ class BranchesTable
             ])
             ->recordActions([
                 EditAction::make(),
-                Action::make('create-base-code')
+                Action::make('manage-branch')
                     ->label('Inventario')
                     ->icon('c-square-3-stack-3d')
-                    ->url(fn (Branch $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
+//                    ->url(fn (Branch $record): string => route('filament.admin.resources.branches.inventory', ['branch_id' => $record->id]))
+                    ->url(fn (Branch $record) => ManageBranch::getUrl(['branch_id' => $record->id]))
                     ->color('success'),
             ])
             ->toolbarActions([

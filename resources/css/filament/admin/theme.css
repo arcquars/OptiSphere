@@ -29,3 +29,7 @@
 .label-azteris {
     @apply after:content-['*'] after:ml-1 after:text-red-500 block
 }
+
+.fi-width-7xl {
+    max-width: 100% !important; /* o el valor que quieras */
+}

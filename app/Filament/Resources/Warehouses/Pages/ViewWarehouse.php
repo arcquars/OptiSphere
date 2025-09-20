@@ -11,7 +11,7 @@ class ViewWarehouse extends Page
 {
     protected static string $resource = WarehouseResource::class;
 
-    protected static ?string $title = 'Inventario';
+    protected static ?string $title = 'Matriz';
 
     protected string $view = 'filament.resources.warehouses.pages.view-warehouse';
 
@@ -26,7 +26,6 @@ class ViewWarehouse extends Page
     {
         return [
             'warehouse' => $this->warehouse,
-//            'warehouseId' => 1,
         ];
     }
 }
