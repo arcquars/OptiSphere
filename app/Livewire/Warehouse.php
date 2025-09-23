@@ -74,10 +74,10 @@ class Warehouse extends Component implements HasSchemas
                         ->first();
 
                     if(strcmp($this->action, "ingreso") == 0) {
-                        $row[] = ['id' => $op->id, 'type' => $op->type, 'sphere' => $op->sphere, 'cylinder' => $op->cylinder, 'amount' => null ];
+                        $row[] = ['id' => $op->product_id, 'type' => $op->type, 'sphere' => $op->sphere, 'cylinder' => $op->cylinder, 'amount' => null ];
                     } else if(strcmp($this->action, "saldo") == 0 || strcmp($this->action, "entregas") == 0) {
                         $row[] = [
-                            'id' => $op->id,
+                            'id' => $op->product_id,
                             'type' => $op->type,
                             'sphere' => $op->sphere,
                             'cylinder' => $op->cylinder,
@@ -180,7 +180,7 @@ class Warehouse extends Component implements HasSchemas
                 // Buscar el registro de stock por su ID.
                 $warehouseStock = WarehouseStock::firstOrCreate($attributes, [
                     'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
-                ]);;
+                ]);
 
                 $oldQuantity = $warehouseStock->quantity;
                 $newQuantity = $oldQuantity + $amount;

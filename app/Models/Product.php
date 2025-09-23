@@ -34,4 +34,8 @@ class Product extends Model
     {
         return $this->hasOne(OpticalProperty::class);
     }
+
+    public function stockByStockWarehouse($warehouseId){
+        return WarehouseStock::where('product_id', $this->id)->where('warehouse_id', $warehouseId)->first();
+    }
 }

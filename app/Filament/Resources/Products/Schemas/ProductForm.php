@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\BaseCode;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
@@ -12,6 +13,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class ProductForm
@@ -44,32 +47,40 @@ class ProductForm
                             ->columnSpan(2),
 
                         ])->columns(4),
-                // Agrega el Fieldset para la tabla optical_properties
-                Fieldset::make('Propiedades Opticas')
+                Checkbox::make('has_optical_properties')
+                    ->label('¿Agregar Propiedades Ópticas?')
+                    ->reactive(),
+                Section::make('Propiedades Ópticas')
+                    ->visible(fn (Get $get) => $get('has_optical_properties'))
                     ->schema([
-                        Select::make('base_code')
-                            ->label('Código Base')
-                            ->options(BaseCode::all()->pluck('name', 'name'))
-                            ->required()
-                            ->searchable(),
-                        Radio::make('type')
-                            ->label('Tipo?')
-                            ->options([
-                                '+' => 'Positivo',
-                                '-' => 'Negativo',
+                        // Agrega el Fieldset para la tabla optical_properties
+                        Fieldset::make('Propiedades Opticas')
+                            ->schema([
+                                Select::make('base_code')
+                                    ->label('Código Base')
+                                    ->options(BaseCode::all()->pluck('name', 'name'))
+                                    ->required()
+                                    ->searchable(),
+                                Radio::make('type')
+                                    ->label('Tipo?')
+                                    ->options([
+                                        '+' => 'Positivo',
+                                        '-' => 'Negativo',
+                                    ])
+                                    ->default('+')
+                                    ->inline(),
+                                TextInput::make('sphere')
+                                    ->label('Esfera')
+                                    ->numeric()
+                                    ->required(),
+                                TextInput::make('cylinder')
+                                    ->label('Cilindro')
+                                    ->numeric()
+                                    ->required(),
                             ])
-                            ->default('+')
-                            ->inline(),
-                        TextInput::make('sphere')
-                            ->label('Esfera')
-                            ->numeric()
-                            ->required(),
-                        TextInput::make('cylinder')
-                            ->label('Cilindro')
-                            ->numeric()
-                            ->required(),
-                    ])
-                    ->relationship('opticalProperties'),
+                            ->relationship('opticalProperties'),
+                    ]),
+
                 // Repeater para los diferentes tipos de precios
                 // Repeater para los diferentes tipos de precios
                 Repeater::make('prices')

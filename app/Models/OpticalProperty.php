@@ -23,7 +23,7 @@ class OpticalProperty extends Model
     }
 
     public function stockByWarehouse($warehouseId){
-        $warehouseStock = WarehouseStock::where('product_id', $this->id)
+        $warehouseStock = WarehouseStock::where('product_id', $this->product_id)
             ->where('warehouse_id', $warehouseId)->first();
         $quantity = 0;
         if($warehouseStock)
@@ -32,7 +32,7 @@ class OpticalProperty extends Model
     }
 
     public function stockByBranch($brachId){
-        $warehouseStock = ProductStock::where('product_id', $this->id)
+        $warehouseStock = ProductStock::where('product_id', $this->product_id)
             ->where('branch_id', $brachId)->first();
         if($warehouseStock)
             return $warehouseStock->quantity;
