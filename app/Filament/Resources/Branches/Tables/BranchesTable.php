@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Branches\Tables;
 
+use App\Filament\Resources\Branches\Pages\InventoryBranch;
 use App\Filament\Resources\Branches\Pages\ManageBranch;
 use App\Models\Branch;
 use App\Models\Warehouse;
@@ -18,6 +19,7 @@ class BranchesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordUrl(null)
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombre')
@@ -41,13 +43,17 @@ class BranchesTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
                 Action::make('manage-branch')
-                    ->label('Inventario')
+                    ->label('Matriz')
                     ->icon('c-square-3-stack-3d')
-//                    ->url(fn (Branch $record): string => route('filament.admin.resources.branches.inventory', ['branch_id' => $record->id]))
                     ->url(fn (Branch $record) => ManageBranch::getUrl(['branch_id' => $record->id]))
                     ->color('success'),
+                Action::make('inventory-branch')
+                    ->label('Inventario')
+                    ->icon('c-square-3-stack-3d')
+                    ->url(fn (Branch $record) => InventoryBranch::getUrl(['branch_id' => $record->id]))
+                    ->color('success'),
+                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

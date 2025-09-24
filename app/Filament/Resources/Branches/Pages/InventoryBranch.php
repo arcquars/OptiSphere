@@ -6,13 +6,13 @@ use App\Filament\Resources\Branches\BranchResource;
 use App\Models\Branch;
 use Filament\Resources\Pages\Page;
 
-class ManageBranch extends Page
+class InventoryBranch extends Page
 {
     protected static string $resource = BranchResource::class;
 
-    protected static ?string $title = 'Matriz de Sucursal';
+    protected static ?string $title = 'Inventario de Sucursal';
 
-    protected string $view = 'filament.resources.branches.pages.manage-branch';
+    protected string $view = 'filament.resources.branches.pages.inventory-branch';
 
     public Branch $branch;
 
@@ -27,5 +27,4 @@ class ManageBranch extends Page
             'branch' => $this->branch,
         ];
     }
-
 }

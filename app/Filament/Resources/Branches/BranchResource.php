@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Branches;
 
 use App\Filament\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Resources\Branches\Pages\EditBranch;
+use App\Filament\Resources\Branches\Pages\InventoryBranch;
 use App\Filament\Resources\Branches\Pages\ListBranches;
 use App\Filament\Resources\Branches\Pages\ManageBranch;
 use App\Filament\Resources\Branches\Schemas\BranchForm;
@@ -52,7 +53,8 @@ class BranchResource extends Resource
             'index' => ListBranches::route('/'),
             'create' => CreateBranch::route('/create'),
             'edit' => EditBranch::route('/{record}/edit'),
-            'inventory' => ManageBranch::route('/{branch_id}/inventory')
+            'matrix' => ManageBranch::route('/{branch_id}/matrix'),
+            'inventory' => InventoryBranch::route('/{branch_id}/inventory')
         ];
     }
 }
