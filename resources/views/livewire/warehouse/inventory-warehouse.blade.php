@@ -2,7 +2,7 @@
     <form wire:submit.prevent="search">
         <div class="join">
             <div>
-                <label class="input validator join-item">
+                <label class="input validator join-item focus-within:outline-none">
                     <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <g
                             stroke-linejoin="round"

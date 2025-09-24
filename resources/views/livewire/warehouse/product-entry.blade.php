@@ -4,7 +4,6 @@
     }'
 >
     <button wire:click="toggleForm" class="btn btn-sm btn-primary">Ingresar productos</button>
-    <button class="btn btn-sm btn-primary">Entregas a sucursales</button>
 
     @if (session('success'))
         <div role="alert" class="alert alert-success mt-4">
@@ -26,7 +25,7 @@
                         <div x-show="!searchByCode" class="mb-4">
                             <form wire:submit="searchProducts">
                                 <div class="join">
-                                    <label class="input input-sm input-bordered flex items-center gap-2 join-item">
+                                    <label class="input input-sm input-bordered flex items-center gap-2 join-item focus-within:outline-none">
                                         <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                             <g
                                                 stroke-linejoin="round"
@@ -46,7 +45,7 @@
                             </form>
                         </div>
                         <div x-show="searchByCode" class="mb-4">
-                            <label class="input input-sm">
+                            <label class="input input-sm focus-within:outline-none">
                                 <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                     <g
                                         stroke-linejoin="round"
@@ -60,7 +59,7 @@
                                     </g>
                                 </svg>
                                 <input type="text" wire:model.defer="searchQuery" wire:keydown.enter="searchCode"
-                                       placeholder="Buscar codigo"/>
+                                       placeholder="Buscar codigo" class=""/>
                             </label>
                         </div>
                     </div>
@@ -98,11 +97,11 @@
                             <tr wire:key="{{ $product->id }}">
                                 <td>{{ $product->name }} <small>({{ $product->code }})</small></td>
                                 <td>
-                                    <input type="number" class="input input-sm input-bordered w-20"
+                                    <input type="number" class="input input-sm input-bordered w-20 focus-within:outline-none"
                                            wire:model.live="productQuantities.{{ $product->id }}" min="1">
                                 </td>
-                                <td>
-                                    <button wire:click="removeProduct({{ $product->id }})" class="btn btn-error btn-xs">
+                                <td class="text-right">
+                                    <button wire:click="removeProduct({{ $product->id }})" class="btn btn-error btn-sm">
                                         Eliminar
                                     </button>
                                 </td>
@@ -114,9 +113,9 @@
 
                 <div class="modal-action">
                     <button wire:click="saveEntry" @if(count($selectedProducts) <= 0) disabled
-                            @endif class="btn btn-success">Guardar
+                            @endif class="btn btn-sm btn-success">Guardar
                     </button>
-                    <button wire:click="toggleForm" class="btn">Cancelar</button>
+                    <button wire:click="toggleForm" class="btn btn-sm">Cancelar</button>
                 </div>
             </div>
         </div>
