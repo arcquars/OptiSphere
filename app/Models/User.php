@@ -83,13 +83,13 @@ class User extends Authenticatable implements FilamentUser
 //    }
     public function canAccessPanel(Panel $panel): bool
     {
-        Log::info("1 Eeee: " . $panel->getId() . " || rol:: " . $this->hasRole('admin'));
+        Log::info("1 Eeee: " . $panel->getId() . " || rol:: " . $this->hasRole('admin') . " || check:: " . auth()->check());
 
         if($this->hasRole('admin') && $this->is_active){
             return $this->hasVerifiedEmail();
         } else if($this->hasRole('accountant') && $panel->getId() === 'accountant' && $this->is_active) {
             return $this->hasVerifiedEmail();
-        } else if($this->hasRole('branch_manager') && $panel->getId() === 'branch-manager' && $this->is_active) {
+        } else if(($this->hasRole('branch_manager') || $this->hasRole('admin')) && $panel->getId() === 'branch-manager' && $this->is_active) {
             return $this->hasVerifiedEmail();
         } else if($this->hasRole('branch_coordinator') && $panel->getId() === 'branch-coordinator' && $this->is_active) {
             return $this->hasVerifiedEmail();

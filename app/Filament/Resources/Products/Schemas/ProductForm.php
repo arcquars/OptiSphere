@@ -47,6 +47,17 @@ class ProductForm
                             ->columnSpan(2),
 
                         ])->columns(4),
+//                Select::make('category_id')
+//                    ->relationship(name: 'categories', titleAttribute: 'name')
+//                    ->searchable()
+//                    ->loadingMessage('Cargando categorías...'),
+                Select::make('categories')
+                    ->relationship('categories', 'name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->label('Categorías')
+                    ->columnSpan('full'),
                 Checkbox::make('has_optical_properties')
                     ->label('¿Agregar Propiedades Ópticas?')
                     ->reactive(),

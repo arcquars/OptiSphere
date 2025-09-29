@@ -13,6 +13,7 @@ class InventoryBranch extends Component
     use WithPagination, WithoutUrlPagination;
 
     public Branch $branch;
+    public $productId;
     public $querySearch = '';
 
     public function mount($branchId): void
@@ -23,6 +24,11 @@ class InventoryBranch extends Component
     public function search()
     {
         $this->resetPage();
+    }
+
+    public function toggleFormPrice($productId){
+//        dd("ddd");
+        $this->dispatch('togglePriceProductForm', $productId);
     }
 
     public function render()

@@ -5,7 +5,7 @@ namespace App\Livewire;
 use App\Helpers\GenerateProductHelper;
 use App\Http\Requests\StoreGenerateProductsRequest;
 use App\Models\Product;
-use App\Models\ProductPrice;
+use App\Models\Price;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -37,15 +37,15 @@ class GenerateProducts extends Component
 
         $productsToCreate = GenerateProductHelper::generateZeroToSix(strtoupper($this->baseCode), $this->supplier);
         $price1 = [
-            "type" => ProductPrice::TYPE_NORMAL,
+            "type" => Price::TYPE_NORMAL,
             "price" => $this->priceNormal
         ];
         $price2 = [
-            "type" => ProductPrice::TYPE_ESPECIAL,
+            "type" => Price::TYPE_ESPECIAL,
             "price" => $this->priceSpecial ?: $this->priceNormal
         ];
         $price3 = [
-            "type" => ProductPrice::TYPE_MAYORISTA,
+            "type" => Price::TYPE_MAYORISTA,
             "price" => $this->priceWholesale ?: $this->priceNormal
         ];
         try{

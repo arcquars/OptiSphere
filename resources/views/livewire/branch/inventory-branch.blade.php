@@ -14,15 +14,15 @@
     </form>
 
     <div class="overflow-x-auto mt-2">
-        <table class="table table-zebra">
+        <table class="table table-zebra table-sm">
             <!-- head -->
             <thead class="bg-amber-600 text-white">
             <tr>
                 <th></th>
-                <th>Nombre</th>
-                <th>Codigo</th>
-                <th>Cantidad</th>
-                {{--                <th>Acciones</th>--}}
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Codigo</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-center">Acciones</th>
             </tr>
             </thead>
             <tbody>
@@ -35,6 +35,11 @@
                     <td>{{ $product->id }} {{ $product->name }}</td>
                     <td>{{ $product->code }}</td>
                     <td class="text-right">{{ $stock? $stock->quantity : 0 }}</td>
+                    <td class="text-right">
+                        <a href="#" class="btn btn-link no-underline" title="Editar Precios" wire:click.prevent="toggleFormPrice({{$product->id}})">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </a>
+                    </td>
                 </tr>
             @endforeach
             </tbody>

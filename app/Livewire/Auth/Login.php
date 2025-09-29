@@ -46,15 +46,27 @@ class Login extends Component
 
 //        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
         Log::info("Pdm 33:: " . Auth::user()->hasRole('admin'));
-        if(Auth::user()->hasRole('admin')){
-//            $this->redirectIntended(default: route('filament.admin.pages.dashboard', absolute: true), navigate: true);
-            $this->redirectRoute('filament.admin.pages.dashboard');
-        } else if(Auth::user()->hasRole('accountant')){
-            $this->redirectIntended(default: route('filament.accountant.pages.dashboard', absolute: false), navigate: true);
-        } else if(Auth::user()->hasRole('branch_manager')){
-            $this->redirectIntended(default: route('filament.branch-manager.pages.dashboard', absolute: false), navigate: true);
-        } else if(Auth::user()->hasRole('branch_coordinator')){
-            $this->redirectIntended(default: route('filament.branch-coordinator.pages.dashboard', absolute: false), navigate: true);
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            if ($user->hasRole('admin')) {
+                $this->redirectRoute('filament.admin.pages.dashboard');
+            } elseif ($user->hasRole('accountant')) {
+                $this->redirectIntended(
+                    default: route('filament.accountant.pages.dashboard', absolute: false),
+                    navigate: true
+                );
+            } elseif ($user->hasRole('branch_manager')) {
+                $this->redirectIntended(
+                    default: route('filament.branch-manager.pages.dashboard', absolute: false),
+                    navigate: true
+                );
+            } elseif ($user->hasRole('branch_coordinator')) {
+                $this->redirectIntended(
+                    default: route('filament.branch-coordinator.pages.dashboard', absolute: false),
+                    navigate: true
+                );
+            }
         }
     }
 

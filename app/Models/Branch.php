@@ -29,4 +29,8 @@ class Branch extends Model
         return $this->belongsToMany(User::class);
     }
 
+    public function prices()
+    {
+        return $this->morphMany(Price::class, 'priceable');
+    }
 }

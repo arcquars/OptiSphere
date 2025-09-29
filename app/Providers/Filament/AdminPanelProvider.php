@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\BranchManager\Pages\CustomLogin;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -66,6 +67,8 @@ class AdminPanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
             ])
             ->middleware([
+                'web',
+                'auth',
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -91,7 +94,12 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::HEAD_END,
                 fn (): string => Blade::render("@vite(['resources/css/app.css', 'resources/js/app.js'])"),
             )
-            ->viteTheme('resources/css/filament/admin/theme.css');
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->authGuard('web');
     }
 
+    public function canAccessPanel(User $user): bool
+    {
+        return $user->hasRole('admin');
+    }
 }

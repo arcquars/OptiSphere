@@ -17,7 +17,7 @@ class StoresWidget extends StatsOverviewWidget
         foreach ($stores as $i => $store){
             if($store)
                 $stats[] = Stat::make($store->id, $store->name)
-                ->url(fn () => route('filament.branch-manager.pages.custom-login'));
+                ->url(fn () => route('filament.branch-manager.pages.branch-manager', ['branchId' => $store->id]));
         }
         return $stats;
     }
