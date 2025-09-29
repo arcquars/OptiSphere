@@ -18,11 +18,15 @@ class ServicesTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nombre del Servicio')
                     ->searchable(),
                 TextColumn::make('code')
+                    ->label('Código / SKU')
                     ->searchable(),
-                ImageColumn::make('path_image'),
+                ImageColumn::make('path_image')
+                    ->label('Imagen'),
                 IconColumn::make('is_active')
+                    ->label('Activo')
                     ->boolean(),
                 TextColumn::make('categories.name')
                     ->label('Categorías')

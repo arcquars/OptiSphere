@@ -38,7 +38,7 @@ class ServiceForm
 
                         // 1. CAMPO PARA LA IMAGEN DEL SERVICIO
                         FileUpload::make('path_image')
-                            ->label('Imagen Descriptiva')
+                            ->label('Imagen')
                             ->image()
                             ->directory('services-images') // Directorio donde se guardarán las imágenes
                             ->visibility('public') // O 'private' si lo prefieres

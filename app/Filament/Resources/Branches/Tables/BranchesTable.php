@@ -25,7 +25,7 @@ class BranchesTable
                     ->label('Nombre')
                     ->searchable(),
                 TextColumn::make('address')
-                    ->label('Direccion')
+                    ->label('Dirección')
                     ->searchable(),
                 IconColumn::make('is_active')
                     ->label('Activo')

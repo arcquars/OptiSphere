@@ -33,8 +33,8 @@ return new class extends Migration
         // 4. Eliminar la columna original de product_id
         Schema::table('prices', function (Blueprint $table) {
             // Buscar el nombre del foreing key en la base de datos, aqui ocurre un error
-//            $table->dropForeign("product_prices_product_id_foreign");
-//            $table->dropColumn('product_id');
+            $table->dropForeign("product_prices_product_id_foreign");
+            $table->dropColumn('product_id');
         });
     }
 
