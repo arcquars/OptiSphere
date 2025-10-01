@@ -9,7 +9,9 @@
                     currentY: 0,
                     cells: {},
                     branchId: null,
+                    priceType: null,
                     messageError: "",
+                    disableSavePrices: false,
                     init() {
                         console.log(`ccc2`, this.cells);
                     },
@@ -25,6 +27,7 @@
                     } else {
                         this.markedCells.push(id)
                     }
+                    this.setEnableSavePrices();
                 },
                 changeSelected(action) {
                     this.messageError = "";
@@ -32,6 +35,7 @@
                         this.messageError = "Cantidad es requerido";
                         return  // no hacer nada si está vacío
                     }
+
                     this.markedCells.forEach(id => {
                         if(action === "entregas"){
                             console.log(action + " | " + this.cells[id] + " | " + this.amount);
@@ -55,6 +59,7 @@
                         }
                     })
                     this.markedCells = [];
+                    this.setEnableSavePrices();
                 },
 
                 startSelection(e) {
@@ -146,12 +151,27 @@
                     if (element) {
                         element.scrollIntoView({ behavior: "smooth" });
                     }
+                },
+                setEnableSavePrices() {
+                    console.log("Entro a setEnableSavePrices: " + this.priceType);
+                    if(this.markedAmountCells.length !== 0 &&
+{{--                        markedAmountCells.some(item => item.state === "danger") ||--}}
+                        (this.priceType!== null && this.priceType!== "")
+                        ){
+                        console.log("Entro a setEnableSavePrices: IFFFF");
+                        this.disableSavePrices = true;
+                    } else {
+                        this.disableSavePrices = false;
+                    }
+
                 }
+
 }'
 
      @clear-markedcells.window="
         setPositionYMatrix();
         clearCells();
+        setEnableSavePrices();
      "
 >
 <!-- Rectángulo de selección -->
@@ -187,7 +207,7 @@
         <fieldset class="fieldset">
             <label class="label label-azteris">Cantidad</label>
             <div class="join">
-                <input type="number" x-model="amount" min="1" class="input input-sm" />
+                <input type="number" x-model="amount" min="1" class="input input-sm focus-within:outline-none" />
                 <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
                 <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
                 <button class="btn btn-primary btn-sm join-item"
@@ -201,53 +221,58 @@
         </fieldset>
 
         @break
-{{--        @case('precios')--}}
-{{--            <p class="text-xl text-success text-center"><b>Precios</b></p>--}}
-{{--            <fieldset class="fieldset">--}}
-{{--                <label class="label label-azteris">Sucursal</label>--}}
-{{--                <div class="join">--}}
-{{--                    <select class="select select-sm join-item" x-model="branchId" x-on:change="clearCells();">--}}
-{{--                        <option disabled selected>Sucursal</option>--}}
-{{--                        @foreach($branches as $branch)--}}
-{{--                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>--}}
-{{--                        @endforeach--}}
-{{--                    </select>--}}
-{{--                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="Precio normal" />--}}
-{{--                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="Precio especial" />--}}
-{{--                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="Mayorista" />--}}
-{{--                    <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>--}}
-{{--                    <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>--}}
-{{--                    <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_delivery.showModal()"--}}
-{{--                            --}}{{--                            :disabled="markedAmountCells.length === 0"--}}
-{{--                            :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger')"--}}
-{{--                    >--}}
-{{--                        Registrar--}}
-{{--                    </button>--}}
-{{--                </div>--}}
-{{--            </fieldset>--}}
-{{--        @break--}}
         @case('entregas')
             <p class="text-xl text-success text-center"><b>Entregas</b></p>
             <fieldset class="fieldset">
                 <label class="label label-azteris">Sucursal</label>
                 <div class="join">
-                    <select class="select select-sm join-item" x-model="branchId" x-on:change="clearCells();">
+                    <select class="select select-sm join-item focus-within:outline-none" x-model="branchId" x-on:change="clearCells();">
                         <option value="" selected>Sucursal</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
                     </select>
-                    <input type="number" x-model="amount" min="1" class="input input-sm" placeholder="cantidad" />
+                    <input type="number" x-model="amount" min="1" class="input input-sm focus-within:outline-none" placeholder="cantidad" />
                     <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
                     <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
                     <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_delivery.showModal()"
-{{--                            :disabled="markedAmountCells.length === 0"--}}
                             :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger') || branchId=== null"
                     >
                         Registrar
                     </button>
                 </div>
             </fieldset>
+        @break
+        @case('precios')
+        <p class="text-xl text-success text-center"><b>Precios</b></p>
+            <fieldset class="fieldset">
+                <label class="label label-azteris">Precio</label>
+                <div class="join">
+                    <input type="number" x-model="amount" min="1" class="input input-sm focus-within:outline-none" placeholder="Ej: 0.00" />
+                    <select class="select select-sm join-item focus-within:outline-none" x-model="branchId">
+                        <option value="" selected>Almacen</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+{{--                    <select class="select select-sm join-item focus-within:outline-none" x-model="branchId" x-on:change="clearCells();">--}}
+                    <select class="select select-sm join-item focus-within:outline-none" x-model="priceType" x-on:change="setEnableSavePrices()" >
+                        <option value="" selected>Seleccione precio</option>
+                        <option value="{{ \App\Models\Price::TYPE_NORMAL }}">{{ \App\Models\Price::TYPE_NORMAL }}</option>
+                        <option value="{{ \App\Models\Price::TYPE_ESPECIAL }}">{{ \App\Models\Price::TYPE_ESPECIAL }}</option>
+                        <option value="{{ \App\Models\Price::TYPE_MAYORISTA }}">{{ \App\Models\Price::TYPE_MAYORISTA }}</option>
+                    </select>
+                    <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
+                    <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
+                    <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_change_prices.showModal()"
+                            :disabled="!disableSavePrices"
+                    >
+                        Registrar
+                    </button>
+                </div>
+            </fieldset>
+
+
         @break
     @endswitch
 
@@ -259,13 +284,15 @@
          @mousemove.window="updateSelection($event)"
          @mouseup.window="endSelection"
     >
-        <table x-ref="table" class="min-w-full divide-y divide-gray-200">
+        <table id="t-matrix" x-ref="table" class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50 sticky-header">
             <tr id="t-matrix">
                 <th scope="col" class="">
                 </th>
-                @foreach ($uniqueCylinders as $cylinder)
-                    <th scope="col" class="px-1 py-1 text-center text-xs font-semibold text-white uppercase tracking-wider bg-success">
+                @foreach ($uniqueCylinders as $i => $cylinder)
+                    <th scope="col" class="px-1 py-1 text-center text-xs font-semibold text-white uppercase tracking-wider bg-success
+                        @if($i == 8 || $i == 16) border-r-2 border-r-zinc-600 @endif
+                    ">
                         {{ number_format($cylinder, 2) }}
                     </th>
                 @endforeach
@@ -274,11 +301,13 @@
             <tbody
                 class="bg-white divide-y divide-gray-200"
             >
-            @foreach($matrix as $row)
-                <tr class="hover:bg-gray-50">
+            @foreach($matrix as $j => $row)
+                <tr class="hover:bg-gray-50 @if($j == 4 || $j == 8 || $j == 16) border-b-2 border-b-zinc-600 @endif">
                     @foreach($row as $i => $opticalProperty)
                         @if($opticalProperty)
-                            <td class="px-1 py-1 whitespace-nowrap text-xs text-center font-medium text-white @if($type) bg-blue-500 @else bg-red-500 @endif" >
+                            <td class="px-1 py-1 whitespace-nowrap text-xs text-center font-medium text-white
+                                @if($type) bg-blue-500 @else bg-red-500 @endif
+                                " >
                                 {{ number_format($opticalProperty['sphere'], 2) }}
                             </td>
                             @break
@@ -286,6 +315,7 @@
                     @endforeach
                     @foreach($row as $i => $opticalProperty)
                         <td
+                            title="{{ $opticalProperty['description'] }}"
                             data-cell-id="{{ $opticalProperty['id'] }}"
                             data-cell-amount="{{ $opticalProperty['amount'] }}"
                             @click="toggleCell({{ (int) $opticalProperty['id'] }})"
@@ -294,10 +324,32 @@
                                 ? 'bg-green-400' : 'bg-red-400') : (markedCells.includes({{ (int) $opticalProperty['id'] }})
                                 ? 'bg-green-200'
                                 : 'bg-white')"
-                            class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border border"
+                            class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border-t border-r
+                            border-l
+                            @if($j == 4 || $j == 8 || $j == 16) border-b-2 border-b-zinc-600 @else border-b @endif
+                            @if($i == 8 || $i == 16) border-r-2 border-r-zinc-600 @endif
+
+                            @if($j == 12 && $i == 4) border-r-2 border-r-zinc-600 border-b-2 border-b-zinc-600 @endif
+                            @if($j == 13 && $i == 5) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
+
+                            @if($j == 12 && $i == 12) border-r-2 border-r-zinc-600 border-b-2 border-b-zinc-600 @endif
+                            @if($j == 13 && $i == 13) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
+
+                            @if($j == 12 && $i == 20) border-r-2 border-r-zinc-600 border-b-2 border-b-zinc-600 @endif
+                            @if($j == 13 && $i == 21) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
+
+                            @if($j == 20 && $i == 4) border-r-2 border-r-zinc-600 border-b-2 border-b-zinc-600 @endif
+                            @if($j == 21 && $i == 5) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
+
+                            @if($j == 20 && $i == 12) border-r-2 border-r-zinc-600 border-b-2 border-b-zinc-600 @endif
+                            @if($j == 21 && $i == 13) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
+
+                            @if($j == 20 && $i == 20) border-r-2 border-r-zinc-600 border-b-2 border-b-zinc-600 @endif
+                            @if($j == 21 && $i == 21) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
+                                "
                         >
                             <div
-                                x-text="uploadText({{ $opticalProperty['id'] }}, {{ $opticalProperty['amount'] }})"
+                                x-text="uploadText({{ $opticalProperty['id'] }}, '{{ $opticalProperty['amount'] }}')"
                             >
                             </div>
 
@@ -332,6 +384,21 @@
                         <!-- if there is a button in form, it will close the modal -->
                         <button class="btn btn-sm btn-secondary">Cerrar</button>
                         <button class="btn btn-sm btn-primary" @click="$wire.call('save', markedAmountCells, branchId)" >Confirmar</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+
+        <dialog id="modal_confirm_change_prices" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">Cambiar precios de Almacenes</h3>
+                <p class="py-4">Esta seguro de cambiar los precios seleccionados?</p>
+                <div class="modal-action">
+                    <form method="dialog">
+                        <!-- if there is a button in form, it will close the modal -->
+                        <button class="btn btn-sm btn-secondary">Cerrar</button>
+{{--                        <button class="btn btn-sm btn-primary" @click="$wire.call('save', markedAmountCells, branchId)" >Confirmar</button>--}}
+                        <button class="btn btn-sm btn-primary" @click="$wire.call('save', markedAmountCells, branchId, priceType)" >Confirmar</button>
                     </form>
                 </div>
             </div>

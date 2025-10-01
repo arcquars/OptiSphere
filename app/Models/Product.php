@@ -35,6 +35,10 @@ class Product extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    /** Esto devuelve los precios de todas las Sucursales y nulos que son Almacenes
+     * @return MorphMany
+     */
     public function prices(): MorphMany
     {
         return $this->morphMany(Price::class, 'priceable');
@@ -56,5 +60,32 @@ class Product extends Model
 
     public function stockByStockBranch($branchId){
         return ProductStock::where('product_id', $this->id)->where('branch_id', $branchId)->first();
+    }
+
+    public function stockByWarehouse($warehouseId){
+        $warehouseStock = WarehouseStock::where('product_id', $this->id)
+            ->where('warehouse_id', $warehouseId)->first();
+        $quantity = 0;
+        if($warehouseStock)
+            $quantity = $warehouseStock->quantity;
+        return $quantity;
+    }
+
+    public function stockByBranch($brachId){
+        $warehouseStock = ProductStock::where('product_id', $this->id)
+            ->where('branch_id', $brachId)->first();
+        if($warehouseStock)
+            return $warehouseStock->quantity;
+        return 0;
+    }
+
+    public function textPrices($branchId = null){
+        $prices = $this->prices()->where('branch_id', $branchId)->get();
+        $text = [];
+        foreach ($prices as $price){
+            $text[]= strtoupper($price->type) . " " . $price->price;
+        }
+//        return implode(",", $text);
+        return $text;
     }
 }

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Branch;
 use App\Models\InventoryMovement;
 use App\Models\OpticalProperty;
+use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\WarehouseDelivery;
 use App\Models\WarehouseIncome;
@@ -73,17 +74,24 @@ class Warehouse extends Component implements HasSchemas
                         ->where('cylinder', $cylinder)
                         ->first();
 
-                    if(strcmp($this->action, "ingreso") == 0) {
-                        $row[] = ['id' => $op->product_id, 'type' => $op->type, 'sphere' => $op->sphere, 'cylinder' => $op->cylinder, 'amount' => null ];
+                    $amount = null;
+                    $description = "";
+                    if(strcmp($this->action, "precios") == 0){
+                        $textPrices = $op->product->textPrices();
+                        $description =implode(",", $textPrices);
+                        $amount = (count($textPrices) > 0)? count($textPrices) : null;
                     } else if(strcmp($this->action, "saldo") == 0 || strcmp($this->action, "entregas") == 0) {
-                        $row[] = [
-                            'id' => $op->product_id,
-                            'type' => $op->type,
-                            'sphere' => $op->sphere,
-                            'cylinder' => $op->cylinder,
-                            'amount' => $op->stockByWarehouse($this->warehouseId)];
-                    } else
-                        $row[] = ['id' => $op->id, 'type' => $op->type, 'sphere' => $op->sphere, 'cylinder' => $op->cylinder, 'amount' => null ];
+                        $amount = $op->product->stockByWarehouse($this->warehouseId);
+                        $description = $amount;
+                    }
+                    $row[] = [
+                        'id' => $op->product_id,
+                        'type' => $op->type,
+                        'sphere' => $op->sphere,
+                        'cylinder' => $op->cylinder,
+                        'description' => $description,
+                        'amount' => $amount];
+
                 }
                 $this->matrix[] = $row;
             }
@@ -110,7 +118,7 @@ class Warehouse extends Component implements HasSchemas
                             ->options([
                                 'saldo' => 'Saldo',
                                 'ingreso' => 'Ingreso',
-//                                'precios' => 'Precios',
+                                'precios' => 'Precios',
                                 'entregas' => 'Entregas a Sucursal',
                             ])
                         ->required(),
@@ -140,13 +148,16 @@ class Warehouse extends Component implements HasSchemas
         $this->dispatch('clear-markedcells');
     }
 
-    public function save($celdas, $branchId = null){
+    public function save($celdas, $branchId = null, $priceType= null){
         switch ($this->action){
             case "ingreso":
                 $this->saveIncome($celdas);
                 break;
             case "entregas":
                 $this->saveDelivery($celdas, $branchId);
+                break;
+            case "precios":
+                $this->savePrices($celdas, $branchId, $priceType);
                 break;
 
         }
@@ -269,6 +280,41 @@ class Warehouse extends Component implements HasSchemas
                         'user_id' => Auth::id(),
                     ]);
                 }
+            }
+        });
+    }
+
+    public function savePrices($celdas, $branchId, $priceType){
+        DB::transaction(function () use ($celdas, $priceType, $branchId) {
+            foreach ($celdas as $data) {
+                $productId = $data['id'];
+                $amount = $data['amount'];
+                $product = Product::find($productId);
+
+                if (!$product) {
+                    continue;
+                }
+                $searchCondition = [
+                    'type' => $priceType,
+                    'branch_id' => (strcmp($branchId, '') == 0)? null : $branchId,
+                ];
+
+                $updateOrCreateValues = [
+                    'price' => $amount,
+                ];
+
+
+                $price = $product->prices()->updateOrCreate(
+                    $searchCondition,
+                    $updateOrCreateValues
+                );
+
+                if ($price->wasRecentlyCreated) {
+                    Log::info("PRECIO CREADO: Se creó un nuevo precio normal para el producto ID {$product->id} con valor {$price->price}.");
+                } else {
+                    Log::info( "PRECIO ACTUALIZADO: El precio normal existente para el producto ID {$product->id} fue actualizado a {$price->price}.\n");
+                }
+
             }
         });
     }

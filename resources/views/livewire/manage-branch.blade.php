@@ -250,7 +250,7 @@
                                 data-cell-id="{{ $opticalProperty['id'] }}"
                                 data-cell-amount="{{ $opticalProperty['amount'] }}"
                                 @click="toggleCell({{ (int) $opticalProperty['id'] }})"
-                                :class="markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }})
+                                    :class="markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }})
                                 ? (markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }} && item.state=== 'success')
                                 ? 'bg-green-400' : 'bg-red-400') : (markedCells.includes({{ (int) $opticalProperty['id'] }})
                                 ? 'bg-green-200'

@@ -81,7 +81,7 @@ class ManageBranch extends Component implements HasSchemas
                             'type' => $op->type,
                             'sphere' => $op->sphere,
                             'cylinder' => $op->cylinder,
-                            'amount' => $op->stockByBranch($this->branchId)];
+                            'amount' => $op->product->stockByBranch($this->branchId)];
 //                            'amount' => 0];
                     } else
                         $row[] = ['id' => $op->id, 'type' => $op->type, 'sphere' => $op->sphere, 'cylinder' => $op->cylinder, 'amount' => null ];
@@ -111,9 +111,9 @@ class ManageBranch extends Component implements HasSchemas
                             ->options([
                                 'saldo' => 'Saldo',
                                 'devolucion' => 'Devolucion',
-                                'price-normal' => 'Precio normal',
-                                'price-especial' => 'Precio especial',
-                                'price-mayorista' => 'Precio mayorista',
+//                                'price-normal' => 'Precio normal',
+//                                'price-especial' => 'Precio especial',
+//                                'price-mayorista' => 'Precio mayorista',
                             ])
                             ->required(),
                         ToggleButtons::make('type')
