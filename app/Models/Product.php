@@ -71,11 +71,11 @@ class Product extends Model
         return $quantity;
     }
 
-    public function stockByBranch($brachId){
-        $warehouseStock = ProductStock::where('product_id', $this->id)
-            ->where('branch_id', $brachId)->first();
-        if($warehouseStock)
-            return $warehouseStock->quantity;
+    public function stockByBranch($branchId){
+        $productStock = ProductStock::where('product_id', $this->id)
+            ->where('branch_id', $branchId)->first();
+        if($productStock)
+            return $productStock->quantity;
         return 0;
     }
 
@@ -87,5 +87,21 @@ class Product extends Model
         }
 //        return implode(",", $text);
         return $text;
+    }
+
+    public function getPriceByType($branchId = null, $priceType = "normal"): float
+    {
+        $price = $this->prices()->where('branch_id', $branchId)->where('type', '=', $priceType)->first();
+        if($price)
+            return $price->price;
+        return 0;
+    }
+
+    public function getUrlImage(){
+        if($this->image_path){
+            return asset('/storage/' . $this->image_path);
+        }
+
+        return asset('/img/cerisier-no-image.png');
     }
 }

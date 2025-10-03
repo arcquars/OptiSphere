@@ -45,10 +45,11 @@
                     @endif
                 </div>
 
-                <select wire:model="selectedCategory" class="select select-bordered w-full md:w-auto focus:outline-none">
+                <select wire:model.live.debounce.300ms="selectedCategory" class="select select-bordered w-full md:w-auto focus:outline-none">
                     <option value="">Categorías</option>
-                    <option>Bebidas</option>
-                    <option>Snacks</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    @endforeach
                 </select>
             </div>
 
@@ -69,35 +70,65 @@
                     <!-- Grid de Productos -->
                     <div id="product-grid" class="@if($activeTab !== 'products') hidden @endif">
                         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                            @foreach($products as $product)
-                                <div wire:click="addToCart({{ $product['id'] }}, 'product', '{{ $product['name'] }}', {{ $product['price'] }})" class="card card-compact bg-base-200 shadow-md cursor-pointer hover:border-primary border-2 border-transparent transition-all duration-300 hover:scale-105">
-                                    <figure><img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" /></figure>
-                                    <div class="card-body">
-                                        <h2 class="card-title text-sm">{{ $product['name'] }}</h2>
-                                        <p class="text-lg font-bold">${{ number_format($product['price'], 2) }}</p>
+
+                            @foreach($products1 as $product)
+                                <div wire:click="addToCart({{ $product->id }}, 'product', '{{ $product->name }}', {{ $product->getPriceByType($branch->id) }}, {{ $product->stockByBranch($branch->id) }})"
+                                     class="card card-compact bg-base-200 shadow-md cursor-pointer hover:border-primary border-2 border-transparent transition-all duration-300 hover:scale-[1.02]">
+
+                                    <!-- 1. Contenedor de Imagen de Altura Fija y Relación de Aspecto (1:1) -->
+                                    <figure class="relative aspect-square w-full overflow-hidden p-2 bg-white">
+                                        <img
+                                            src="{{ $product->getUrlImage() }}"
+                                            alt="{{ $product->name }}"
+                                            class="object-contain w-full h-full"
+                                            onerror="this.onerror=null; this.src='https://placehold.co/150x150/e5e7eb/4b5563?text=Sin+Imagen';"
+                                        />
+                                    </figure>
+
+                                    <!-- 2. Contenido alineado al fondo con Flexbox -->
+                                    <div class="card-body p-3 flex flex-col">
+
+                                        <!-- Nombre del producto, limitado a dos líneas -->
+                                        <h2 class="card-title text-sm line-clamp-2 leading-tight h-10 mb-1">
+                                            {{ $product->name }} <small>(q: {{ $product->stockByBranch($branch->id) }})</small>
+                                        </h2>
+
+                                        <!-- Precio: 'mt-auto' lo empuja hacia el fondo de la tarjeta-body -->
+                                        <p class="text-lg font-bold text-primary mt-auto">
+                                            ${{ number_format($product->getPriceByType($branch->id, $saleType), 2) }}
+                                        </p>
                                     </div>
                                 </div>
                             @endforeach
+                        </div>
+
+                        <div class="mt-2">
+                            {{ $products1->links() }}
                         </div>
                     </div>
                     <!-- Grid de Servicios -->
                     <div id="service-grid" class="@if($activeTab !== 'services') hidden @endif">
                         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                            @foreach($services as $service)
-                                <div wire:click="addToCart({{ $service['id'] }}, 'service', '{{ $service['name'] }}', {{ $service['price'] }})" class="card card-compact bg-base-200 shadow-md cursor-pointer hover:border-primary border-2 border-transparent transition-all duration-300 hover:scale-105">
+                            @foreach($services1 as $service)
+                                <div wire:click="addToCart({{ $service->id }}, 'service', '{{ $service->name }}', {{ $service->getPriceByType($branch->id, $saleType) }}, {{ \App\Models\Service::QUANTITY_DEFAULT }})"
+                                     class="card card-compact bg-base-200 shadow-md cursor-pointer hover:border-primary border-2 border-transparent transition-all duration-300 hover:scale-105">
                                     <figure class="px-10 pt-10">
-                                        @if($service['name'] === 'Servicio de Reparación')
-                                            <i class="fa-solid fa-screwdriver-wrench text-5xl text-primary"></i>
-                                        @else
-                                            <i class="fa-solid fa-gears text-5xl text-primary"></i>
-                                        @endif
+                                        <img
+                                            src="{{ $service->getUrlImage() }}"
+                                            alt="{{ $service->name }}"
+                                            class="object-contain w-full h-full"
+                                            onerror="this.onerror=null; this.src='https://placehold.co/150x150/e5e7eb/4b5563?text=Sin+Imagen';"
+                                        />
                                     </figure>
                                     <div class="card-body items-center text-center">
-                                        <h2 class="card-title text-sm">{{ $service['name'] }}</h2>
-                                        <p class="text-lg font-bold">${{ number_format($service['price'], 2) }}</p>
+                                        <h2 class="card-title text-sm">{{ $service->name }}</h2>
+                                        <p class="text-lg font-bold">${{ number_format($service->getPriceByType($branch->id, $saleType), 2) }}</p>
                                     </div>
                                 </div>
                             @endforeach
+                        </div>
+                        <div class="mt-2">
+                            {{ $services1->links() }}
                         </div>
                     </div>
                 </div>
@@ -115,9 +146,14 @@
 
             <!-- Tipo de Venta -->
             <div role="tablist" class="tabs tabs-boxed tabs-sm">
-                <a role="tab" class="tab @if($saleType === 'Normal') tab-active @endif" wire:click="$set('saleType', 'Normal')">Normal</a>
-                <a role="tab" class="tab @if($saleType === 'Especial') tab-active @endif" wire:click="$set('saleType', 'Especial')">Cliente Especial</a>
-                <a role="tab" class="tab @if($saleType === 'Mayor') tab-active @endif" wire:click="$set('saleType', 'Mayor')">Por Mayor</a>
+                <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_NORMAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_NORMAL }}')">Normal</a>
+                <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_ESPECIAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_ESPECIAL }}')">Cliente Especial</a>
+                <a role="tab"
+                   class="tab @if($saleType === \App\Models\Price::TYPE_MAYORISTA) tab-active text-indigo-700 @endif @if(!$canTypeMayor) line-through cursor-not-allowed pointer-events-none @endif"
+                   wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_MAYORISTA }}')"
+                >
+                    Por Mayor
+                </a>
             </div>
 
             <!-- Lista de Productos en Carrito -->
@@ -133,7 +169,11 @@
                                 </p>
                                 <p class="text-sm text-gray-500">${{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = ${{ number_format($item['price'] * $item['quantity'], 2) }}</p>
                             </div>
-                            <input type="number" value="{{ $item['quantity'] }}" wire:change="updateCartQuantity('{{ $key }}', $event.target.value)" class="input input-bordered input-sm w-16 text-center" />
+                            <input type="number" value="{{ $item['quantity'] }}"
+                                   wire:change="updateCartQuantity('{{ $key }}', $event.target.value)"
+                                   class="input input-bordered input-sm w-16 text-center"
+                                   min="1" max="{{ $item['limit'] }}"
+                            />
                             <button wire:click="removeFromCart('{{ $key }}')" class="btn btn-sm btn-ghost text-error"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     @empty

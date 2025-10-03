@@ -41,6 +41,9 @@ class ProductForm
                             ->required(),
                         FileUpload::make('image_path')
                             ->image()
+                            ->disk('public')
+                            ->directory('product-attachments')
+                            ->visibility('public')
                             ->required()->columnSpan(2),
                         Textarea::make('description')
                             ->required()

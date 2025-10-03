@@ -3,40 +3,21 @@
 namespace App\Livewire\Branch;
 
 use App\Models\Branch;
+use App\Models\Category;
+use App\Models\Price;
+use App\Models\Product;
+use App\Models\Service;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ManagerBranch extends Component
 {
+    use WithPagination;
     public $branch;
+    public $categories;
     public $searchResults = [];
-
-    public function mount($branchId): void
-    {
-        $this->branch = Branch::find($branchId);
-        $this->calculateTotals();
-    }
-
-    public function render()
-    {
-        // En una aplicación real, aquí filtrarías tus modelos
-        // $products = Product::where('name', 'like', '%'.$this->searchTerm.'%')->get();
-        // $services = Service::where('name', 'like', '%'.$this->searchTerm.'%')->get();
-
-        // Para este ejemplo, usamos datos de prueba
-        $products = collect([
-            ['id' => 1, 'name' => 'Gafas Sol Adidas', 'price' => 1.50, 'image' => 'https://placehold.co/200x200/F2C14E/FFFFFF?text=Producto'],
-            ['id' => 2, 'name' => 'Anteojos co-85', 'price' => 2.00, 'image' => 'https://placehold.co/200x200/4EC1F2/FFFFFF?text=Producto'],
-        ]);
-        $services = collect([
-            ['id' => 1, 'name' => 'Servicio de Reparación', 'price' => 50.00],
-            ['id' => 2, 'name' => 'Mantenimiento Preventivo', 'price' => 35.00],
-        ]);
-
-        return view('livewire.branch.manager-branch', [
-            'products' => $products,
-            'services' => $services,
-        ]);
-    }
 
     // Estado para la búsqueda y catálogos
     public $searchTerm = '';
@@ -51,7 +32,7 @@ class ManagerBranch extends Component
     public $total = 0;
 
     // Estado para las opciones de la venta
-    public $saleType = 'Normal';
+    public $saleType = Price::TYPE_NORMAL;
     public $paymentType = 'Efectivo';
 
     // Estado para la gestión de clientes
@@ -63,6 +44,48 @@ class ManagerBranch extends Component
     public $newCustomerNit = '';
     public $newCustomerEmail = '';
 
+    public $canTypeMayor = false;
+
+    public function mount($branchId): void
+    {
+        $this->branch = Branch::find($branchId);
+        $this->categories = Category::where('is_active', true)->get();
+        $this->calculateTotals();
+    }
+
+    public function render()
+    {
+        $query = Product::where("is_active", true)->where('name', 'like', '%'.$this->searchTerm.'%');
+        $queryService = Service::where("is_active", true)->where('name', 'like', '%'.$this->searchTerm.'%');
+
+        if(!empty($this->selectedCategory)){
+            $query->whereHas('categories', function ($q) {
+                // $q es un nuevo query builder, pero para el modelo Category
+                // Asumimos que $this->selectedCategory es el ID de la categoría
+                $q->where('id', $this->selectedCategory);
+            });
+            $queryService->whereHas('categories', function ($q) {
+                // $q es un nuevo query builder, pero para el modelo Category
+                // Asumimos que $this->selectedCategory es el ID de la categoría
+                $q->where('id', $this->selectedCategory);
+            });
+        }
+        $products1 = $query->orderBy('name')->paginate(5);
+        $services1 = $queryService->orderBy('name')->paginate(5);
+
+        $services = collect([
+            ['id' => 1, 'name' => 'Servicio de Reparación', 'price' => 50.00],
+            ['id' => 2, 'name' => 'Mantenimiento Preventivo', 'price' => 35.00],
+        ]);
+
+        return view('livewire.branch.manager-branch', [
+//            'products' => $products,
+            'products1' => $products1,
+            'services' => $services,
+            'services1' => $services1,
+        ]);
+    }
+
 
     // Cambia entre la pestaña de productos y servicios
     public function changeTab($tab)
@@ -71,18 +94,44 @@ class ManagerBranch extends Component
     }
 
     // Añade un ítem (producto o servicio) al carrito
-    public function addToCart($itemId, $type, $name, $price)
+    public function addToCart($itemId, $type, $name, $price, $quantity)
     {
+        if($quantity == 0){
+            Notification::make()
+                ->title('Cuidado')
+                ->body('El producto seleccionado no tiene items')
+                ->warning()
+                ->send();
+            return;
+        }
+
         $cartKey = $type . '-' . $itemId;
 
         if (isset($this->cart[$cartKey])) {
-            $this->cart[$cartKey]['quantity']++;
+            if(($this->cart[$cartKey]['quantity'] + 1) <= $quantity) {
+                $this->cart[$cartKey]['quantity']++;
+                $this->cart[$cartKey]['limit'] = $quantity;
+            } else {
+                Notification::make()
+                    ->title('Cuidado')
+                    ->body('El producto tiene solo ' . $quantity . " para ser vendidos.")
+                    ->warning()
+                    ->send();
+                return;
+            }
+
         } else {
+            $itemTemp = Product::find($itemId);
+            if(strcmp($type, 'service') == 0){
+                $itemTemp = Service::find($itemId);
+            }
+
             $this->cart[$cartKey] = [
                 'id'       => $itemId,
                 'name'     => $name,
-                'price'    => (float)$price,
+                'price'    => $itemTemp->getPriceByType($this->branch->id, $this->saleType),
                 'quantity' => 1,
+                'limit' => $quantity,
                 'type'     => $type,
             ];
         }
@@ -93,9 +142,26 @@ class ManagerBranch extends Component
     public function updateCartQuantity($cartKey, $quantity)
     {
         if (isset($this->cart[$cartKey])) {
-            $this->cart[$cartKey]['quantity'] = max(1, (int)$quantity);
+            if($quantity < $this->cart[$cartKey]['limit']){
+                $this->cart[$cartKey]['quantity'] = max(1, (int)$quantity);
+                $this->calculateTotals();
+            }
+        }
+    }
+
+    public function updatedSaleType(){
+        if(count($this->cart) > 0){
+            foreach ($this->cart as $key => $cart){
+                $itemTemp = Product::find($cart['id']);
+                if(strcmp($cart['type'], 'service') == 0){
+                    $itemTemp = Service::find($cart['id']);
+                }
+                $this->cart[$key]['price'] = $itemTemp->getPriceByType($this->branch->id, $this->saleType);
+                Log::info("Pdm price update::: " . $cart['price']);
+            }
             $this->calculateTotals();
         }
+
     }
 
     // Elimina un ítem del carrito
@@ -155,6 +221,7 @@ class ManagerBranch extends Component
             return;
         }
 
+        $this->resetPage();
         // En una aplicación real, aquí buscarías en la base de datos
         // $products = Product::where('name', 'like', '%'.$value.'%')->take(5)->get();
         // $services = Service::where('name', 'like', '%'.$value.'%')->take(5)->get();
