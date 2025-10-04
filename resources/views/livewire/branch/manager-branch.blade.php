@@ -139,17 +139,21 @@
         {{-- Se eliminó h-full para que la altura se ajuste al contenido --}}
         <div class="lg:col-span-1 flex flex-col bg-base-100 rounded-box shadow-lg p-4 gap-4">
             <!-- Sección Cliente -->
-            <div class="join w-full">
-                <input wire:model="customerSearch" class="input input-bordered join-item w-full focus:outline-none" placeholder="Buscar cliente..."/>
-                <button class="btn join-item btn-accent" onclick="document.getElementById('modal_cliente').showModal()"><i class="fa-solid fa-user-plus"></i></button>
-            </div>
+            <livewire:customer.search-customer />
 
+{{--            <h1 class="text-2xl {{ $customer? "text-indigo-700" : "text-red-700" }}">--}}
+            <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
+                {{ $customer? $customer->name . "(NIT: " . $customer->nit . ")" : "Sin Cliente seleccionado" }}
+            </h1>
             <!-- Tipo de Venta -->
             <div role="tablist" class="tabs tabs-boxed tabs-sm">
                 <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_NORMAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_NORMAL }}')">Normal</a>
                 <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_ESPECIAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_ESPECIAL }}')">Cliente Especial</a>
                 <a role="tab"
-                   class="tab @if($saleType === \App\Models\Price::TYPE_MAYORISTA) tab-active text-indigo-700 @endif @if(!$canTypeMayor) line-through cursor-not-allowed pointer-events-none @endif"
+                   class="
+                    tab
+                    @if($saleType === \App\Models\Price::TYPE_MAYORISTA) tab-active text-indigo-700 @endif
+                    @if(!$canTypeMayor) line-through cursor-not-allowed pointer-events-none @endif"
                    wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_MAYORISTA }}')"
                 >
                     Por Mayor
@@ -180,6 +184,45 @@
                         <p class="text-center text-gray-500">El carrito está vacío.</p>
                     @endforelse
                 </div>
+            </div>
+
+            <div class="card bg-base-100 shadow-md rounded-xl border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-tags text-pink-500"></i> Promociones
+                    </h3>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox"
+                               class="toggle toggle-accent"
+                               wire:model.live="promoActive" />
+                    </label>
+                </div>
+
+                {{-- Mostrar opciones solo si está activa la promo --}}
+                @if($promoActive)
+                    <div class="mt-3 space-y-2">
+                        <select wire:model.live="selectedPromo" class="select select-bordered w-full focus-within:outline-none">
+                            <option value="">Seleccionar promoción</option>
+                            {{--                            @foreach($availablePromos as $promo)--}}
+                            {{--                                <option value="{{ $promo->id }}">--}}
+                            {{--                                    {{ $promo->name }} - {{ $promo->discount }}%--}}
+                            {{--                                </option>--}}
+                            {{--                            @endforeach--}}
+                        </select>
+
+                        {{-- Mostrar detalle de la promo aplicada --}}
+                        @if($selectedPromo)
+                            <div class="bg-pink-50 border border-pink-200 text-pink-600 rounded-lg p-3 text-sm">
+                                🎉 Promo aplicada:
+                                {{--                                <span class="font-semibold">{{ $promoName }}</span>--}}
+                                {{--                                (-{{ $promoDiscount }}%)--}}
+
+                                <span class="font-semibold">Ptes ts</span>
+                                (-25%)
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             <!-- Sección de Totales y Descuento -->
@@ -220,38 +263,5 @@
         </div>
     </div>
 
-    <!-- Modal para Registrar Cliente -->
-    <dialog id="modal_cliente" class="modal">
-        <div class="modal-box">
-            <h3 class="font-bold text-lg">Registrar Nuevo Cliente</h3>
-            <form wire:submit.prevent="saveCustomer">
-                <div class="py-4 space-y-4">
-                    <input type="text" placeholder="Nombre completo" wire:model="newCustomerName" class="input input-bordered w-full" />
-                    @error('newCustomerName') <span class="text-error text-sm">{{ $message }}</span> @enderror
-
-                    <input type="text" placeholder="NIT / Cédula" wire:model="newCustomerNit" class="input input-bordered w-full" />
-                    @error('newCustomerNit') <span class="text-error text-sm">{{ $message }}</span> @enderror
-
-                    <input type="email" placeholder="Email (opcional)" wire:model="newCustomerEmail" class="input input-bordered w-full" />
-                    @error('newCustomerEmail') <span class="text-error text-sm">{{ $message }}</span> @enderror
-                </div>
-                <div class="modal-action">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                    <button type="button" class="btn" onclick="document.getElementById('modal_cliente').close()">Cerrar</button>
-                </div>
-            </form>
-        </div>
-    </dialog>
-
-    @push('scripts')
-        <script>
-            document.addEventListener('livewire:load', function () {
-                // Escucha el evento del backend para cerrar el modal
-                Livewire.on('close-customer-modal', () => {
-                    document.getElementById('modal_cliente').close();
-                });
-            });
-        </script>
-    @endpush
 </div>
 

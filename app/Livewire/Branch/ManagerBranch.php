@@ -4,11 +4,13 @@ namespace App\Livewire\Branch;
 
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\Price;
 use App\Models\Product;
 use App\Models\Service;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -35,16 +37,13 @@ class ManagerBranch extends Component
     public $saleType = Price::TYPE_NORMAL;
     public $paymentType = 'Efectivo';
 
-    // Estado para la gestión de clientes
-    public $customerSearch = '';
-    public $selectedCustomer = null;
-
-    // Propiedades para el modal de nuevo cliente
-    public $newCustomerName = '';
-    public $newCustomerNit = '';
-    public $newCustomerEmail = '';
+    // Customer select
+    public $customer;
 
     public $canTypeMayor = false;
+
+    public $promoActive = true;
+    public $selectedPromo = true;
 
     public function mount($branchId): void
     {
@@ -265,5 +264,19 @@ class ManagerBranch extends Component
         // Limpiar la búsqueda después de seleccionar
         $this->searchTerm = '';
         $this->searchResults = [];
+    }
+
+    #[On('customer-updated')]
+    public function updateCustomer($id)
+    {
+        $this->customer = Customer::find($id);
+
+        if(strcmp($this->customer->type, Customer::TYPE_MAYORISTA) == 0){
+//            $this->saleType = Customer::TYPE_MAYORISTA;
+            $this->canTypeMayor = true;
+        } else {
+            $this->saleType = Customer::TYPE_NORMAL;
+            $this->canTypeMayor = false;
+        }
     }
 }
