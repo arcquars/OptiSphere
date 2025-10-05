@@ -25,11 +25,6 @@ class SearchCustomer extends Component
             return;
         }
 
-//        $this->resetPage();
-        // En una aplicación real, aquí buscarías en la base de datos
-        // $products = Product::where('name', 'like', '%'.$value.'%')->take(5)->get();
-        // $services = Service::where('name', 'like', '%'.$value.'%')->take(5)->get();
-
         $this->searchResults = Customer::where(function ($query) use ($value) {
             // Todas las condiciones dentro de esta función se agruparán entre paréntesis en el SQL final
             $query->where('name', 'like', '%' . $value . '%')

@@ -32,6 +32,7 @@ class ManagerBranch extends Component
     public $subtotal = 0;
     public $discountAmount = 0;
     public $total = 0;
+    public $partial_payment = 0;
 
     // Estado para las opciones de la venta
     public $saleType = Price::TYPE_NORMAL;
@@ -173,6 +174,10 @@ class ManagerBranch extends Component
     // Escucha los cambios en discountPercentage y recalcula
     public function updatedDiscountPercentage()
     {
+        $this->calculateTotals();
+    }
+
+    public function applyDiscount(){
         $this->calculateTotals();
     }
 

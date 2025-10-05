@@ -32,7 +32,7 @@ class CustomerForm
                     ->required(),
                 Select::make('type')
                     ->label('Tipo')
-                    ->options(['normal' => 'Normal', 'especial' => 'Especial', 'mayorista' => 'Mayorista'])
+                    ->options(config('cerisier.tipo_cliente'))
                     ->default('normal')
                     ->required(),
             ]);

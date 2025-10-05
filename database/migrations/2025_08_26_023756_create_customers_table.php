@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('email', 250)->nullable();
             $table->string('phone', 80)->nullable();
 
-            $table->string('contact_info', 255);
+            $table->string('contact_info', 255)->nullable();
             $table->boolean('can_buy_on_credit')->default(false);
             $table->enum('type', ['normal', 'especial', 'mayorista'])->default('normal');
 

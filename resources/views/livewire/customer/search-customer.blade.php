@@ -23,7 +23,8 @@
         />
         <button
             class="btn join-item btn-accent"
-            onclick="document.getElementById('modal_cliente').showModal()"
+{{--            onclick="document.getElementById('modal_cliente').showModal()"--}}
+            x-on:click="$dispatch('customer-create-open')"
         >
             <i class="fa-solid fa-user-plus"></i>
         </button>
