@@ -24,6 +24,17 @@ class Service extends Model
         return $this->morphToMany(Category::class, 'categorizable');
     }
 
+    /**
+     * Obtiene las promociones aplicables a este servicio (Relación Polimórfica de Muchos a Muchos).
+     */
+    public function promotions(): MorphToMany
+    {
+        return $this->morphToMany(Promotion::class, 'promotionable')
+            ->where('is_active', true) // Solo promociones activas
+            ->where('start_date', '<=', now()) // Que ya hayan iniciado
+            ->where('end_date', '>=', now()); // Que aún no hayan terminado
+    }
+
     public function getPriceByType($branchId = null, $priceType = "normal"): float
     {
         $price = $this->prices()->where('branch_id', $branchId)->where('type', '=', $priceType)->first();
