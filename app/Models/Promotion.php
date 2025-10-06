@@ -21,8 +21,8 @@ class Promotion extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'discount_percentage' => 'float',
     ];
 
@@ -41,5 +41,21 @@ class Promotion extends Model
     {
         return $this->morphedByMany(Service::class, 'promotionable');
     }
+
+    /**
+     * Relación polimórfica genérica para obtener todos los ítems
+     * (productos y/o servicios) a los que aplica esta promoción.
+     * La clave 'promotionable' corresponde a las columnas promotionable_id y promotionable_type
+     * en la tabla pivote 'promotionables'.
+     *
+     * @return MorphToMany
+     */
+    public function promotionables(): MorphToMany
+    {
+        // En este caso, solo mapeamos a Product, pero Laravel maneja automáticamente
+        // los diferentes tipos (Service, Product) gracias al Trait que definimos.
+        return $this->morphToMany(Product::class, 'promotionable');
+    }
+
 
 }

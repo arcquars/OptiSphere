@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Contracts\SalableInterface;
+use App\Traits\HasPricesAndPromotions;
 use App\Traits\HasPricesByBranch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,8 +13,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Facades\Log;
 
-class Product extends Model
+class Product  extends Model implements SalableInterface
 {
+    use HasPricesAndPromotions;
     use HasPricesByBranch;
     /**
      * @var list<string>

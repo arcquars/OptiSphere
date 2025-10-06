@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Contracts\SalableInterface;
+use App\Traits\HasPricesAndPromotions;
 use App\Traits\HasPricesByBranch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
-class Service extends Model
+class Service extends Model implements SalableInterface
 {
     const QUANTITY_DEFAULT = 50;
+
+    use HasPricesAndPromotions;
     use HasPricesByBranch;
 
     protected $fillable = ['name', 'code', 'description', 'path_image','is_active'];

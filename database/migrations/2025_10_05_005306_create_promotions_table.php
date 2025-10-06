@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('name', 100);
             $table->text('description')->nullable();
             // Fechas de validez de la promoción
-            $table->dateTime('start_date');
-            $table->dateTime('end_date');
+            $table->date('start_date');
+            $table->date('end_date');
             // Porcentaje de descuento (ej: 15.00)
             $table->decimal('discount_percentage', 5, 2)->default(0);
             $table->boolean('is_active')->default(true);
