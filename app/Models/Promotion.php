@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -57,5 +59,21 @@ class Promotion extends Model
         return $this->morphToMany(Product::class, 'promotionable');
     }
 
+    public function scopeActive(Builder $query): Builder
+    {
+        $now = Carbon::now();
 
+        return $query->where('is_active', true)->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now);
+    }
+
+    // Si tu promoción también tiene un campo `is_active` booleano:
+    public function scopeIsAvailable(Builder $query): Builder
+    {
+        $now = Carbon::now();
+
+        return $query->where('is_active', true) // Solo si el administrador la activó manualmente
+        ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now);
+    }
 }

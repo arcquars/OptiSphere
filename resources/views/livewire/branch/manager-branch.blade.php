@@ -142,141 +142,164 @@
             <livewire:customer.search-customer />
             <livewire:customer.create-customer />
 
-{{--            <h1 class="text-2xl {{ $customer? "text-indigo-700" : "text-red-700" }}">--}}
-            <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
-                {{ $customer? $customer->name . "(NIT: " . $customer->nit . ")" : "Sin Cliente seleccionado" }}
-            </h1>
-            <!-- Tipo de Venta -->
-            <div role="tablist" class="tabs tabs-boxed tabs-sm">
-                <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_NORMAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_NORMAL }}')">Normal</a>
-                <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_ESPECIAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_ESPECIAL }}')">Cliente Especial</a>
-                <a role="tab"
-                   class="
-                    tab
-                    @if($saleType === \App\Models\Price::TYPE_MAYORISTA) tab-active text-indigo-700 @endif
-                    @if(!$canTypeMayor) line-through cursor-not-allowed pointer-events-none @endif"
-                   wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_MAYORISTA }}')"
-                >
-                    Por Mayor
-                </a>
-            </div>
-
-            <!-- Lista de Productos en Carrito -->
-            <div id="cart-items" class="flex-grow overflow-y-auto border-t border-b border-base-200 py-2 min-h-[200px]">
-                <div class="space-y-2">
-                    @forelse($cart as $key => $item)
-                        <div class="flex items-center gap-2 p-2 rounded-lg bg-base-200">
-                            <div class="flex-grow">
-                                <p class="font-bold">{{ $item['name'] }}
-                                    @if($item['type'] === 'service')
-                                        <span class="badge badge-info badge-xs ml-2">Servicio</span>
-                                    @endif
-                                </p>
-                                <p class="text-sm text-gray-500">${{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = ${{ number_format($item['price'] * $item['quantity'], 2) }}</p>
-                            </div>
-                            <input type="number" value="{{ $item['quantity'] }}"
-                                   wire:change="updateCartQuantity('{{ $key }}', $event.target.value)"
-                                   class="input input-bordered input-sm w-16 text-center"
-                                   min="1" max="{{ $item['limit'] }}"
-                            />
-                            <button wire:click="removeFromCart('{{ $key }}')" class="btn btn-sm btn-ghost text-error"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                    @empty
-                        <p class="text-center text-gray-500">El carrito está vacío.</p>
-                    @endforelse
-                </div>
-            </div>
-
-            <div class="card bg-base-100 shadow-md rounded-xl border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <i class="fa-solid fa-tags text-pink-500"></i> Promociones
-                    </h3>
-                    <label class="flex items-center cursor-pointer">
-                        <input type="checkbox"
-                               class="toggle toggle-accent"
-                               wire:model.live="promoActive" />
-                    </label>
+            <form wire:submit.prevent="completePayment">
+                <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
+                    {{ $customer? $customer->name . "(NIT: " . $customer->nit . ")" : "Sin Cliente seleccionado" }}
+                </h1>
+                <!-- Tipo de Venta -->
+                <div role="tablist" class="tabs tabs-boxed tabs-sm">
+                    <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_NORMAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_NORMAL }}')">Normal</a>
+                    <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_ESPECIAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_ESPECIAL }}')">Cliente Especial</a>
+                    <a role="tab"
+                       class="
+                        tab
+                        @if($saleType === \App\Models\Price::TYPE_MAYORISTA) tab-active text-indigo-700 @endif
+                        @if(!$canTypeMayor) line-through cursor-not-allowed pointer-events-none @endif"
+                       wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_MAYORISTA }}')"
+                    >
+                        Por Mayor
+                    </a>
                 </div>
 
-                {{-- Mostrar opciones solo si está activa la promo --}}
-                @if($promoActive)
-                    <div class="mt-3 space-y-2">
-                        <select wire:model.live="selectedPromo" class="select select-bordered w-full focus-within:outline-none">
-                            <option value="">Seleccionar promoción</option>
-                            {{--                            @foreach($availablePromos as $promo)--}}
-                            {{--                                <option value="{{ $promo->id }}">--}}
-                            {{--                                    {{ $promo->name }} - {{ $promo->discount }}%--}}
-                            {{--                                </option>--}}
-                            {{--                            @endforeach--}}
-                        </select>
+                <!-- Lista de Productos en Carrito -->
+                <div id="cart-items" class="flex-grow overflow-y-auto border-t border-b border-base-200 py-2 min-h-[200px]">
+                    <div class="space-y-2">
+                        @forelse($cart as $key => $item)
+                            <div class="flex items-center gap-2 p-2 rounded-lg bg-base-200">
+                                <div class="flex-grow">
+                                    <p class="font-bold">{{ $item['name'] }} {{ $item['quantity'] }}
+                                        @if($item['type'] === 'service')
+                                            <span class="badge badge-info badge-xs ml-2">Servicio</span>
+                                        @endif
+                                        @if($item['promotion'])
+                                        <span class="badge badge-info badge-xs ml-2">
+                                            {{ ($item['promotion'])? "-" .$item['promotion'] . "%" : "" }}
+                                        </span>
+                                        @endif
+                                    </p>
+                                    <p class="text-sm text-gray-500">
+                                        @if($item['promotion'] == null)
+                                        ${{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = ${{ number_format($item['price'] * $item['quantity'], 2) }}
+                                        @else
+                                            $({{ number_format($item['price'], 2) }} - {{ number_format(($item['price'] *  ($item['promotion']/100)), 2) }}) x {{ $item['quantity'] }} = ${{ number_format(($item['price'] - $item['price'] *  ($item['promotion']/100) )* $item['quantity'], 2) }}
+                                        @endif
+                                    </p>
+                                </div>
+                                <input type="number" value="{{ $item['quantity'] }}"
+                                       wire:change="updateCartQuantity('{{ $key }}', $event.target.value)"
+                                       class="input input-bordered input-sm w-16 text-center"
+                                       min="1" max="{{ $item['limit'] }}"
+                                />
 
-                        {{-- Mostrar detalle de la promo aplicada --}}
-                        @if($selectedPromo)
-                            <div class="bg-pink-50 border border-pink-200 text-pink-600 rounded-lg p-3 text-sm">
-                                🎉 Promo aplicada:
-                                {{--                                <span class="font-semibold">{{ $promoName }}</span>--}}
-                                {{--                                (-{{ $promoDiscount }}%)--}}
+    {{--                            <input type="test" value="{{ $item['quantity'] }}"--}}
+    {{--                                   wire:change="updateCartQuantity('{{ $key }}', $event.target.value)"--}}
+    {{--                                   class="input input-bordered input-sm w-16 text-center"--}}
+    {{--                                   min="1" max="{{ $item['limit'] }}"--}}
+    {{--                            />--}}
 
-                                <span class="font-semibold">Ptes ts</span>
-                                (-25%)
+                                <button wire:click="removeFromCart('{{ $key }}')" class="btn btn-sm btn-ghost text-error"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
-                        @endif
+                        @empty
+                            <p class="text-center text-gray-500">El carrito está vacío.</p>
+                        @endforelse
                     </div>
-                @endif
-            </div>
-
-            <!-- Sección de Totales y Descuento -->
-            <div>
-                <div class="join w-full mb-2">
-                    <input type="number" placeholder="Descuento %" wire:model.lazy="discountPercentage" class="input input-bordered join-item w-full focus:outline-none"/>
-                    <button wire:click="applyDiscount" class="btn join-item btn-secondary">Aplicar</button>
                 </div>
-                <div class="space-y-1 text-md">
-                    <div class="flex justify-between"><span>Subtotal:</span> <span>${{ number_format($subtotal, 2) }}</span></div>
-                    <div class="flex justify-between"><span>Descuento ({{ $discountPercentage }}%):</span> <span class="text-error">-${{ number_format($discountAmount, 2) }}</span></div>
-                    <div class="flex justify-between font-bold text-xl"><span>TOTAL:</span> <span>${{ number_format($total, 2) }}</span></div>
-                    @if ($paymentType === 'credito' &&
-                        isset($customer) && strcmp($customer->type, \App\Models\Customer::TYPE_MAYORISTA) == 0
-                        )
-                        <div class="mt-4">
-                            <label class="font-semibold">Pago parcial:</label>
-                            <input type="number" wire:model="partial_payment" min="0" max="{{ $total }}" class="input input-bordered w-full mt-2 focus:outline-none">
-                            <p class="text-sm text-gray-500 mt-1">
-                                Restante a crédito: <strong>${{ $total - $partial_payment }}</strong>
-                            </p>
+
+                <div class="card bg-base-100 shadow-md rounded-xl border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fa-solid fa-tags text-pink-500"></i> Promociones
+                        </h3>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox"
+                                   class="toggle toggle-accent"
+                                   wire:model.live="promoActive" />
+                        </label>
+                    </div>
+
+                    {{-- Mostrar opciones solo si está activa la promo --}}
+                    @if($promoActive)
+                        <div class="mt-3 space-y-2">
+                            <select wire:model.live="selectedPromo" class="select select-bordered w-full focus-within:outline-none">
+                                <option value="">Seleccionar promoción</option>
+                            @foreach($promotionActives as $promo)
+                                <option value="{{ $promo->id }}">
+                                    {{ $promo->name }} - {{ $promo->discount_percentage }}%
+                                </option>
+                            @endforeach
+                            </select>
+
+                            {{-- Mostrar detalle de la promo aplicada --}}
+                            @if($selectedPromo)
+                                <div class="bg-pink-50 border border-pink-200 text-pink-600 rounded-lg p-3 text-sm">
+                                    🎉 Promo aplicada:
+                                    <span class="font-semibold">{{ $promotion->name }}</span>
+                                    (-{{ $promotion->discount_percentage }}%)
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
-            </div>
 
-            <!-- Tipo de Pago -->
-            <div role="tablist" class="tabs tabs-bordered tabs-sm">
-                <a role="tab" class="tab @if($paymentType === 'Efectivo') tab-active @endif" wire:click="$set('paymentType', 'Efectivo')">
-                    <i class="fa-solid fa-money-bill-wave mr-2"></i>Efectivo
-                </a>
-                <a role="tab" class="tab @if($paymentType === 'Transferencia') tab-active @endif" wire:click="$set('paymentType', 'Transferencia')">
-                    <i class="fa-solid fa-credit-card mr-2"></i>Transferencia
-                </a>
-                <a role="tab" class="tab @if($paymentType === 'QR') tab-active @endif" wire:click="$set('paymentType', 'QR')">
-                    <i class="fa-solid fa-qrcode mr-2"></i>Pago QR
-                </a>
-                @if(isset($customer) && strcmp($customer->type, \App\Models\Customer::TYPE_MAYORISTA) == 0)
-                <a role="tab" class="tab @if($paymentType === 'credito') tab-active @endif" wire:click="$set('paymentType', 'credito')">
-                    <i class="fa-solid fa-qrcode mr-2"></i>Credito
-                </a>
+                <!-- Sección de Totales y Descuento -->
+                <div class="mt-1">
+                    <div class="join w-full mb-2">
+                        <input type="number" placeholder="Descuento %" wire:model.lazy="discountPercentage" class="input input-bordered join-item w-full focus:outline-none"/>
+                        <button wire:click="applyDiscount" class="btn join-item btn-secondary">Aplicar Desc %</button>
+                    </div>
+                    <div class="space-y-1 text-md">
+                        <div class="flex justify-between"><span>Subtotal:</span> <span>${{ number_format($subtotal, 2) }}</span></div>
+                        <div class="flex justify-between"><span>Descuento ({{ $discountPercentage }}%):</span> <span class="text-error">-${{ number_format($discountAmount, 2) }}</span></div>
+                        <div class="flex justify-between font-bold text-xl"><span>TOTAL:</span> <span>${{ number_format($total, 2) }}</span></div>
+                        @if ($paymentType === 'credito' &&
+                            isset($customer) && strcmp($customer->type, \App\Models\Customer::TYPE_MAYORISTA) == 0
+                            )
+                            <div class="mt-4">
+                                <label class="font-semibold">Pago parcial:</label>
+                                <input type="number" wire:model="partial_payment" min="0" max="{{ $total }}" class="input input-bordered w-full mt-2 focus:outline-none">
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Restante a crédito: <strong>${{ $total - $partial_payment }}</strong>
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Tipo de Pago -->
+                <div role="tablist" class="tabs tabs-bordered tabs-sm">
+                    <a role="tab" class="tab @if($paymentType === 'Efectivo') tab-active @endif" wire:click="$set('paymentType', 'Efectivo')">
+                        <i class="fa-solid fa-money-bill-wave mr-2"></i>Efectivo
+                    </a>
+                    <a role="tab" class="tab @if($paymentType === 'Transferencia') tab-active @endif" wire:click="$set('paymentType', 'Transferencia')">
+                        <i class="fa-solid fa-credit-card mr-2"></i>Transferencia
+                    </a>
+                    <a role="tab" class="tab @if($paymentType === 'QR') tab-active @endif" wire:click="$set('paymentType', 'QR')">
+                        <i class="fa-solid fa-qrcode mr-2"></i>Pago QR
+                    </a>
+                    @if(isset($customer) && strcmp($customer->type, \App\Models\Customer::TYPE_MAYORISTA) == 0)
+                    <a role="tab" class="tab @if($paymentType === 'credito') tab-active @endif" wire:click="$set('paymentType', 'credito')">
+                        <i class="fa-solid fa-file-half-dashed mr-2"></i>Credito
+{{--                        <i class="fa-solid fa-qrcode mr-2"></i>Credito--}}
+                    </a>
+                    @endif
+                </div>
+
+                @if($message_error)
+                <div>
+                    <p class="text-base text-danger-500">{{ $message_error }}</p>
+                </div>
                 @endif
-            </div>
 
-            <!-- Botones de Acción -->
-            <div class="grid grid-cols-2 gap-2">
-                <button wire:click="completePayment" class="btn btn-success btn-block">
-                    <i class="fa-solid fa-check"></i>Completar Pago
-                </button>
-                <button class="btn btn-info btn-block">
-                    <i class="fa-solid fa-print"></i>Generar Factura
-                </button>
-            </div>
+                <!-- Botones de Acción -->
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="submit" class="btn btn-success btn-block">
+                        <i class="fa-solid fa-check"></i>Completar Pago
+                    </button>
+                    <button class="btn btn-info btn-block">
+                        <i class="fa-solid fa-print"></i>Generar Factura
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 

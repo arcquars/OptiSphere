@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Price;
 use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\Service;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
@@ -44,12 +45,19 @@ class ManagerBranch extends Component
     public $canTypeMayor = false;
 
     public $promoActive = true;
-    public $selectedPromo = true;
+    public $selectedPromo = false;
+    public $promotionActives = [];
+    public $promotion = null;
+    public $message_error = null;
 
     public function mount($branchId): void
     {
         $this->branch = Branch::find($branchId);
         $this->categories = Category::where('is_active', true)->get();
+
+        $this->promotionActives = Promotion::active()->get();
+        $this->promoActive = (count($this->promotionActives) > 0)? true : false;
+
         $this->calculateTotals();
     }
 
@@ -109,8 +117,9 @@ class ManagerBranch extends Component
 
         if (isset($this->cart[$cartKey])) {
             if(($this->cart[$cartKey]['quantity'] + 1) <= $quantity) {
-                $this->cart[$cartKey]['quantity']++;
+                $this->cart[$cartKey]['quantity'] = (is_numeric($this->cart[$cartKey]['quantity']))? $this->cart[$cartKey]['quantity']+1 : 1;
                 $this->cart[$cartKey]['limit'] = $quantity;
+                $this->cart[$cartKey]['promotion'] = null;
             } else {
                 Notification::make()
                     ->title('Cuidado')
@@ -125,12 +134,12 @@ class ManagerBranch extends Component
             if(strcmp($type, 'service') == 0){
                 $itemTemp = Service::find($itemId);
             }
-
             $this->cart[$cartKey] = [
                 'id'       => $itemId,
                 'name'     => $name,
                 'price'    => $itemTemp->getPriceByType($this->branch->id, $this->saleType),
                 'quantity' => 1,
+                'promotion' => null,
                 'limit' => $quantity,
                 'type'     => $type,
             ];
@@ -142,6 +151,12 @@ class ManagerBranch extends Component
     public function updateCartQuantity($cartKey, $quantity)
     {
         if (isset($this->cart[$cartKey])) {
+            if($quantity <= 0){
+                $this->cart[$cartKey]['quantity'] = 1;
+                $this->calculateTotals();
+            }
+
+//            dd($this->cart[$cartKey]['quantity']);
             if($quantity < $this->cart[$cartKey]['limit']){
                 $this->cart[$cartKey]['quantity'] = max(1, (int)$quantity);
                 $this->calculateTotals();
@@ -164,6 +179,15 @@ class ManagerBranch extends Component
 
     }
 
+    public function updatedSelectedPromo(){
+        if($this->selectedPromo){
+            $this->promotion = Promotion::find($this->selectedPromo);
+        } else {
+            $this->promotion = null;
+        }
+        $this->calculateTotals();
+    }
+
     // Elimina un ítem del carrito
     public function removeFromCart($cartKey)
     {
@@ -184,12 +208,39 @@ class ManagerBranch extends Component
     // Calcula todos los totales del carrito
     public function calculateTotals()
     {
+        $this->promoItems();
         $this->subtotal = collect($this->cart)->sum(function ($item) {
+            if($item['promotion']){
+                return ($item['price'] - ($item['price'] * $item['promotion']/100)) * $item['quantity'];
+            }
             return $item['price'] * $item['quantity'];
         });
 
         $this->discountAmount = ($this->subtotal * (float)$this->discountPercentage) / 100;
+        if(($this->subtotal - $this->discountAmount) < 0){
+            $this->discountAmount = 0;
+            $this->discountPercentage =0;
+        }
         $this->total = $this->subtotal - $this->discountAmount;
+    }
+
+    public function promoItems(){
+        foreach ($this->cart as $key => $cart){
+            $itemTemp = Product::find($this->cart[$key]['id']);
+            if(strcmp($this->cart[$key]['type'], 'service') == 0){
+                $itemTemp = Service::find($this->cart[$key]['id']);
+            }
+
+            $itemPromotion = null;
+            if($this->promotion){
+                $pPromotion = $itemTemp->getPromotionById($this->promotion->id);
+                if($pPromotion != null){
+                    $itemPromotion = $pPromotion->discount_percentage;
+                }
+            }
+            $this->cart[$key]['promotion'] = $itemPromotion;
+        }
+
     }
 
     // Guarda un nuevo cliente desde el modal
@@ -212,8 +263,30 @@ class ManagerBranch extends Component
     // Lógica para finalizar la venta
     public function completePayment()
     {
+        $this->message_error = "";
+        if(count($this->cart) == 0){
+            $this->message_error = 'Debe seleccionar productos / servicios a vender';
+            return;
+        }
+        if($this->total < 0){
+            $this->message_error = 'El Total de venta no puede ser un numero negativo';
+            return;
+        }
+        if(!isset($this->customer)){
+            $this->message_error = 'Debe elegir un cliente para la venta';
+            return;
+        }
+
+
+
+
+
         // Lógica para crear la orden, registrar el pago, etc.
-        session()->flash('message', '¡Venta completada exitosamente!');
+        Notification::make()
+            ->title('Exito')
+            ->body('La venta se registro ')
+            ->success()
+            ->send();
         $this->cart = [];
         $this->calculateTotals();
     }
