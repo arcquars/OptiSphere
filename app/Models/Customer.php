@@ -20,6 +20,7 @@ class Customer extends Model
         'phone',
         'contact_info',
         'can_buy_on_credit',
+        'credit_limit',
         'type'
     ];
 }

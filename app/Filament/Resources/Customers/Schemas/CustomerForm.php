@@ -25,16 +25,18 @@ class CustomerForm
                     ->label('Teléfono')
                     ->tel(),
                 TextInput::make('contact_info')
-                    ->label('Información de contacto')
-                    ->required(),
-                Toggle::make('can_buy_on_credit')
-                    ->label('Credito')
-                    ->required(),
+                    ->label('Información de contacto'),
                 Select::make('type')
                     ->label('Tipo')
                     ->options(config('cerisier.tipo_cliente'))
                     ->default('normal')
                     ->required(),
+                Toggle::make('can_buy_on_credit')
+                    ->label('Credito'),
+                TextInput::make('credit_limit')
+                    ->label('Limite de credito')
+                    ->numeric(),
+
             ]);
     }
 }
