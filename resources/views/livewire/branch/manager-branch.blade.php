@@ -251,9 +251,7 @@
                         <div class="flex justify-between"><span>Subtotal:</span> <span>${{ number_format($subtotal, 2) }}</span></div>
                         <div class="flex justify-between"><span>Descuento ({{ $discountPercentage }}%):</span> <span class="text-error">-${{ number_format($discountAmount, 2) }}</span></div>
                         <div class="flex justify-between font-bold text-xl"><span>TOTAL:</span> <span>${{ number_format($total, 2) }}</span></div>
-                        @if ($paymentType === 'credito' &&
-                            isset($customer) && strcmp($customer->type, \App\Models\Customer::TYPE_MAYORISTA) == 0
-                            )
+                        @if ($isSaleCredit)
                             <div class="mt-4">
                                 <label class="font-semibold">Pago parcial:</label>
                                 <input type="number" wire:model="partial_payment" min="0" max="{{ $total }}" class="input input-bordered w-full mt-2 focus:outline-none">
@@ -276,11 +274,14 @@
                     <a role="tab" class="tab @if($paymentType === 'QR') tab-active @endif" wire:click="$set('paymentType', 'QR')">
                         <i class="fa-solid fa-qrcode mr-2"></i>Pago QR
                     </a>
-                    @if(isset($customer) && strcmp($customer->type, \App\Models\Customer::TYPE_MAYORISTA) == 0)
-                    <a role="tab" class="tab @if($paymentType === 'credito') tab-active @endif" wire:click="$set('paymentType', 'credito')">
-                        <i class="fa-solid fa-file-half-dashed mr-2"></i>Credito
-{{--                        <i class="fa-solid fa-qrcode mr-2"></i>Credito--}}
-                    </a>
+                    @if(isset($customer) && $customer->can_buy_on_credit)
+{{--                    <a role="tab" class="tab @if($paymentType === 'credito') tab-active @endif" wire:click="$set('paymentType', 'credito')">--}}
+{{--                        <i class="fa-solid fa-file-half-dashed mr-2"></i>Credito--}}
+{{--                    </a>--}}
+                        <label class="label text-primary ml-2">
+                            <input type="checkbox" wire:model.live="isSaleCredit" class="checkbox checkbox-primary" />
+                            Credito
+                        </label>
                     @endif
                 </div>
 

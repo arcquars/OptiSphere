@@ -8,12 +8,15 @@ use App\Models\Customer;
 use App\Models\Price;
 use App\Models\Product;
 use App\Models\Promotion;
+use App\Models\Sale;
 use App\Models\Service;
+use App\Services\SaleService;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+use function PHPUnit\Framework\isNull;
 
 class ManagerBranch extends Component
 {
@@ -43,6 +46,7 @@ class ManagerBranch extends Component
     public $customer;
 
     public $canTypeMayor = false;
+    public $isSaleCredit = false;
 
     public $promoActive = true;
     public $selectedPromo = false;
@@ -261,7 +265,7 @@ class ManagerBranch extends Component
     }
 
     // Lógica para finalizar la venta
-    public function completePayment()
+    public function completePayment(SaleService $saleService)
     {
         $this->message_error = "";
         if(count($this->cart) == 0){
@@ -278,6 +282,58 @@ class ManagerBranch extends Component
         }
 
 
+        $userId = auth()->id();
+        $total = $this->total;
+        // 1. Preparar los datos del DETALLE de la venta (SaleItem)
+        $itemsData = [];
+        foreach ($this->cart as $item) {
+            // Se transforma la estructura del carrito a la estructura de la tabla SaleItem
+            $itemsData[] = [
+                'salable_id' => $item['id'],
+                'salable_type' => $item['type'],
+                'quantity' => $item['quantity'],
+                'base_price' => $item['price'],
+                'promotion_id' => (isset($item['promotion']))? $this->promotion->id : null,
+                'promotion_discount_rate' => (isset($item['promotion']))? $this->promotion->discount_percentage : 0,
+                'final_price_per_unit' => (isset($item['promotion']))? $item['price'] - ($item['price'] * ($this->promotion->discount_percentage/100)) : $item['price'],
+                'subtotal' => (isset($item['promotion']))? ($item['price'] - ($item['price'] * ($this->promotion->discount_percentage/100))) * $item['quantity'] : $item['price'] * $item['quantity'],
+            ];
+        }
+
+        // 2. Preparar los datos del ENCABEZADO de la venta
+        $saleData = [
+            'customer_id' => $this->customer->id,
+            'branch_id' => $this->branch->id,
+            'user_id' => $userId,
+            'total_amount' => $this->subtotal,
+            'final_discount' => $this->discountPercentage,
+            'final_total' => $this->subtotal - ($this->subtotal * ($this->discountPercentage/100)),
+            'status' => ($this->isSaleCredit)? Sale::SALE_STATUS_PARTIAL_PAYMENT : Sale::SALE_STATUS_PAID,
+            'payment_method' => $this->paymentType,
+            'sale_type' => $this->saleType,
+            'paid_amount' => ($this->isSaleCredit)? $this->partial_payment : null,
+            'due_amount' => ($this->isSaleCredit)? $this->total - $this->partial_payment : null,
+            'items' => $itemsData,
+        ];
+
+        try {
+
+            // 3. LLAMADA CRÍTICA AL SERVICIO
+            // El servicio se encarga de: Iniciar DB::transaction, crear Sale, crear SaleItems,
+            // y por cada Product llamar al InventoryService para el descuento.
+            $sale = $saleService->createSale(
+                $saleData
+            );
+
+            // Éxito:
+            session()->flash('success', "¡Venta N° {$sale->id} registrada con éxito! Stock descontado.");
+            $this->reset(['cart', 'customer', 'selectedPromo', 'discountPercentage', 'saleType', 'paymentType']);
+            // Puedes emitir un evento para imprimir la factura aquí
+
+        } catch (\Exception $e) {
+            // Fracaso: El servicio hizo Rollback.
+            session()->flash('error', "Error al procesar la venta: " . $e->getMessage());
+        }
 
 
 
@@ -289,34 +345,6 @@ class ManagerBranch extends Component
             ->send();
         $this->cart = [];
         $this->calculateTotals();
-    }
-
-    public function updatedSearchTerm($value)
-    {
-        if (strlen($value) < 2) {
-            $this->searchResults = [];
-            return;
-        }
-
-        $this->resetPage();
-        // En una aplicación real, aquí buscarías en la base de datos
-        // $products = Product::where('name', 'like', '%'.$value.'%')->take(5)->get();
-        // $services = Service::where('name', 'like', '%'.$value.'%')->take(5)->get();
-
-        // Para este ejemplo, filtramos las colecciones de prueba
-        $allProducts = collect([
-            ['id' => 1, 'name' => 'Gafas Sol Adidas', 'price' => 1.50, 'image' => 'https://placehold.co/200x200/F2C14E/FFFFFF?text=Producto', 'type' => 'product'],
-            ['id' => 2, 'name' => 'Anteojos co-85', 'price' => 2.00, 'image' => 'https://placehold.co/200x200/4EC1F2/FFFFFF?text=Producto', 'type' => 'product'],
-        ]);
-        $allServices = collect([
-            ['id' => 1, 'name' => 'Servicio de Reparación', 'price' => 50.00, 'type' => 'service'],
-            ['id' => 2, 'name' => 'Mantenimiento Preventivo', 'price' => 35.00, 'type' => 'service'],
-        ]);
-
-        $filteredProducts = $allProducts->filter(fn($p) => str_contains(strtolower($p['name']), strtolower($value)));
-        $filteredServices = $allServices->filter(fn($s) => str_contains(strtolower($s['name']), strtolower($value)));
-
-        $this->searchResults = $filteredProducts->merge($filteredServices)->take(5)->all();
     }
 
     public function selectAndAddToCart($itemId, $type)
@@ -356,5 +384,9 @@ class ManagerBranch extends Component
             $this->saleType = Customer::TYPE_NORMAL;
             $this->canTypeMayor = false;
         }
+        // Verificar si el cliente puede comparar al credito
+        $this->partial_payment = 0;
+        $this->isSaleCredit = false;
+
     }
 }

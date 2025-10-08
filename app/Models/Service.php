@@ -54,4 +54,11 @@ class Service extends Model implements SalableInterface
 
         return asset('/img/cerisier-no-image.png');
     }
+
+    public function getPromotionById(int $promotionId): ?Promotion
+    {
+        return $this->promotions()
+            ->where('promotions.id', $promotionId) // Filtrar por el ID de la tabla 'promotions'
+            ->first();
+    }
 }
