@@ -37,16 +37,20 @@ class SaleService
      */
     public function createSale(array $data): Sale
     {
+        Log::info("Registro de update ProductStock:::: a1 ");
         // 1. Validar y preparar los datos de la venta (items)
         $processedItems = $this->processAndValidateItems($data['items'], $data['branch_id'], $data['customer_id']);
 
+        Log::info("Registro de update ProductStock:::: a12 ");
         // 2. Calcular totales
         $totals = $this->calculateTotals($processedItems);
 
+        Log::info("Registro de update ProductStock:::: a13 ");
         // 3. Determinar el estado y tipo de la venta
         $isCredit = $data['status'] === Sale::SALE_STATUS_PARTIAL_PAYMENT;
 
         if ($isCredit) {
+            Log::info("Registro de update ProductStock:::: a14 ");
             // Redirigir la lógica a createCreditSale si es a crédito
             return $this->createCreditSale($data, $processedItems, $totals);
         }
@@ -55,7 +59,7 @@ class SaleService
         $status = Sale::SALE_STATUS_PAID;
         $paidAmount = $totals['total_amount'];
         $dueAmount = 0.00;
-
+        Log::info("Registro de update ProductStock:::: a16 ");
         // 4. Ejecutar la transacción de la venta
         return DB::transaction(function () use ($data, $processedItems, $totals, $status, $paidAmount, $dueAmount) {
 
@@ -74,13 +78,15 @@ class SaleService
                 'due_amount' => $dueAmount,
                 'notes' => $data['notes'] ?? null,
             ]);
+            Log::info("Registro de update ProductStock:::: p12 ");
 
             // b) Adjuntar ítems de la venta (Pivot table sale_item)
             $this->attachSaleItems($sale, $processedItems);
 
+            Log::info("Registro de update ProductStock:::: p13 ");
             // c) Gestión de inventario (solo para productos)
             $this->deductInventory($data['branch_id'], $processedItems, $sale->id, $data['user_id']);
-
+            Log::info("Registro de update ProductStock:::: p14 ");
             // d) Registrar el pago único si es al contado
             SalePayment::create([
                 'sale_id' => $sale->id,
@@ -174,11 +180,14 @@ class SaleService
      */
     protected function processAndValidateItems(array $items, int $branchId, int $customerId): array
     {
+        Log::info("Registro de update ProductStock:::: b1 ");
         $processedItems = [];
         $customer = Customer::find($customerId);
+        Log::info("Registro de update ProductStock:::: b2 ");
         $priceType = $customer ? $customer->type : Price::TYPE_NORMAL;
 
         foreach ($items as $item) {
+            Log::info("Registro de update ProductStock:::: b3 ");
             $model = $item['salable_type'] === 'product'
                 ? Product::find($item['salable_id'])
                 : \App\Models\Service::find($item['salable_id']);
@@ -192,6 +201,7 @@ class SaleService
                 throw new InvalidArgumentException("La cantidad para {$model->name} debe ser positiva.");
             }
 
+            Log::info("Registro de update ProductStock:::: b4 ");
             // 1. Validar Stock (solo para productos)
             if ($item['salable_type'] === 'product') {
                 $stock = ProductStock::where('product_id', $model->id)
@@ -203,20 +213,22 @@ class SaleService
                     throw new InvalidArgumentException("Stock insuficiente para {$model->name}. Disponible: {$availableQuantity}.");
                 }
             }
-
+            Log::info("Registro de update ProductStock:::: b5 ");
             // 2. Obtener Precio y calcular subtotal/descuento
             $basePrice = $model->getPriceByType($branchId, $priceType);
             $pricePerUnit = $item['base_price'] ?? $basePrice; // Permite anular el precio si se envía
-
+            Log::info("Registro de update ProductStock:::: b55 ");
             if ($pricePerUnit <= 0) {
+                Log::info("Registro de update ProductStock:::: b551 ");
                 throw new InvalidArgumentException("Precio no encontrado o inválido para {$model->name}.");
             }
 
+            Log::info("Registro de update ProductStock:::: b56 ");
             $promotion_id = $item['promotion_id'] ?? null;
             $promotion_discount_rate = $item['promotion_discount_rate'];
             $final_price_per_unit = $item['final_price_per_unit'];
             $subtotal = $item['subtotal'];
-
+            Log::info("Registro de update ProductStock:::: b57 ");
             $processedItems[] = [
                 'model' => $model,
                 'type' => $item['salable_type'],
@@ -229,7 +241,7 @@ class SaleService
                 'final_price_per_unit' => $final_price_per_unit,
             ];
         }
-
+        Log::info("Registro de update ProductStock:::: b6 ");
         return $processedItems;
     }
 
@@ -301,6 +313,7 @@ class SaleService
      */
     protected function deductInventory(int $branchId, array $processedItems, int $saleId, int $userId): void
     {
+        Log::info("Registro de update ProductStock:::: p1 ");
         foreach ($processedItems as $item) {
             if ($item['type'] !== 'product') {
                 continue;
@@ -325,6 +338,7 @@ class SaleService
 
             $productStock->update(['quantity' => $newQuantity]);
 
+            Log::info("Registro de update ProductStock:::: " . $productStock->id);
             // 2. Registrar el movimiento de inventario por la venta
             InventoryMovement::create([
                 'product_id' => $product->id,

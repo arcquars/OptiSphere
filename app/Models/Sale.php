@@ -116,4 +116,11 @@ class Sale extends Model
         );
     }
 
+    protected function usePromotion(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->items()->whereNotNull('promotion_id')->exists(),
+        )->shouldCache();
+    }
+
 }

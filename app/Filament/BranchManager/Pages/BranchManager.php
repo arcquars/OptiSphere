@@ -10,7 +10,7 @@ class BranchManager extends Page
 {
     protected string $view = 'filament.branch-manager.pages.branch-manager';
 
-    protected static ?string $title = 'Sucursal..';
+    protected static ?string $title = 'Sucursal';
 
     protected static bool $shouldRegisterNavigation = false;
 

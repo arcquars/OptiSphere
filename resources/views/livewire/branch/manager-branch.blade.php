@@ -265,14 +265,14 @@
 
                 <!-- Tipo de Pago -->
                 <div role="tablist" class="tabs tabs-bordered tabs-sm">
-                    <a role="tab" class="tab @if($paymentType === 'Efectivo') tab-active @endif" wire:click="$set('paymentType', 'Efectivo')">
-                        <i class="fa-solid fa-money-bill-wave mr-2"></i>Efectivo
+                    <a role="tab" class="tab @if($paymentType === \App\Models\SalePayment::METHOD_CASH) tab-active @endif" wire:click="$set('paymentType', '{{ \App\Models\SalePayment::METHOD_CASH }}')">
+                        <i class="fa-solid fa-money-bill-wave mr-2"></i>{{ \App\Models\SalePayment::METHOD_CASH }}
                     </a>
-                    <a role="tab" class="tab @if($paymentType === 'Transferencia') tab-active @endif" wire:click="$set('paymentType', 'Transferencia')">
-                        <i class="fa-solid fa-credit-card mr-2"></i>Transferencia
+                    <a role="tab" class="tab @if($paymentType === \App\Models\SalePayment::METHOD_TRANSFER) tab-active @endif" wire:click="$set('paymentType', '{{ \App\Models\SalePayment::METHOD_TRANSFER }}')">
+                        <i class="fa-solid fa-credit-card mr-2"></i>{{ \App\Models\SalePayment::METHOD_TRANSFER }}
                     </a>
-                    <a role="tab" class="tab @if($paymentType === 'QR') tab-active @endif" wire:click="$set('paymentType', 'QR')">
-                        <i class="fa-solid fa-qrcode mr-2"></i>Pago QR
+                    <a role="tab" class="tab @if($paymentType === \App\Models\SalePayment::METHOD_QR) tab-active @endif" wire:click="$set('paymentType', '{{ \App\Models\SalePayment::METHOD_QR }}')">
+                        <i class="fa-solid fa-qrcode mr-2"></i>Pago {{ \App\Models\SalePayment::METHOD_QR }}
                     </a>
                     @if(isset($customer) && $customer->can_buy_on_credit)
 {{--                    <a role="tab" class="tab @if($paymentType === 'credito') tab-active @endif" wire:click="$set('paymentType', 'credito')">--}}

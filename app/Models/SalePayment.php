@@ -10,6 +10,7 @@ class SalePayment extends Model
     // Usamos estas constantes para registrar el tipo de método de pago
     const METHOD_CASH = 'EFECTIVO';
     const METHOD_CARD = 'TARJETA';
+    const METHOD_QR = 'QR';
     const METHOD_TRANSFER = 'TRANSFERENCIA';
     const METHOD_OTHER = 'OTRO';
 

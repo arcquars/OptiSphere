@@ -9,6 +9,7 @@ use App\Models\Price;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Sale;
+use App\Models\SalePayment;
 use App\Models\Service;
 use App\Services\SaleService;
 use Filament\Notifications\Notification;
@@ -40,7 +41,7 @@ class ManagerBranch extends Component
 
     // Estado para las opciones de la venta
     public $saleType = Price::TYPE_NORMAL;
-    public $paymentType = 'Efectivo';
+    public $paymentType = SalePayment::METHOD_CASH;
 
     // Customer select
     public $customer;
@@ -326,25 +327,29 @@ class ManagerBranch extends Component
             );
 
             // Éxito:
-            session()->flash('success', "¡Venta N° {$sale->id} registrada con éxito! Stock descontado.");
+            Notification::make()
+                ->title('Exito')
+                ->body("¡Venta N° {$sale->id} registrada con éxito! Stock descontado.")
+                ->success()
+                ->send();
             $this->reset(['cart', 'customer', 'selectedPromo', 'discountPercentage', 'saleType', 'paymentType']);
             // Puedes emitir un evento para imprimir la factura aquí
+            $this->cart = [];
+            $this->calculateTotals();
 
         } catch (\Exception $e) {
             // Fracaso: El servicio hizo Rollback.
-            session()->flash('error', "Error al procesar la venta: " . $e->getMessage());
+            Notification::make()
+                ->title('Error')
+                ->body("Error al procesar la venta: " . $e->getMessage())
+                ->danger()
+                ->send();
         }
 
 
 
-        // Lógica para crear la orden, registrar el pago, etc.
-        Notification::make()
-            ->title('Exito')
-            ->body('La venta se registro ')
-            ->success()
-            ->send();
-        $this->cart = [];
-        $this->calculateTotals();
+
+
     }
 
     public function selectAndAddToCart($itemId, $type)

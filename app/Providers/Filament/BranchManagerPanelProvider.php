@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\BranchManager\Pages\BranchManager;
+use App\Filament\BranchManager\Pages\SalesReport;
 use App\Filament\BranchManager\Widgets\StatsOverviewWidget;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\Branch;
@@ -48,7 +49,8 @@ class BranchManagerPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/BranchManager/Pages'), for: 'App\Filament\BranchManager\Pages')
             ->pages([
                 Dashboard::class,
-                BranchManager::class
+                BranchManager::class,
+                SalesReport::class
             ])
             ->discoverWidgets(in: app_path('Filament/BranchManager/Widgets'), for: 'App\Filament\BranchManager\Widgets')
             ->widgets([
@@ -94,7 +96,12 @@ class BranchManagerPanelProvider extends PanelProvider
                         ->isActiveWhen(fn (): bool => original_request()->routeIs('filament.admin.pages.dashboard'))
                         ->url(fn (): string => Dashboard::getUrl()),
                     ...$this::getNavigationItems(),
-//                    ...Settings::getNavigationItems(),
+                    NavigationItem::make('SalesReport')
+                        ->label('Reporte de ventas')
+//                        ->icon('heroicon-o-home')
+                        ->icon('fas-table-list')
+                        ->isActiveWhen(fn (): bool => original_request()->routeIs('filament.branch-manager.pages.sales-report'))
+                        ->url(fn (): string => SalesReport::getUrl()),
                 ]);
             });
 //            ->navigationItems([

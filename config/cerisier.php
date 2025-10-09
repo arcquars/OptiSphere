@@ -13,5 +13,7 @@ return [
         5 => 'OD - OTRO DOCUMENTO DE IDENTIDAD'
     ],
 //    'tipo_cliente' => ['normal' => 'Normal', 'especial' => 'Especial', 'mayorista' => 'Mayorista']
-    'tipo_cliente' => ['normal' => 'Normal', 'mayorista' => 'Mayorista']
+    'tipo_cliente' => ['normal' => 'Normal', 'mayorista' => 'Mayorista'],
+    'currency_symbol' => "BOB",
+    'pagination' => 5
 ];
