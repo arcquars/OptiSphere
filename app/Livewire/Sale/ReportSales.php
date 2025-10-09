@@ -33,7 +33,7 @@ class ReportSales extends Component
 
         if(auth()->user()->hasRole('admin')){
             $this->branches = Branch::where('is_active', true)->get();
-        } elseif (auth()->user()->hasRole('branch_manager')) {
+        } elseif (auth()->user()->hasRole('branch-manager')) {
             $this->branches = User::find(Auth::id())->branches;
         }
     }

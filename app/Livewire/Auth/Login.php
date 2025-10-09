@@ -45,7 +45,6 @@ class Login extends Component
         Session::regenerate();
 
 //        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-        Log::info("Pdm 33:: " . Auth::user()->hasRole('admin'));
         if (auth()->check()) {
             $user = auth()->user();
 
@@ -56,12 +55,12 @@ class Login extends Component
                     default: route('filament.accountant.pages.dashboard', absolute: false),
                     navigate: true
                 );
-            } elseif ($user->hasRole('branch_manager')) {
+            } elseif ($user->hasRole('branch-manager')) {
                 $this->redirectIntended(
                     default: route('filament.branch-manager.pages.dashboard', absolute: false),
                     navigate: true
                 );
-            } elseif ($user->hasRole('branch_coordinator')) {
+            } elseif ($user->hasRole('branch-coordinator')) {
                 $this->redirectIntended(
                     default: route('filament.branch-coordinator.pages.dashboard', absolute: false),
                     navigate: true

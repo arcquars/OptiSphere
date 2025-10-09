@@ -4,15 +4,46 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use Illuminate\Support\Facades\Route;
+use \Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 Route::get('/', function () {
-//    return view('welcome');
-    return redirect('login');
+//    return redirect('login');
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+
+    $user = Auth::user();
+
+    // Con Spatie: obtenemos el primer rol del usuario
+    // (ajusta si quieres priorizar otro orden)
+    $role = method_exists($user, 'getRoleNames')
+        ? optional($user->getRoleNames())->first()
+        : null;
+
+    if (!$role) {
+        // Sin rol => decide a dónde enviar (login o algún panel por defecto)
+        return redirect()->route('login');
+    }
+
+    // Normaliza a ID de panel (coincide con el rol)
+    $panelId = str_replace(' ', '_', strtolower($role));
+
+    // Busca el panel por ID y redirige a su path
+    $panel = Filament::getPanel($panelId);
+
+    if ($panel) {
+        // getPath() ya te da el prefijo correcto del panel (p.ej. "admin", "accountant", etc.)
+        return redirect('/' . ltrim($panel->getPath(), '/'));
+    }
+
+    // Fallback si el panel no existe con ese ID
+    return redirect()->route('login');
 })->name('home');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+//Route::view('dashboard', 'dashboard')
+//    ->middleware(['auth', 'verified'])
+//    ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');

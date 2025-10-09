@@ -1,4 +1,4 @@
-<div class="container mx-auto">
+<div x-data class="container mx-auto">
     <!-- Contenedor Principal del Reporte -->
     <div class="bg-base-100 p-6 rounded-box shadow-lg">
 
@@ -146,7 +146,7 @@
                             <div class="dropdown dropdown-bottom dropdown-end">
                                 <div tabindex="0" role="button" class="btn m-1">Acciones <i class="fa-solid fa-sort-down"></i></div>
                                 <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-                                    <li><a class="text-primary"><i class="fa-solid fa-print"></i> Ver</a></li>
+                                    <li><a @click="$dispatch('toggleViewSale', {saleId: '{{$sale->id}}'}); return false;" class="text-primary"><i class="fa-solid fa-print"></i> Ver</a></li>
                                     <li><a class="text-primary"><i class="fa-solid fa-print"></i> Imprimir</a></li>
                                     <li><a class="text-danger-500"><i class="fa-solid fa-trash-can"></i> Eliminar</a></li>
                                 </ul>

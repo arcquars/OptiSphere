@@ -120,7 +120,7 @@ class BranchManagerPanelProvider extends PanelProvider
         $branches = collect();
         if(auth()->user()->hasRole('admin')){
             $branches = Branch::where('is_active', true)->get();
-        } elseif (auth()->user()->hasRole('branch_manager')) {
+        } elseif (auth()->user()->hasRole('branch-manager')) {
             $branches = User::find(Auth::id())->branches;
         }
 
