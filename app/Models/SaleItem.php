@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class SaleItem extends Model
 {
@@ -31,6 +32,8 @@ class SaleItem extends Model
         'subtotal' => 'float',
     ];
 
+    protected $appends = ['is_service', 'type_label'];
+
     /**
      * Relación con el encabezado de la venta.
      */
@@ -45,6 +48,16 @@ class SaleItem extends Model
     public function salable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    protected function isService(): Attribute
+    {
+        return Attribute::get(fn () => $this->salable instanceof Service);
+    }
+
+    protected function typeLabel(): Attribute
+    {
+        return Attribute::get(fn () => $this->is_service ? 'Servicio' : 'Producto');
     }
 
     /**

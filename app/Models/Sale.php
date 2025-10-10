@@ -28,13 +28,16 @@ class Sale extends Model
         'sale_type',
         'paid_amount', // Monto almacenado
         'due_amount',  // Saldo almacenado (aunque se puede recalcular con el accessor)
-        'notes'
+        'notes',
+        'date_sale'
     ];
 
     protected $casts = [
         'total_amount' => 'float',
         'final_discount' => 'float',
         'final_total' => 'float',
+        'date_sale' => 'date'
+
     ];
 
     /**
@@ -123,4 +126,17 @@ class Sale extends Model
         )->shouldCache();
     }
 
+    protected function amountProducts(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->items()->where('salable_type', Product::class)->count(),
+        )->shouldCache();
+    }
+
+    protected function amountServices(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->items()->where('salable_type', Service::class)->count(),
+        )->shouldCache();
+    }
 }

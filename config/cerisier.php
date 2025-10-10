@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'company_name' => 'Cerisier S.R.L.',
     'sphere_step' => 0.25,
     'cylinder_step' => 0.25,
     'sphere_range' => [0, 6],

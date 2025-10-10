@@ -6,6 +6,7 @@ use App\Livewire\Settings\Profile;
 use Illuminate\Support\Facades\Route;
 use \Illuminate\Support\Facades\Auth;
 use Filament\Facades\Filament;
+use \App\Http\Controllers\SalePdfController;
 
 Route::get('/', function () {
 //    return redirect('login');
@@ -51,6 +52,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
+
+    Route::get('/sales/{sale}/receipt-pdf', [SalePdfController::class, 'receipt'])->name('sales.receipt_pdf');
+    Route::get('/sales/{sale}/invoice-pdf', [SalePdfController::class, 'invoice'])->name('sales.invoice_pdf');
 });
 
 require __DIR__.'/auth.php';
