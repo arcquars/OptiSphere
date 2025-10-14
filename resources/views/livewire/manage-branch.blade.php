@@ -187,7 +187,7 @@
             <fieldset class="fieldset">
                 <label class="label label-azteris">Almacen</label>
                 <div class="join">
-                    <select class="select select-sm" x-model="warehouseId">
+                    <select class="select select-sm focus-within:outline-none" x-model="warehouseId">
                         <option value="" selected>Almacen...</option>
                         @foreach($warehouses as $warehouse)
                         <option value="warehouse-{{ $warehouse->id }}">Almacen - {{ $warehouse->name }}</option>
@@ -196,7 +196,7 @@
                             <option value="branch-{{ $branch->id }}">Sucursal - {{ $branch->name }}</option>
                         @endforeach
                     </select>
-                    <input type="number" x-model="amount" min="1" class="input input-sm" />
+                    <input type="number" x-model="amount" min="1" class="input input-sm focus-within:outline-none" />
                     <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
                     <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
                     <button class="btn btn-primary btn-sm join-item"

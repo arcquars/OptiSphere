@@ -25,6 +25,29 @@
                         <p class="text-sm">{{ ($product)? $product->code : 'x' }}</p>
                     </div>
                 </div>
+                    <hr class="my-2">
+                    <p class="text-xs font-semibold">Precio Almacen:</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <p class="text-xs text-neutral-400 mb-1">Normal:
+                                <span class="text-base text-stone-950 pl-2">{{ ($product)? $product->getPriceByType(null, \App\Models\Price::TYPE_NORMAL) : '0' }}</span>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-neutral-400 mb-1">Especial:
+                                <span class="text-base text-stone-950 pl-2">
+                                    {{ ($product)? $product->getPriceByType(null, \App\Models\Price::TYPE_ESPECIAL) : '0' }}
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-neutral-400 mb-1">Mayorista:
+                                <span class="text-base text-stone-950 pl-2">
+                                    {{ ($product)? $product->getPriceByType(null, \App\Models\Price::TYPE_MAYORISTA) : '0' }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
                 <hr class="border-amber-600 my-3">
                 <div class="grid grid-cols-3 gap-4">
                     <fieldset class="fieldset">

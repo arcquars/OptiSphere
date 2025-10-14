@@ -20,6 +20,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use \App\Models\Warehouse;
@@ -77,7 +78,7 @@ class ManageBranch extends Component implements HasSchemas
 
                     if(strcmp($this->action, "saldo") == 0 || strcmp($this->action, "devolucion") == 0) {
                         $row[] = [
-                            'id' => $op->id,
+                            'id' => $op->product_id,
                             'type' => $op->type,
                             'sphere' => $op->sphere,
                             'cylinder' => $op->cylinder,
@@ -254,72 +255,114 @@ class ManageBranch extends Component implements HasSchemas
     }
 
     public function saveRefundBranch($celdas, $branchId){
-        DB::transaction(function () use ($celdas, $branchId) {
+        try {
+            DB::beginTransaction(); // Inicia la transacción
+
             foreach ($celdas as $data) {
-                // 'id' es el ID de la tabla 'product_stocks'.
+                // Validación de datos y tipado
                 $stockId = $data['id'];
-                // 'amount' es la nueva cantidad que viene del input.
                 $amount = (int) $data['amount'];
 
-                // Buscar registro de stock en sucursal que devuelve
-                $attrProd = [
+                // 1. GESTIÓN DEL STOCK EN SUCURSAL DE ORIGEN (QUIEN DEVUELVE)
+                // -----------------------------------------------------------------
+                $attrProdOrigen = [
                     'product_id' => $stockId,
-                    'branch_id' => $this->branchId, // Ejemplo: asume que es el almacén 1
+                    'branch_id' => $this->branchId,
                 ];
-                $productStock = ProductStock::firstOrCreate($attrProd, [
-                    'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
-                ]);;
 
-                $oldQuantity = $productStock->quantity;
-                $newQuantity = $oldQuantity - $amount;
 
-                $productStock->increment('quantity', ($amount*(-1)));
+                $productStockOrigen = ProductStock::firstOrCreate($attrProdOrigen, ['quantity' => 0]);
 
-                if ($amount != 0) {
+                $oldQuantityOrigen = $productStockOrigen->quantity;
+                $newQuantityOrigen = $oldQuantityOrigen - $amount;
+
+                // Bloquear el registro para asegurar atomicidad (opcional, pero recomendado)
+                // $productStockOrigen->lockForUpdate();
+
+                if ($newQuantityOrigen < 0) {
+                    // Si la cantidad resultante es negativa, lanzar una excepción y forzar ROLLBACK
+                    throw new \Exception("Stock insuficiente para el producto ID {$stockId} en sucursal {$this->branchId}.");
+                }
+
+                // Usar la funcionalidad de incremento para una operación atómica
+                $productStockOrigen->decrement('quantity', $amount);
+
+                if ($amount > 0) { // Registrar movimiento solo si la cantidad devuelta es > 0
                     InventoryMovement::create([
                         'product_id' => $stockId,
                         'from_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
-                        'from_location_id' => $this->branchId,
+                        'from_location_id' => $this->branchId, // Sucursal de Origen (Devuelve)
                         'to_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
-                        'to_location_id' => $branchId,
-                        'old_quantity' => $oldQuantity,
-                        'new_quantity' => $newQuantity,
-                        'difference' => $amount,
+                        'to_location_id' => $branchId, // Sucursal de Destino (Recibe)
+                        'old_quantity' => $oldQuantityOrigen,
+                        'new_quantity' => $newQuantityOrigen,
+                        'difference' => $amount * -1, // La diferencia es negativa para el stock de origen
                         'type' => WarehouseStockHistory::MOVEMENT_TYPE_REFUND,
                         'user_id' => Auth::id(),
                     ]);
                 }
+                // -----------------------------------------------------------------
 
-                // Buscar registro de stock en sucursal quien RECIBE
-                $attrProd = [
+
+                // 2. GESTIÓN DEL STOCK EN SUCURSAL DE DESTINO (QUIEN RECIBE)
+                // -----------------------------------------------------------------
+                $attrProdDestino = [
                     'product_id' => $stockId,
                     'branch_id' => $branchId,
                 ];
-                $productStock = ProductStock::firstOrCreate($attrProd, [
-                    'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
-                ]);;
+                $productStockDestino = ProductStock::firstOrCreate($attrProdDestino, ['quantity' => 0]);
 
-                $oldQuantity = $productStock->quantity;
-                $newQuantity = $oldQuantity + $amount;
+                $oldQuantityDestino = $productStockDestino->quantity;
+                $newQuantityDestino = $oldQuantityDestino + $amount;
 
-                $productStock->increment('quantity', $amount);
+                // $productStockDestino->lockForUpdate(); // Bloquear también el destino
 
-                if ($amount != 0) {
+                $productStockDestino->increment('quantity', $amount);
+
+                if ($amount > 0) { // Registrar movimiento solo si la cantidad devuelta es > 0
                     InventoryMovement::create([
                         'product_id' => $stockId,
                         'from_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
-                        'from_location_id' => $branchId,
+                        'from_location_id' => $branchId, // Sucursal de Destino (Recibe)
                         'to_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
-                        'to_location_id' => $this->branchId,
-                        'old_quantity' => $oldQuantity,
-                        'new_quantity' => $newQuantity,
-                        'difference' => $amount,
-                        'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        'to_location_id' => $this->branchId, // Sucursal de Origen (Devuelve)
+                        'old_quantity' => $oldQuantityDestino,
+                        'new_quantity' => $newQuantityDestino,
+                        'difference' => $amount, // La diferencia es positiva para el stock de destino
+                        'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY, // O un tipo de movimiento apropiado
                         'user_id' => Auth::id(),
                     ]);
                 }
-            }
-        });
+            } // Fin del foreach
+
+            DB::commit(); // Confirma la transacción (COMMIT)
+            Notification::make()
+                ->title('Éxito')
+                ->body('Se actualizo el inventario')
+                ->success()
+                ->send();
+            return true; // Éxito
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // Deshace la transacción (ROLLBACK) si ocurre alguna excepción
+
+            Notification::make()
+                ->title('Error')
+                ->body('Se produjo un error: ' . $e->getMessage())
+                ->danger()
+                ->send();
+            // Registrar el error para seguimiento
+            Log::error('Error al guardar devolución entre sucursales: ' . $e->getMessage(), [
+                'exception' => $e,
+                'celdas' => $celdas,
+                'branchId' => $branchId,
+                'user_id' => Auth::id(),
+            ]);
+
+            // Si necesitas el mensaje de error para mostrar al usuario, puedes retornarlo
+            // throw new \Exception($e->getMessage());
+            return false; // Fallo
+        }
     }
 
     public function render()
