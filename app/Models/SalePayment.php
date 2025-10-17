@@ -18,6 +18,7 @@ class SalePayment extends Model
         'sale_id',          // Clave foránea a la venta
         'user_id',          // Usuario que registró el pago
         'branch_id',          // Sucursal
+        'deleted',
         'amount',           // Monto del abono o pago
         'payment_method',   // Método de pago (ej: EFECTIVO, TARJETA)
         'notes',            // Notas adicionales sobre el pago

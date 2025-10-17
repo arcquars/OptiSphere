@@ -10,6 +10,7 @@ use App\Models\InventoryMovement;
 use App\Models\Price;
 use App\Models\SalePayment;
 use App\Models\Service;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
@@ -43,7 +44,7 @@ class SaleService
 
         Log::info("Registro de update ProductStock:::: a12 ");
         // 2. Calcular totales
-        $totals = $this->calculateTotals($processedItems);
+        $totals = $this->calculateTotals($data['total_amount'], $data['final_discount']);
 
         Log::info("Registro de update ProductStock:::: a13 ");
         // 3. Determinar el estado y tipo de la venta
@@ -227,7 +228,6 @@ class SaleService
             $promotion_id = $item['promotion_id'] ?? null;
             $promotion_discount_rate = $item['promotion_discount_rate'];
             $final_price_per_unit = $item['final_price_per_unit'];
-            $subtotal = $item['subtotal'];
             Log::info("Registro de update ProductStock:::: b57 ");
             $processedItems[] = [
                 'model' => $model,
@@ -235,10 +235,11 @@ class SaleService
                 'id' => $model->id,
                 'quantity' => $quantity,
                 'price_per_unit' => $pricePerUnit,
-                'subtotal' => $subtotal,
+                'subtotal' => $item['subtotal'],
                 'promotion_id' => $promotion_id,
                 'promotion_discount_rate' => $promotion_discount_rate,
                 'final_price_per_unit' => $final_price_per_unit,
+                'services' => $item['services']
             ];
         }
         Log::info("Registro de update ProductStock:::: b6 ");
@@ -248,13 +249,16 @@ class SaleService
     /**
      * Calcula los totales de la venta.
      *
-     * @param array $items Ítems procesados.
+     * @param float $subtotalAmount
+     * @param float $finalDiscount
      * @return array
      */
-    protected function calculateTotals(array $items): array
+    protected function calculateTotals(float $subtotalAmount, float $finalDiscount): array
     {
-        $subtotalAmount = array_sum(array_column($items, 'subtotal'));
-        $totalDiscount = array_sum(array_column($items, 'discount'));
+        $totalDiscount = 0;
+        if($finalDiscount > 0){
+            $totalDiscount = $subtotalAmount * ($totalDiscount/100);
+        }
         $totalAmount = $subtotalAmount - $totalDiscount;
 
         return [
@@ -274,32 +278,53 @@ class SaleService
     protected function attachSaleItems(Sale $sale, array $processedItems): void
     {
         $saleItems = [];
-//        'model' => $model,
-//                'type' => $item['salable_type'],
-//                'id' => $model->id,
-//                'quantity' => $quantity,
-//                'price_per_unit' => $pricePerUnit,
-//                'subtotal' => $subtotal,
-//                'promotion_id' => $promotion_id,
-//                'promotion_discount_rate' => $promotion_discount_rate,
-//                'final_price_per_unit' => $final_price_per_unit,
-        foreach ($processedItems as $item) {
-            $saleItems[] = [
+        foreach ($processedItems as $processeditem) {
+//            $saleItems[] = [
+//                // Estas son las columnas de la tabla 'sale_items' (excepto 'sale_id')
+//                'salable_id' => $item['id'], // El ID del Producto o Servicio
+//                'salable_type' => $item['type'] === 'product' ? Product::class : Service::class,
+//                'quantity' => $item['quantity'],
+//                'base_price' => $item['price_per_unit'],
+//                // Asegúrate de incluir todos los campos obligatorios/fillable de SaleItem
+//                'promotion_id' => $item['promotion_id'] ?? null,
+//                'promotion_discount_rate' => $item['promotion_discount_rate'] ?? 0.0,
+//                'final_price_per_unit' => $item['final_price_per_unit'],
+//                'subtotal' => $item['subtotal'],
+//                'created_at' => now(), // Agrega timestamps si no son automáticos
+//                'updated_at' => now(),
+//            ];
+            $item = $sale->items()->create([
                 // Estas son las columnas de la tabla 'sale_items' (excepto 'sale_id')
-                'salable_id' => $item['id'], // El ID del Producto o Servicio
-                'salable_type' => $item['type'] === 'product' ? Product::class : Service::class,
-                'quantity' => $item['quantity'],
-                'base_price' => $item['price_per_unit'],
+                'salable_id' => $processeditem['id'], // El ID del Producto o Servicio
+                'salable_type' => $processeditem['type'] === 'product' ? Product::class : Service::class,
+                'quantity' => $processeditem['quantity'],
+                'base_price' => $processeditem['price_per_unit'],
                 // Asegúrate de incluir todos los campos obligatorios/fillable de SaleItem
-                'promotion_id' => $item['promotion_id'] ?? null,
-                'promotion_discount_rate' => $item['promotion_discount_rate'] ?? 0.0,
-                'final_price_per_unit' => $item['final_price_per_unit'],
-                'subtotal' => $item['subtotal'],
+                'promotion_id' => $processeditem['promotion_id'] ?? null,
+                'promotion_discount_rate' => $processeditem['promotion_discount_rate'] ?? 0.0,
+                'final_price_per_unit' => $processeditem['final_price_per_unit'],
+                'subtotal' => $processeditem['subtotal'],
                 'created_at' => now(), // Agrega timestamps si no son automáticos
                 'updated_at' => now(),
-            ];
+            ]);
+
+            if(isset($processeditem['services']) && count($processeditem['services']) > 0){
+                $saleItemServices = [];
+                foreach ($processeditem['services'] as $itemService) {
+                    $saleItemServices[] = [
+                        'service_id' => $itemService['service_id'],
+                        'quantity' => $itemService['quantity'],
+                        'price_per_unit' => $itemService['price_per_unit'],
+//                        'promotion_id' => ($itemService['promotion_discount_rate'] == 0)? null : $itemService['promotion_id'],
+                        'promotion_id' => $itemService['promotion_id'],
+                        'promotion_discount_rate' => $itemService['promotion_discount_rate']?? 0,
+                        'subtotal' => $itemService['subtotal']
+                    ];
+                }
+                $item->attachedServices()->createMany($saleItemServices);
+            }
         }
-        $sale->items()->createMany($saleItems); // Asume que la relación items usa la tabla pivot sale_item
+//        $sale->items()->createMany($saleItems);
     }
 
     /**
@@ -354,5 +379,121 @@ class SaleService
                 'user_id' => $userId,
             ]);
         }
+    }
+
+    /**
+     * Anula una venta y revierte stock/creditos/pagos.
+     *
+     * @throws \DomainException si ya está anulada o no es anulable.
+     */
+    public function voidSale(int $saleId, int $userId, ?string $reason = null): Sale
+    {
+        return DB::transaction(function () use ($saleId, $userId, $reason) {
+            /** @var \App\Models\Sale $sale */
+            $sale = Sale::with(['items'])->lockForUpdate()->findOrFail($saleId);
+
+            if ($sale->isVoided()) {
+                // Idempotente: simplemente devolver.
+                return $sale;
+            }
+
+            // Reglas de negocio previas (ejemplos):
+            // - si tiene notas de crédito/devoluciones asociadas -> prohibir
+            // - si está facturada/contabilizada -> permisos especiales o paso por crédito
+            if ($this->hasDependentDocuments($sale)) {
+                throw new \DomainException('La venta tiene documentos asociados y no puede anularse.');
+            }
+
+            // 1) Revertir inventario por cada item vendido
+            foreach ($sale->items as $item) {
+                if(!$item->isService){
+                    $oldQuantity = $this->restoreStock(
+                        branchId: $sale->branch_id,
+                        productId: $item->salable_id,
+                        qty: $item->quantity
+                    );
+
+                    // (Opcional pero recomendado) Registrar movimiento de inventario:
+                    $this->logStockMovement(
+                        branchId: $sale->branch_id,
+                        productId: $item->salable_id,
+                        qty: $item->quantity,
+                        oldQty: $oldQuantity,
+                        cause: 'SALE_VOID',
+                        refType: 'SALE',
+                        refId: $sale->id
+                    );
+                }
+            }
+
+            // 2) Revertir créditos/pagos si aplica
+//            app(CreditService::class)->reverseForSale($sale);
+
+            // 3) Marcar la venta como anulada
+            $sale->status = Sale::SALE_STATUS_VOIDED;
+            $sale->voided_at = now();
+            $sale->voided_by = $userId;
+            $sale->void_reason = $reason;
+            $sale->save();
+
+            $sale->payments()->update(['deleted' => true]);
+            return $sale;
+        });
+    }
+
+    protected function restoreStock(int $branchId, int $productId, int $qty): float
+    {
+        $oldQuantity = 0;
+        // Bloquea fila de stock para evitar condiciones de carrera
+        $stock = DB::table('product_stocks')
+            ->where('branch_id', $branchId)
+            ->where('product_id', $productId)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$stock) {
+            // Si no existe la fila, créala con la cantidad
+            DB::table('product_stocks')->insert([
+                'branch_id' => $branchId,
+                'product_id' => $productId,
+                'quantity'  => $qty,
+                'created_at'=> now(),
+                'updated_at'=> now(),
+            ]);
+        } else {
+            $oldQuantity = $stock->quantity;
+            DB::table('product_stocks')
+                ->where('branch_id', $branchId)
+                ->where('product_id', $productId)
+                ->update([
+                    'quantity'  => DB::raw("quantity + {$qty}"),
+                    'updated_at'=> now(),
+                ]);
+        }
+
+        return $oldQuantity;
+    }
+
+    protected function logStockMovement(int $branchId, int $productId, int $qty, int $oldQty, string $cause, string $refType, int $refId): void
+    {
+        InventoryMovement::create([
+            'product_id' => $productId,
+            'from_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
+            'from_location_id' => $branchId,
+            'to_location_type' => null, // La venta es el destino final
+            'to_location_id' => null,
+            'old_quantity' => $oldQty,
+            'new_quantity' => $qty + $oldQty,
+            'difference' => $qty, // La diferencia es negativa (salida)
+            'type' => $cause,
+            'description' => "Venta anulada registrada, movimiento de salida de la sucursal {$branchId}. {$refType} ID: {$refId}",
+            'user_id' => Auth::id(),
+        ]);
+    }
+
+    protected function hasDependentDocuments(Sale $sale): bool
+    {
+        // TODO: implementa según tu modelo (notas de crédito, devoluciones, etc.)
+        return false;
     }
 }

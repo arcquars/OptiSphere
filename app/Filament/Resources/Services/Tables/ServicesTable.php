@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Services\Tables;
 
 use App\Models\Branch;
+use App\Models\Price;
 use App\Models\Service;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -10,6 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\IconColumn;
@@ -17,6 +19,8 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 
 class ServicesTable
@@ -52,7 +56,7 @@ class ServicesTable
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('set-price-service')
-//                    ->label('Precios para ')
+                    ->label('Cambiar precios')
                     ->modalHeading(fn (Service $record) => "Precios para: {$record->name}")
                     ->schema([
                         Grid::make([
@@ -82,48 +86,98 @@ class ServicesTable
                                             return;
                                         }
 
-                                        // === Trae precios según tu modelo/diseño de datos ===
-                                        // 1) Si tienes una relación en Service: branchPrices()->where('branch_id', X)
-                                        //    con columnas: normal, special, mayorista
-                                        $price = $record->branchPrices()
-                                            ->where('branch_id', $state)
-                                            ->first();
-
-                                        // 2) O si tienes una tabla service_branch_price, haz tu propia consulta:
-                                        // $price = \App\Models\ServiceBranchPrice::where('service_id', $record->id)
-                                        //     ->where('branch_id', $state)
-                                        //     ->first();
-
-                                        // 3) O si guardas precios en JSON por sucursal en el Service, lee desde ahí.
+                                        $priceNormal = $record->getPriceByType($state, Price::TYPE_NORMAL);
+                                        $priceEspecial = $record->getPriceByType($state, Price::TYPE_ESPECIAL);
+                                        $priceMayorista = $record->getPriceByType($state, Price::TYPE_MAYORISTA);
 
                                         // Setea los TextInput (usa null si no existe)
-                                        $set('price_normal',    optional($price)->normal ?? null);
-                                        $set('price_special',   optional($price)->special ?? null);
-                                        $set('price_mayorista', optional($price)->mayorista ?? null);
+                                        $set('price_normal',    $priceNormal ?? null);
+                                        $set('price_special',   $priceEspecial ?? null);
+                                        $set('price_mayorista', $priceMayorista ?? null);
                                     }),
 
                                 TextInput::make('price_normal')
                                     ->label('P. normal')
                                     ->numeric()
                                     ->inputMode('decimal')
-                                    ->step('0.01'),
+                                    ->step('0.01')
+                                    ->required(),
 
                                 TextInput::make('price_special')
                                     ->label('P. especial')
                                     ->numeric()
                                     ->inputMode('decimal')
-                                    ->step('0.01'),
+                                    ->step('0.01')
+                                    ->required(),
 
                                 TextInput::make('price_mayorista')
                                     ->label('P. mayorista')
                                     ->numeric()
                                     ->inputMode('decimal')
-                                    ->step('0.01'),
+                                    ->step('0.01')
+                                    ->required(),
                             ])
 
                     ])
-                    ->action(function (Service $record): void {
-                        dd();
+                    ->action(function (Service $record, array $data): void {
+                        $branchId = $data['branch_id'];
+                        $priceNormal = $data['price_normal'];
+                        $priceSpecial = $data['price_special'];
+                        $priceMayorista = $data['price_mayorista'];
+
+                        DB::beginTransaction();
+
+                        try {
+                            $record->prices()->updateOrCreate(
+                                [
+                                    'type' => Price::TYPE_NORMAL,
+                                    'branch_id' => $branchId,
+                                ],
+                                // 2. Valores para actualizar o crear
+                                [
+                                    'price' => $priceNormal,
+                                    'user_id' => Auth::id(),
+                                ]
+                            );
+
+                            $record->prices()->updateOrCreate(
+                                [
+                                    'type' => Price::TYPE_ESPECIAL,
+                                    'branch_id' => $branchId,
+                                ],
+                                [
+                                    'price' => $priceSpecial,
+                                    'user_id' => Auth::id(),
+                                ]
+                            );
+
+                            $record->prices()->updateOrCreate(
+                                [
+                                    'type' => Price::TYPE_MAYORISTA,
+                                    'branch_id' => $branchId,
+                                ],
+                                [
+                                    'price' => $priceMayorista,
+                                    'user_id' => Auth::id(),
+                                ]
+                            );
+
+                            DB::commit();
+                            Notification::make()
+                                ->title('Éxito')
+                                ->body('Se actualizaron los precios para este producto')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            // En caso de error, deshacer todo
+                            DB::rollback();
+
+                            Notification::make()
+                                ->title('Error')
+                                ->body('Ocurrio un error al momento de guardar los cambios.')
+                                ->success()
+                                ->send();
+                        }
                     })
                     ->modalWidth(Width::Small)
             ])

@@ -245,6 +245,38 @@
             <td class="right">{{ m($disc) }}</td>
             <td class="right">{{ m($line) }}</td>
         </tr>
+
+        @if(count($item->attachedServices) > 0)
+            @foreach($item->attachedServices as $attached)
+                <tr>
+                    <td>
+                        {{ $attached->service->code ?? '—' }}
+                    </td>
+                    <td class="center">{{ $attached->quantity }}</td>
+                    <td class="center">
+                        SERVICIO
+                    </td>
+                    <td>
+                        {{ $descFor($attached->service) }}
+{{--                        @if($attached->promotion_id)--}}
+{{--                            {{ number_format($attached->price_per_unit - ($attached->price_per_unit * $attached->promotion_discount_rate / 100), 2) }} <small>({{ $attached->price_per_unit }} - {{ $attached->promotion_discount_rate }}%)</small>--}}
+{{--                        @else--}}
+{{--                            {{ $attached->price_per_unit }}--}}
+{{--                        @endif--}}
+                    </td>
+                    <td class="right">
+                        {{ $attached->price_per_unit }}
+{{--                        {{ config('cerisier.currency_symbol') }} {{ $attached->subtotal }}--}}
+                    </td>
+                    <td class="right">
+                        {{ $attached->promotion_discount_rate }}
+                    </td>
+                    <td class="right">
+                        {{ $attached->subtotal }}
+                    </td>
+                </tr>
+            @endforeach
+        @endif
     @endforeach
     </tbody>
 </table>

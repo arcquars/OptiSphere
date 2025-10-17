@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithoutUrlPagination;
@@ -38,6 +39,7 @@ class ReportSales extends Component
         }
     }
 
+    #[On('refresh-report-sales')]
     public function search(){
         $this->validate(); // valida las reglas de los atributos primero
         $this->resetPage();
@@ -63,6 +65,8 @@ class ReportSales extends Component
         // Asumo que tu modelo 'Sale' tiene relaciones 'branch' y 'customer'.
         $query = Sale::with(['branch', 'customer']);
 
+        // Filtrar las ventas Anuladas VOIDED
+        $query->where('status', '<>', Sale::SALE_STATUS_VOIDED);
         // Aplicar filtro de rango de fechas
         $query->whereBetween('date_sale', [$this->dateStart, Carbon::parse($this->dateEnd)->endOfDay()]);
 

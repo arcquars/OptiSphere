@@ -165,9 +165,10 @@
                 <div id="cart-items" class="flex-grow overflow-y-auto border-t border-b border-base-200 py-2 min-h-[200px]">
                     <div class="space-y-2">
                         @forelse($cart as $key => $item)
-                            <div class="flex items-center gap-2 p-2 rounded-lg bg-base-200">
+                            <div class="gap-2 p-2 rounded-lg bg-base-200">
+                            <div class="flex items-center">
                                 <div class="flex-grow">
-                                    <p class="font-bold">{{ $item['name'] }} {{ $item['quantity'] }}
+                                    <p class="font-bold">{{ $item['name'] }}
                                         @if($item['type'] === 'service')
                                             <span class="badge badge-info badge-xs ml-2">Servicio</span>
                                         @endif
@@ -179,9 +180,9 @@
                                     </p>
                                     <p class="text-sm text-gray-500">
                                         @if($item['promotion'] == null)
-                                        ${{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = ${{ number_format($item['price'] * $item['quantity'], 2) }}
+                                            {{ config('cerisier.currency_symbol') }}{{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($item['price'] * $item['quantity'], 2) }}
                                         @else
-                                            $({{ number_format($item['price'], 2) }} - {{ number_format(($item['price'] *  ($item['promotion']/100)), 2) }}) x {{ $item['quantity'] }} = ${{ number_format(($item['price'] - $item['price'] *  ($item['promotion']/100) )* $item['quantity'], 2) }}
+                                            {{ config('cerisier.currency_symbol') }}({{ number_format($item['price'], 2) }} - {{ number_format(($item['price'] *  ($item['promotion']/100)), 2) }}) x {{ $item['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($item['price'] - $item['price'] *  ($item['promotion']/100) )* $item['quantity'], 2) }}
                                         @endif
                                     </p>
                                 </div>
@@ -190,15 +191,52 @@
                                        class="input input-bordered input-sm w-16 text-center"
                                        min="1" max="{{ $item['limit'] }}"
                                 />
-
-    {{--                            <input type="test" value="{{ $item['quantity'] }}"--}}
-    {{--                                   wire:change="updateCartQuantity('{{ $key }}', $event.target.value)"--}}
-    {{--                                   class="input input-bordered input-sm w-16 text-center"--}}
-    {{--                                   min="1" max="{{ $item['limit'] }}"--}}
-    {{--                            />--}}
-
-                                <button wire:click="removeFromCart('{{ $key }}')" class="btn btn-sm btn-ghost text-error"><i class="fa-solid fa-trash-can"></i></button>
+                                @if($item['type'] !== 'service')
+                                    <div class="dropdown dropdown-left">
+                                        <div tabindex="0" role="button" class="btn btn-sm btn-ghost text-primary"><i class="fa-solid fa-cart-plus"></i></div>
+                                        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+                                            @foreach($services as $service)
+                                                <li><a wire:click.stop.prevent="addServiceToProduct('{{ $key }}', {{$item['id']}}, {{ $service->id }})">{{ $service->name }}</a></li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                <button wire:click.stop.prevent="removeFromCart('{{ $key }}')" class="btn btn-sm btn-ghost text-error" title="Quitar">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
+
+
+
+                                <hr class="my-2">
+                            @if(isset($item['services']))
+                                @foreach($item['services'] as $subKey => $sub)
+                                        <div class="pl-4 flex items-center pb-1">
+                                            <div class="flex-grow">
+                                                <p class="font-bold">{{ $sub['name'] }}
+                                                    <span class="badge badge-info badge-xs ml-2">Servicio</span>
+                                                    @if($sub['promotion'])
+                                                        <span class="badge badge-info badge-xs ml-2">
+                                            {{ ($sub['promotion'])? "-" .$sub['promotion'] . "%" : "" }}
+                                        </span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-sm text-gray-500">
+                                                    {{ $sub['promotion'] }}...
+                                                    @if($sub['promotion'] == null)
+                                                        {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'] * $sub['quantity'], 2) }}
+                                                    @else
+                                                        {{ config('cerisier.currency_symbol') }}({{ number_format($sub['price'], 2) }} - {{ number_format(($sub['price'] *  ($sub['promotion']/100)), 2) }}) x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($sub['price'] - $sub['price'] *  ($sub['promotion']/100) )* $sub['quantity'], 2) }}
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <button type="button" wire:click.stop.prevent="removeSubFromCart('{{ $key }}', '{{ $subKey }}')" class="btn btn-sm btn-ghost text-error" title="Quitar">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                @endforeach
+                            @endif
+                    </div>
                         @empty
                             <p class="text-center text-gray-500">El carrito está vacío.</p>
                         @endforelse
@@ -245,7 +283,7 @@
                 <div class="mt-1">
                     <div class="join w-full mb-2">
                         <input type="number" placeholder="Descuento %" wire:model.lazy="discountPercentage" class="input input-bordered join-item w-full focus:outline-none"/>
-                        <button wire:click="applyDiscount" class="btn join-item btn-secondary">Aplicar Desc %</button>
+                        <button wire:click.stop.prevent="applyDiscount" class="btn join-item btn-secondary">Aplicar Desc %</button>
                     </div>
                     <div class="space-y-1 text-md">
                         <div class="flex justify-between"><span>Subtotal:</span> <span>${{ number_format($subtotal, 2) }}</span></div>

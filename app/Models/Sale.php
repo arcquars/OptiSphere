@@ -15,6 +15,7 @@ class Sale extends Model
     const SALE_STATUS_PAID = 'PAID';
     const SALE_STATUS_PARTIAL_PAYMENT = 'PARTIAL PAYMENT';
     const SALE_STATUS_CREDIT = 'CREDIT';
+    const SALE_STATUS_VOIDED = 'VOIDED';
 
     protected $fillable = [
         'branch_id',
@@ -36,7 +37,8 @@ class Sale extends Model
         'total_amount' => 'float',
         'final_discount' => 'float',
         'final_total' => 'float',
-        'date_sale' => 'date'
+        'date_sale' => 'date',
+        'voided_at' => 'datetime'
 
     ];
 
@@ -79,6 +81,14 @@ class Sale extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SalePayment::class);
+    }
+
+    public function scopeNotVoided($q) {
+        return $q->where('status', '!=', 'voided');
+    }
+
+    public function isVoided(): bool {
+        return $this->status === 'voided';
     }
 
     // ... otras relaciones (customer, branch, user)
@@ -136,7 +146,22 @@ class Sale extends Model
     protected function amountServices(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->items()->where('salable_type', Service::class)->count(),
+            get: function (mixed $value, array $attributes) {
+                // Puedes agregar código, lógica o depuración aquí
+                // Ejemplo: \Log::info('Calculando cantidad de servicios para Venta ID: ' . $this->id);
+
+                $serviceCount = $this->items()
+                    ->where('salable_type', Service::class)
+                    ->count();
+
+                $subServices = 0;
+                foreach ($this->items as $i){
+                    $subServices += count($i->attachedServices);
+                }
+
+                // Retorno explícito
+                return $serviceCount + $subServices;
+            },
         )->shouldCache();
     }
 }

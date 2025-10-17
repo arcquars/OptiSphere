@@ -42,11 +42,13 @@
                     </select>
                 </label>
                 <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end">
-                    <button class="btn btn-primary"><i class="fa-solid fa-filter"></i> Generar Reporte</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Generar Reporte</button>
                 </div>
             </div>
         </div>
         </form>
+
+        <span wire:loading class="loading loading-spinner text-primary ml-2"></span>
 
         <!-- 2. Resumen de KPIs (Indicadores Clave) -->
         @role('admin')
@@ -155,7 +157,7 @@
                                             <i class="fa-solid fa-print"></i> Imprimir recibo
                                         </a>
                                     </li>
-                                    <li><a class="text-danger-500"><i class="fa-solid fa-trash-can"></i> Eliminar</a></li>
+                                    <li><a @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); return false;" class="text-danger-500"><i class="fa-solid fa-trash-can"></i> Eliminar</a></li>
                                 </ul>
                             </div>
                         </td>
@@ -177,5 +179,19 @@
         @else
             <p class="text-lg text-success">Sin Ventas en la busqueda</p>
         @endif
+
+
     </div>
+
+    <!-- Modal de confirmación -->
+    <x-modal id="voidSaleModal" title="Anular venta">
+        <div class="space-y-3">
+            <p class="text-sm">Esta acción revertirá el inventario y marcará la venta como anulada.</p>
+            <textarea class="textarea textarea-bordered w-full" wire:model="voidReason" placeholder="Motivo (opcional)"></textarea>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="btn btn-ghost" wire:click="$dispatch('close-modal', {id:'voidSaleModal'})">Cancelar</button>
+                <button type="button" class="btn btn-error" wire:click="voidSale">Anular</button>
+            </div>
+        </div>
+    </x-modal>
 </div>

@@ -70,6 +70,27 @@
                                                 {{ config('cerisier.currency_symbol') }} {{ $item->subtotal }}
                                             </td>
                                         </tr>
+                                        @if(count($item->attachedServices) > 0)
+                                            @foreach($item->attachedServices as $attached)
+                                                <tr>
+                                                    <td class="pl-6">
+                                                        {{ $attached->service->name ?? '—' }}
+                                                        <div class="badge badge-info badge-xs ml-1">Servicio</div>
+                                                    </td>
+                                                    <td class="text-center">{{ $attached->quantity }}</td>
+                                                    <td class="text-right font-mono">
+                                                        @if($attached->promotion_id)
+                                                            {{ number_format($attached->price_per_unit - ($attached->price_per_unit * $attached->promotion_discount_rate / 100), 2) }} <small>({{ $attached->price_per_unit }} - {{ $attached->promotion_discount_rate }}%)</small>
+                                                        @else
+                                                            {{ $attached->price_per_unit }}
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-right font-mono">
+                                                        {{ config('cerisier.currency_symbol') }} {{ $attached->subtotal }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @endif
                                     @endforeach
                                     </tbody>
                                 </table>
