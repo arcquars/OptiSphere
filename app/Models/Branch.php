@@ -33,4 +33,12 @@ class Branch extends Model
     {
         return $this->morphMany(Price::class, 'priceable');
     }
+
+    public function isOpenCashBoxClosingByUser($userId){
+        return CashBoxClosing::where('branch_id', $this->id)->where('user_id', $userId)->where('status', '=', CashBoxClosing::STATUS_OPEN)->exists();
+    }
+
+    public function getCashBoxClosingByUser($userId){
+        return CashBoxClosing::where('branch_id', $this->id)->where('user_id', $userId)->where('status', '=', CashBoxClosing::STATUS_OPEN)->first();
+    }
 }

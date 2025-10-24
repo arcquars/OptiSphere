@@ -70,7 +70,8 @@ class User extends Authenticatable implements FilamentUser
      */
     public function branches(): BelongsToMany
     {
-        return $this->belongsToMany(Branch::class);
+        return $this->belongsToMany(Branch::class)
+            ->where('is_active', true);
     }
 
 //    public function canAccessPanel(Panel $panel): bool
