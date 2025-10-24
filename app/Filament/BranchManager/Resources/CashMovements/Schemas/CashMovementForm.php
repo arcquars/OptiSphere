@@ -3,14 +3,17 @@
 namespace App\Filament\BranchManager\Resources\CashMovements\Schemas;
 
 use App\Models\Branch;
+use App\Models\CashBoxClosing;
 use App\Models\CashMovement;
 use App\Models\User;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class CashMovementForm
 {
@@ -21,6 +24,23 @@ class CashMovementForm
                 Select::make('branch_id')
                     ->label('Sucursal')
                     ->options(fn () => self::getAvailableBranches())
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set, $get) {
+                        $user = auth()->user();
+
+                        $exists = CashBoxClosing::where('branch_id', $state)
+                            ->where('user_id', $user->id)
+                            ->where('status', CashBoxClosing::STATUS_OPEN)
+                            ->exists();
+
+                        if (! $exists) {
+                            $set('branch_id', null); // limpia el campo
+                            Notification::make()
+                                ->title('No existe una caja abierta para esta sucursal.')
+                                ->danger() // O ->danger(), ->warning(), ->info()
+                                ->send();
+                        }
+                    })
                     ->required(),
                 Select::make('user_id')
                     ->label('Usuario')

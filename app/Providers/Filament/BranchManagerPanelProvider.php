@@ -25,6 +25,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentIcon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -34,6 +35,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\View\View;
 use function Filament\Support\original_request;
@@ -95,71 +97,6 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
                 CashMovementResource::class, // << RECURSO REGISTRADO AQUÍ
             ])
             ->userMenuItems([
-                // 1. Definición del Action que abre la Caja
-//                Action::make('open-cash')
-//                    ->label(fn () => $this->isCashBoxOpen() ? 'Caja Abierta' : 'Abrir Caja')
-//                    ->icon(fn () => $this->isCashBoxOpen() ? 'heroicon-o-lock-open' : 'heroicon-o-lock-closed')
-//                    ->url(fn (): string => '#')
-//                    // Oculta la opción si el usuario no tiene permiso (ej. solo cajeros/gerentes)
-//                    ->visible(fn () => Auth::user()->hasRole(['cashier', 'branch-manager', 'admin']))
-//                    // El botón solo es visible si NO hay una caja abierta
-//                    ->hidden(fn () => $this->isCashBoxOpen())
-//                    // --- Configuración del Modal ---
-//                    ->modalHeading('Apertura de Caja')
-//                    ->modalSubmitActionLabel('Abrir Caja')
-//                    ->schema([
-//                        // Campo para ingresar el fondo de caja inicial
-//                        TextInput::make('initial_cash')
-//                            ->label('Fondo de Caja Inicial')
-//                            ->numeric()
-//                            ->inputMode('decimal')
-//                            ->default(100.00) // Valor por defecto común
-//                            ->required()
-//                            ->helperText('Ingrese la cantidad de efectivo con la que inicia la jornada.')
-//                            ->rules(['min:0'])
-//                            ->prefix('Bs.'),
-//                    ])
-//                    // --- Lógica del Botón de Cierre ---
-//                    ->action(function (array $data): void {
-//                        $user = Auth::user();
-//
-//                        // 1. Verificar si ya hay una caja abierta (una doble verificación)
-//                        $openBox = CashBoxClosing::where('user_id', $user->id)
-//                            ->where('branch_id', $user->branch_id)
-//                            ->where('status', CashBoxClosing::STATUS_OPEN)
-//                            ->first();
-//
-//                        if ($openBox) {
-//                            Notification::make()
-//                                ->title('Error de Apertura')
-//                                ->body('Ya tienes una caja abierta. Debes cerrarla antes de abrir una nueva.')
-//                                ->danger()
-//                                ->send();
-//                            return;
-//                        }
-//
-//                        // 2. Crear el registro de Apertura
-//                        DB::transaction(function () use ($user, $data) {
-//                            CashBoxClosing::create([
-//                                'branch_id' => $user->branch_id,
-//                                'user_id' => $user->id,
-//                                'opening_time' => now(),
-//                                'initial_cash' => $data['initial_cash'],
-//                                'expected_cash_total' => $data['initial_cash'], // Inicialmente es solo el fondo
-//                                'actual_cash_total' => 0, // 0 al abrir
-//                                'difference' => 0,
-//                                'status' => CashBoxClosing::STATUS_OPEN,
-//                            ]);
-//                        });
-//
-//                        // 3. Notificación de éxito
-//                        Notification::make()
-//                            ->title('Caja Abierta')
-//                            ->body('Caja abierta exitosamente con fondo de Bs. ' . number_format($data['initial_cash'], 2) . '.')
-//                            ->success()
-//                            ->send();
-//                    }),
-
                 // Opción para Cerrar Caja (Solo visible si hay una caja abierta)
                 Action::make('close-cash')
                     ->label('Cerrar Caja')
@@ -225,14 +162,29 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
         } elseif (auth()->user()->hasRole('branch-manager')) {
             $branches = User::find(Auth::id())->branches;
         }
+        $userId = Auth::id();
 
         foreach ($branches as $i => $branch){
             if($branch){
+                $isBranchCashBoxOpen = CashBoxClosing::where('branch_id', $branch->id)
+                    ->where('user_id', $userId)
+                    ->where('status', CashBoxClosing::STATUS_OPEN)
+                    ->exists();
                 $items[] = NavigationItem::make()
                     ->label("Sucursal {$branch->name}")
                     ->icon('heroicon-o-building-office')
                     ->url(route(BranchManager::getRouteName(), ['branchId' => $branch->id]))
-                    ->isActiveWhen(fn () => request()->route('branchId') == $branch->id);
+                    ->isActiveWhen(fn () => request()->route('branchId') == $branch->id)
+                    ->badge($isBranchCashBoxOpen
+                        ? 'A'
+                        : 'C', $isBranchCashBoxOpen
+                        ? 'success'
+                        : null
+                    )
+                    ->badgeTooltip($isBranchCashBoxOpen
+                        ? 'Caja Abierta'
+                        : 'Caja Cerrada');
+
             }
 
         }

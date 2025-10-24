@@ -16,7 +16,7 @@
             wire:click="toggleCashOpenForm"
 {{--            onclick="Livewire.dispatch('toggleViewCashOpen')"--}}
         >
-            <div class="badge badge-sm badge-dash badge-info">+99</div>
+            @if($countOpenCashBox > 0)<div class="badge badge-sm badge-dash badge-info">{{ $countOpenCashBox }}</div>@endif
             Abrir Caja
         </button>
 

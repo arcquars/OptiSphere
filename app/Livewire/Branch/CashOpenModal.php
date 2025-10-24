@@ -15,6 +15,7 @@ class CashOpenModal extends Component
 {
     public bool $showFormCashOpen = false;
     public $branchList = [];
+    public int $countOpenCashBox = 0;
 
     protected $listeners = ['toggleViewCashOpen' => 'toggleCashOpenForm'];
 
@@ -23,6 +24,10 @@ class CashOpenModal extends Component
         return [
             'branchList.*.initial_balance' => ['nullable', 'numeric', 'min:0', 'max:10000'],
         ];
+    }
+
+    public function mount(){
+        $this->loadBranchArray();
     }
 
     public function toggleCashOpenForm(): void
@@ -36,13 +41,18 @@ class CashOpenModal extends Component
     public function loadBranchArray(){
         $branches = new Collection;
         $userId = Auth::id();
+        $this->countOpenCashBox = 0;
         if(Auth::user()->hasRole('admin')){
             $branches = Branch::where('is_active', true)->get();
         } else {
             $branches = User::find($userId)->branches;
+
         }
         foreach ($branches as $bTemp){
             $open = $bTemp->isOpenCashBoxClosingByUser($userId);
+            if($open){
+                $this->countOpenCashBox++;
+            }
             $this->branchList['branch-'.$bTemp->id] = [
                 'id' => $bTemp->id,
                 'name' => $bTemp->name,
