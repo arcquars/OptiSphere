@@ -3,6 +3,7 @@
 namespace App\Livewire\Branch;
 
 use App\Models\Branch;
+use App\Models\CashBoxClosing;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Price;
@@ -14,6 +15,7 @@ use App\Models\SalePayment;
 use App\Models\Service;
 use App\Services\SaleService;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -55,6 +57,7 @@ class ManagerBranch extends Component
     public $promotionActives = [];
     public $promotion = null;
     public $message_error = null;
+    public $isOpenCashBoxClosing = false;
 
     public function mount($branchId): void
     {
@@ -64,6 +67,7 @@ class ManagerBranch extends Component
         $this->promotionActives = Promotion::active()->get();
         $this->promoActive = (count($this->promotionActives) > 0)? true : false;
 
+        $this->isOpenCashBoxClosing = CashBoxClosing::isOpenCashBoxByBranchAndUser($branchId, Auth::id());
         $this->calculateTotals();
     }
 
@@ -396,6 +400,7 @@ class ManagerBranch extends Component
             'customer_id' => $this->customer->id,
             'branch_id' => $this->branch->id,
             'user_id' => $userId,
+            'cash_box_closing_id' => Branch::find($this->branch->id)->getCashBoxClosingByUser($userId)->id,
             'total_amount' => $this->subtotal,
             'final_discount' => $this->discountPercentage,
             'final_total' => $this->subtotal - ($this->subtotal * ($this->discountPercentage/100)),

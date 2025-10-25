@@ -331,10 +331,10 @@
 
                 <!-- Botones de Acción -->
                 <div class="grid grid-cols-2 gap-2">
-                    <button type="submit" class="btn btn-success btn-block">
+                    <button type="submit" class="btn btn-success btn-block" @if(!$isOpenCashBoxClosing) disabled @endif>
                         <i class="fa-solid fa-check"></i>Completar Pago
                     </button>
-                    <button class="btn btn-info btn-block">
+                    <button class="btn btn-info btn-block" @if(!$isOpenCashBoxClosing) disabled @endif>
                         <i class="fa-solid fa-print"></i>Generar Factura
                     </button>
                 </div>

@@ -2,9 +2,12 @@
 
 namespace App\Filament\BranchManager\Pages;
 
+use App\Models\CashBoxClosing;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 
 class BranchManager extends Page
 {
@@ -44,7 +47,12 @@ class BranchManager extends Page
     public function getSubheading(): string | Htmlable | null
     {
         if ($this->branch) {
-            return "Gestionando ventas para la sucursal seleccionada.";
+            if(CashBoxClosing::isOpenCashBoxByBranchAndUser($this->branch->id, Auth::id())){
+                return new HtmlString('<p class="text-success">Gestionando ventas para la sucursal seleccionada <i class="fa-solid fa-lock-open"></i></p>');
+            } else {
+                return new HtmlString('<p class="text-error">Caja se encuentra cerrada <i class="fa-solid fa-lock"></i></p>');
+            }
+
         }
         return "Por favor, seleccione una sucursal para comenzar.";
     }

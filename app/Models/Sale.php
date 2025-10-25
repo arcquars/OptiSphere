@@ -21,6 +21,7 @@ class Sale extends Model
         'branch_id',
         'customer_id',
         'user_id',
+        'cash_box_closing_id',
         'total_amount',
         'final_discount',
         'final_total',

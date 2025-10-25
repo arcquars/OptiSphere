@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CashBoxClosing;
 use App\Models\Sale;
 use App\Models\Customer;
 use App\Models\Product;
@@ -38,7 +39,12 @@ class SaleService
      */
     public function createSale(array $data): Sale
     {
-        Log::info("Registro de update ProductStock:::: a1 ");
+        // Validar que la caja esta abierta
+        $isOpenCashBoxClosing = CashBoxClosing::isOpenCashBoxByBranchAndUser($data['branch_id'], Auth::id());
+        if(!$isOpenCashBoxClosing){
+            throw new InvalidArgumentException("No tienes Caja Abierta");
+        }
+
         // 1. Validar y preparar los datos de la venta (items)
         $processedItems = $this->processAndValidateItems($data['items'], $data['branch_id'], $data['customer_id']);
 
@@ -69,6 +75,7 @@ class SaleService
                 'customer_id' => $data['customer_id'],
                 'branch_id' => $data['branch_id'],
                 'user_id' => $data['user_id'],
+                'cash_box_closing_id' => $data['cash_box_closing_id'],
                 'total_amount' => $totals['total_amount'],
                 'final_total' => $data['final_total'],
                 'final_discount' => $data['final_discount'],
@@ -137,6 +144,7 @@ class SaleService
                 'customer_id' => $data['customer_id'],
                 'branch_id' => $data['branch_id'],
                 'user_id' => $data['user_id'],
+                'cash_box_closing_id' => $data['cash_box_closing_id'],
                 'total_amount' => $totals['total_amount'],
                 'final_total' => $data['final_total'],
                 'final_discount' => $data['final_discount'],

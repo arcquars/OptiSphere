@@ -58,4 +58,15 @@ class CashBoxClosing extends Model
         // podrías agregar una columna cash_box_closing_id a la tabla sales/sale_payments.
         return $this->hasMany(Sale::class);
     }
+
+    public static function isOpenCashBoxByBranchAndUser($branchId, $userId){
+        $user = User::find($userId);
+        if($user->hasRole('admin')){
+            return true;
+        }
+        /** @var Branch $branch */
+        $branch = Branch::find($branchId);
+
+        return $branch->isOpenCashBoxClosingByUser($userId);
+    }
 }
