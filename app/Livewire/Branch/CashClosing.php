@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Branch;
 
+use App\Models\Branch;
 use App\Models\CashBoxClosing;
 use App\Services\CashClosingService;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -21,7 +23,10 @@ class CashClosing extends Component
     public ?string $until = null;  // fecha/hora fin (por defecto now())
     public ?string $notes = null;
 
-    public float $closingAmount = 0.0; // contado por el cajero
+//    public float $closingAmount = 0.0; // contado por el cajero
+    public ?float $closingAmount = null; // contado por el cajero
+
+    public ?CashBoxClosing $cashBoxClosing = null;
 
     public function mount(CashClosingService $svc): void
     {
@@ -34,12 +39,17 @@ class CashClosing extends Component
 
     #[On('load-by-branch')]
     public function loadByBranch(CashClosingService $svc, ?int $branchId = null){
+        if($branchId == null){
+            $this->branchId = null;
+            return;
+        }
         $this->userId   = Auth::id();
         $this->branchId = $branchId ?: ($user->branch_id ?? null); // ajusta si usas many-to-many
 
-        $closing = $svc->getOpenClosingForUser($this->userId, $this->branchId, createIfMissing: true);
-        $this->closingId = $closing?->id;
-        $this->from = $closing?->opened_at?->format('Y-m-d H:i');
+        $this->cashBoxClosing = Branch::find($branchId)->getCashBoxClosingByUser($this->userId);
+//        $closing = $svc->getOpenClosingForUser($this->userId, $this->branchId, createIfMissing: true);
+        $this->closingId = $this->cashBoxClosing->id;
+        $this->from = $this->cashBoxClosing?->opening_time?->format('Y-m-d H:i');
         $this->until = now()->format('Y-m-d H:i');
     }
 
@@ -75,6 +85,8 @@ class CashClosing extends Component
     public function refreshTotals(): void
     {
         // Solo para forzar recomputado
+        $this->until = now()->format('Y-m-d H:i');
+        $this->closingAmount = null;
     }
 
     public function close(CashClosingService $svc): void
@@ -96,9 +108,13 @@ class CashClosing extends Component
             userIdFilter: $userFilter,
         );
 
-        $this->closingId = $closing->id;
+        $this->branchId = null;
 
-        $this->dispatch('toast', type: 'success', message: 'Caja cerrada correctamente.');
+        Notification::make()
+            ->title('Cerrar Caja')
+            ->body("Caja cerrada correctamente.")
+            ->success()
+            ->send();
     }
 
     public function render()

@@ -66,47 +66,60 @@ class CashClosingService
             }
         };
 
+//        dd("ddd: from:: " . $from);
+
         // === Ventas al contado (pagadas) por método ===
         // Ajusta nombres de columnas según tu esquema:
         // - sale_type: 'contado' | 'credito'
         // - payment_method: 'cash' | 'transfer' | 'qr'
         // - status: 'paid'|'open' etc… (filtra solo cerradas/pagadas si aplica)
         $contado = Sale::query()
-            ->where('branch_id', $closing->branch_id)
-            ->where('sale_type', 'contado')
+//            ->where('branch_id', $closing->branch_id)
+//            ->where('user_id', $closing->user_id)
+            ->where('cash_box_closing_id', $closing->id)
+            ->where('status', Sale::SALE_STATUS_PAID)
             ->when(true, $range);
 
-        $salesCash      = (clone $contado)->where('payment_method', 'cash')->sum('total');       // ajusta 'total'
-        $salesTransfer  = (clone $contado)->where('payment_method', 'transfer')->sum('total');
-        $salesQr        = (clone $contado)->where('payment_method', 'qr')->sum('total');
+        $salesCash      = (clone $contado)->where('payment_method', SalePayment::METHOD_CASH)->sum('final_total');       // ajusta 'total'
+        $salesTransfer  = (clone $contado)->where('payment_method', SalePayment::METHOD_TRANSFER)->sum('final_total');
+        $salesQr        = (clone $contado)->where('payment_method', SalePayment::METHOD_QR)->sum('final_total');
 
         // === Cobros de crédito parciales por método ===
         // Ajusta al nombre real de tu tabla de pagos de crédito
         $paymentsBase = SalePayment::query()
-            ->where('branch_id', $closing->branch_id)
-            ->when(true, $range);
+//            ->where('branch_id', $closing->branch_id)
+//            ->where('user_id', $closing->user_id)
+            ->where('cash_box_closing_id', $closing->id)
+            ->when(true, $range)
+            ->whereHas('sale', function($q){
+                $q->where('status', Sale::SALE_STATUS_CREDIT);
+            });
 
-        $creditCash     = (clone $paymentsBase)->where('method', 'cash')->sum('amount');
-        $creditTransfer = (clone $paymentsBase)->where('method', 'transfer')->sum('amount');
-        $creditQr       = (clone $paymentsBase)->where('method', 'qr')->sum('amount');
+//        dd($paymentsBase->get());
+        $creditCash     = (clone $paymentsBase)->where('sale_payments.payment_method', SalePayment::METHOD_CASH)->sum('amount');
+        $creditTransfer = (clone $paymentsBase)->where('sale_payments.payment_method', SalePayment::METHOD_TRANSFER)->sum('amount');
+        $creditQr       = (clone $paymentsBase)->where('sale_payments.payment_method', SalePayment::METHOD_QR)->sum('amount');
 
         // === Movimientos manuales de caja ===
         // cash_movements: type 'income'|'expense'
         $movIncomes  = CashMovement::query()
-            ->where('branch_id', $closing->branch_id)
-            ->where('type', 'income')
+//            ->where('branch_id', $closing->branch_id)
+            ->where('cash_box_closing_id', $closing->id)
+            ->where('type', CashMovement::TYPE_INCOME)
             ->when(true, $range)
             ->sum('amount');
 
         $movExpenses = CashMovement::query()
-            ->where('branch_id', $closing->branch_id)
-            ->where('type', 'expense')
+//            ->where('branch_id', $closing->branch_id)
+            ->where('cash_box_closing_id', $closing->id)
+            ->where('type', CashMovement::TYPE_EXPENSE)
             ->when(true, $range)
             ->sum('amount');
 
         $systemTotal =
             ($salesCash + $salesTransfer + $salesQr) +
             ($creditCash + $creditTransfer + $creditQr) +
+            $closing->initial_balance +
             ($movIncomes - $movExpenses);
 
         return [
@@ -137,14 +150,15 @@ class CashClosingService
             $totals = $this->computeTotals($closing, $from, $until, $userIdFilter);
 
             $closing->update([
-                'closed_at'      => now(),
-                'closing_amount' => $closingAmount,
-                'system_total'   => $totals['system_total'],
+                'closing_time'      => now(),
+                'actual_balance' => $closingAmount,
+                'expected_balance'   => $totals['system_total'],
                 'difference'     => $closingAmount - $totals['system_total'],
-                'status'         => 'closed',
+                'status'         => CashBoxClosing::STATUS_CLOSED,
                 'notes'          => $notes,
             ]);
 
+            /**
             // Asociar registros al cierre (si aún no están vinculados)
             $from  = $from  ? Carbon::parse($from)  : Carbon::parse($closing->opened_at);
             $until = $until ? Carbon::parse($until) : now();
@@ -172,7 +186,7 @@ class CashClosingService
 
             // Movimientos
             CashMovement::query()->tap($attach)->getQuery();
-
+            */
             return $closing->refresh();
         });
     }

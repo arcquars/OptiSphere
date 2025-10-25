@@ -1,16 +1,18 @@
 <div class="space-y-4">
+    @if($branchId)
+        <h3>Caja abierta: {{ $cashBoxClosing?->opening_time }} | Balance inicial: {{ $cashBoxClosing?->initial_balance }}</h3>
     <!-- Filtros / cabecera -->
     <div class="bg-base-100 rounded-2xl shadow-sm p-4 md:p-6">
         <div class="flex flex-col md:flex-row md:items-end gap-4">
             <div class="w-full md:w-1/4">
                 <label class="block text-sm font-semibold mb-1">Desde</label>
                 <input type="datetime-local" class="input input-bordered w-full"
-                       wire:model.live="from">
+                       wire:model.live="from" readonly>
             </div>
             <div class="w-full md:w-1/4">
                 <label class="block text-sm font-semibold mb-1">Hasta</label>
                 <input type="datetime-local" class="input input-bordered w-full"
-                       wire:model.live="until">
+                       wire:model.live="until" readonly>
             </div>
 
             @if(auth()->user()->hasRole('admin'))
@@ -61,6 +63,10 @@
                 <div class="flex justify-between"><span>Egresos</span><span class="font-semibold text-error">{{ number_format($this->totals['movements']['expenses'], 2) }}</span></div>
                 <div class="divider my-1"></div>
                 <div class="flex justify-between text-base font-bold">
+                    <span>Balance inicial</span>
+                    <span class="text-success">{{ number_format($cashBoxClosing->initial_balance, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-base font-bold">
                     <span>Total del sistema</span>
                     <span>{{ number_format($this->totals['system_total'], 2) }}</span>
                 </div>
@@ -70,25 +76,25 @@
 
     <!-- Cierre -->
     <div class="bg-base-100 rounded-2xl shadow-sm p-5">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <form wire:submit="close" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
-                <label class="block text-sm font-semibold mb-1">Efectivo contado por cajero</label>
-                <input type="number" step="0.01" class="input input-bordered w-full"
-                       wire:model="closingAmount">
+                <label class="block text-sm font-semibold mb-1">Efectivo contado por cajero <span class="text-error">*</span></label>
+                <input type="number" step="0.01" class="input input-bordered focus-within:outline-none w-full"
+                       wire:model.blur="closingAmount" required>
             </div>
             <div>
                 <label class="block text-sm font-semibold mb-1">Notas</label>
-                <textarea class="textarea textarea-bordered w-full" rows="2" wire:model="notes" placeholder="Observaciones del cierre"></textarea>
+                <textarea class="textarea textarea-bordered focus-within:outline-none w-full" rows="2" wire:model="notes" placeholder="Observaciones del cierre"></textarea>
             </div>
             <div class="md:text-right">
-                <button type="button" class="btn btn-warning"
-                        wire:click="close"
+                <button type="submit" class="btn btn-warning"
+{{--                        wire:click="close"--}}
                         wire:loading.attr="disabled">
                     <span wire:loading.remove wire:target="close">Cerrar caja</span>
                     <span wire:loading wire:target="close" class="loading loading-spinner loading-xs"></span>
                 </button>
             </div>
-        </div>
+        </form>
 
         @php
             $diff = (float) ($closingAmount - $this->totals['system_total']);
@@ -102,4 +108,6 @@
             </div>
         </div>
     </div>
+
+    @endif
 </div>
