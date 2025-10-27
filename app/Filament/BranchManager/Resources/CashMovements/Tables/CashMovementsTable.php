@@ -2,6 +2,7 @@
 
 namespace App\Filament\BranchManager\Resources\CashMovements\Tables;
 
+use App\Models\CashBoxClosing;
 use App\Models\CashMovement;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -123,12 +124,15 @@ class CashMovementsTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                ->visible(function (CashMovement $record): bool {
+                    return $record->can_edit;
+                }),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+//                BulkActionGroup::make([
+//                    DeleteBulkAction::make(),
+//                ]),
             ]);
     }
 }
