@@ -5,7 +5,11 @@ namespace App\Filament\Resources\Branches\Pages;
 use App\Filament\Resources\Branches\BranchResource;
 use App\Models\Branch;
 use App\Models\CashBoxClosing;
+use App\Services\CashClosingService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Filament\Resources\Pages\Page;
+use Livewire\Attributes\Computed;
 
 class CashBoxView extends Page
 {
@@ -21,29 +25,15 @@ class CashBoxView extends Page
     {
         $breadcrumbs = [];
         $currentPageTitle = $this->getTitle(); // 'Detalle de Caja'
-
-        // 1. Sucursales (Base: Link al listado principal del Resource)
-        // Se asume que BranchResource::getUrl('index') genera la ruta base de Sucursales.
         $breadcrumbs[BranchResource::getUrl('index')] = BranchResource::getTitleCasePluralModelLabel();
-
-        // 2. Reporte de Caja (Página Intermedia)
-        // Debes reemplazar 'reporte-caja-index' con el nombre de la ruta que has definido
-        // para tu clase App\Filament\Pages\ReporteCajaIndex.
-//        $reporteCajaUrl = url('/' . Filament::getPanel()->getPath() . '/' . ReporteCajaIndex::getSlug());
-
-        // Si ReporteCajaIndex extiende Filament\Pages\Page, utiliza su método getUrl()
-         $reporteCajaUrl = CashBoxReport::getUrl(['branch_id' => $this->cashBc->branch_id]);
-
+        $reporteCajaUrl = CashBoxReport::getUrl(['branch_id' => $this->cashBc->branch_id]);
         $breadcrumbs[$reporteCajaUrl] = 'Reporte de Caja';
-
-        // 3. Detalle de Caja (Página Actual)
-        // Se usa '#' para indicar que la página actual no es un enlace.
         $breadcrumbs[''] = $currentPageTitle;
 
         return $breadcrumbs;
     }
 
-    public function mount(int $cashBoxClosingId): void
+    public function mount(CashClosingService $svc, int $cashBoxClosingId): void
     {
         $this->cashBc = CashBoxClosing::find($cashBoxClosingId);
     }
@@ -53,5 +43,43 @@ class CashBoxView extends Page
         return [
             'cashBoxClosing' => $this->cashBc,
         ];
+    }
+
+    #[Computed]
+    public function totals(): array
+    {
+        $svc = app(CashClosingService::class);
+
+        $closingTime = (strcmp($this->cashBc->status, CashBoxClosing::STATUS_OPEN) == 0)?
+            null : $this->cashBc->closing_time;
+//        dd($this->cashBc->opening_time . " || " . $closingTime);
+        return $svc->computeTotals(
+            closing: $this->cashBc,
+            from: $this->cashBc->opening_time,
+            until: $closingTime,
+            userIdFilter: $this->cashBc->user_id,
+        );
+    }
+
+    public function printPdf()
+    {
+        // 1. Obtener los datos necesarios para el PDF
+        $data = [
+            'closing' => $this->cashBc,
+            'totals' => $this->totals,
+            'branchName' => $this->cashBc->branch->name, // Ejemplo de dato
+            'userName' => $this->cashBc->user->name,     // Ejemplo de dato
+        ];
+
+        // 2. Cargar la vista Blade para el PDF
+        // Reemplaza 'pdf.cash_box_report' con el nombre de tu vista Blade para el PDF.
+        $pdf = Pdf::loadView('pdf.cash_box_report', $data);
+
+        // 3. Devolver la respuesta de descarga usando streaming
+        // Livewire maneja esto correctamente para forzar la descarga en el navegador.
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output(); // Esto genera el contenido binario del PDF
+        }, 'cierre-caja-' . $this->cashBc->id . '.pdf'); // Nombre del archivo
+
     }
 }
