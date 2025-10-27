@@ -21,7 +21,7 @@ class Category extends Model
 
     use HasFactory;
 
-    public function products(): MorphedByMan
+    public function products(): MorphedByMany
     {
         return $this->morphedByMany(Product::class, 'categorizable');
     }

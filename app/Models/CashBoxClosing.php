@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,8 @@ class CashBoxClosing extends Model
     const STATUS_CLOSED = 'closed';
     const STATUS_ARCHIVED = 'archived';
 
+    use HasFactory;
+    
     protected $fillable = [
         'branch_id',
         'user_id',           // Usuario que realiza el cierre.

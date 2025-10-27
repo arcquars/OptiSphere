@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Branches\Tables;
 
+use App\Filament\Resources\Branches\Pages\CashBoxReport;
 use App\Filament\Resources\Branches\Pages\InventoryBranch;
 use App\Filament\Resources\Branches\Pages\ManageBranch;
 use App\Models\Branch;
@@ -43,6 +44,11 @@ class BranchesTable
                 //
             ])
             ->recordActions([
+                Action::make('cash-box-closing')
+                    ->label('Flujo de caja')
+                    ->icon('fas-cash-register')
+                    ->url(fn (Branch $record) => CashBoxReport::getUrl(['branch_id' => $record->id]))
+                    ->color('success'),
                 Action::make('manage-branch')
                     ->label('Matriz')
                     ->icon('c-square-3-stack-3d')
@@ -56,9 +62,9 @@ class BranchesTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+//                BulkActionGroup::make([
+//                    DeleteBulkAction::make(),
+//                ]),
             ]);
     }
 }

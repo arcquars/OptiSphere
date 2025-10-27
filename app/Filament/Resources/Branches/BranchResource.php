@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Branches;
 
+use App\Filament\Resources\Branches\Pages\CashBoxReport;
+use App\Filament\Resources\Branches\Pages\CashBoxView;
 use App\Filament\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Resources\Branches\Pages\EditBranch;
 use App\Filament\Resources\Branches\Pages\InventoryBranch;
@@ -54,7 +56,9 @@ class BranchResource extends Resource
             'create' => CreateBranch::route('/create'),
             'edit' => EditBranch::route('/{record}/edit'),
             'matrix' => ManageBranch::route('/{branch_id}/matrix'),
-            'inventory' => InventoryBranch::route('/{branch_id}/inventory')
+            'inventory' => InventoryBranch::route('/{branch_id}/inventory'),
+            'cash-box-report' => CashBoxReport::route('/{branch_id}/cash-box'),
+            'cash-box-view' => CashBoxView::route('/cash-box-report/{cashBoxClosingId}/cash-box-view')
         ];
     }
 }
