@@ -134,7 +134,16 @@
 
                         </td>
                         <td>
-                            {{ __('cerisier.'.$sale->status)  }}
+                            @if(strcmp($sale->status, \App\Models\Sale::SALE_STATUS_CREDIT) == 0)
+                                @if(!$sale->is_paid)
+                                <p class="text-error">{{ __('cerisier.'.$sale->status)  }}</p>
+                                @else
+                                <p class="text-success">{{ __('cerisier.'.$sale->status)  }}</p>
+                                @endif
+                            @else
+                                {{ __('cerisier.'.$sale->status)  }}
+                            @endif
+
                         </td>
                         <td>
                             @if($sale->use_promotion)
