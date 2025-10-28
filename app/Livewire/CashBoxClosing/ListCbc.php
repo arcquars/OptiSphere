@@ -3,6 +3,7 @@
 namespace App\Livewire\CashBoxClosing;
 
 use App\Models\CashBoxClosing;
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -13,10 +14,13 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
+use Filament\Tables\Filters\Filter; // <-- Importar la clase base de Filtros
+use Filament\Forms\Components\DatePicker; // <-- Importar el componente de fecha
 
 class ListCbc extends Component implements HasActions, HasSchemas, HasTable
 {
@@ -39,36 +43,33 @@ class ListCbc extends Component implements HasActions, HasSchemas, HasTable
             )
             ->columns([
                 TextColumn::make('branch.name')
+                    ->label('Sucursal')
                     ->searchable(),
                 TextColumn::make('user.name')
+                    ->label('Usuario')
                     ->searchable(),
                 TextColumn::make('opening_time')
+                    ->label('Fecha de apertura')
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('closing_time')
+                    ->label('Fecha de cierre')
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('initial_balance')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Balance inicial')
+                    ->numeric(),
                 TextColumn::make('expected_balance')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Balance del Sistema')
+                    ->numeric(),
                 TextColumn::make('actual_balance')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Balance usuario')
+                    ->numeric(),
                 TextColumn::make('difference')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Diferencia')
+                    ->numeric(),
                 IconColumn::make('status')
+                    ->label('Estado')
                     ->icon(fn (string $state): Heroicon => match ($state) {
                         CashBoxClosing::STATUS_OPEN => Heroicon::OutlinedLockOpen,
                         CashBoxClosing::STATUS_CLOSED => Heroicon::OutlinedLockClosed,
@@ -83,7 +84,36 @@ class ListCbc extends Component implements HasActions, HasSchemas, HasTable
             ])
             ->defaultSort('initial_balance', 'desc')
             ->filters([
-                //
+                SelectFilter::make('user_id')
+                    ->label('Filtrar por Usuario')
+                    ->relationship('user', 'name') // Usa la relación 'user' y muestra el campo 'name'
+                    ->options(
+                    // Opcional: Limitar las opciones solo a usuarios que realmente tienen cierres de caja
+                        User::whereIn('id', CashBoxClosing::pluck('user_id')->unique())->pluck('name', 'id')->toArray()
+                    ),
+                Filter::make('closing_time')
+                    ->form([
+                        // Usamos dos DatePicker para definir el rango "Desde" y "Hasta"
+                        DatePicker::make('date_from')
+                            ->label('Cierre Desde')
+                            ->placeholder(now()->subDays(30)->format('Y-m-d')),
+                        DatePicker::make('date_until')
+                            ->label('Cierre Hasta')
+                            ->placeholder(now()->format('Y-m-d')),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            // Filtro para la fecha de inicio ('date_from')
+                            ->when(
+                                $data['date_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('closing_time', '>=', $date),
+                            )
+                            // Filtro para la fecha de fin ('date_until')
+                            ->when(
+                                $data['date_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('closing_time', '<=', $date),
+                            );
+                    }),
             ])
             ->headerActions([
                 //

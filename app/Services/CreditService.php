@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Branch;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +25,8 @@ class CreditService
      * @return SalePayment El registro del pago recién creado.
      */
     public function registerPayment(
-        Sale $sale,
         float $amount,
+        Sale $sale,
         string $paymentMethod,
         int $userId,
         ?string $notes = null
@@ -46,12 +47,15 @@ class CreditService
         // 2. Ejecutar Transacción (Garantiza que ambas operaciones se completen o ninguna)
         return DB::transaction(function () use ($sale, $amount, $paymentMethod, $userId, $notes) {
 
+            $branch = Branch::find($sale->branch_id);
+            $cashBc = $branch->getCashBoxClosingByUser($userId);
+
             // a) Crear el registro del abono (SalePayment)
             $payment = SalePayment::create([
                 'sale_id' => $sale->id,
                 'branch_id' => $sale->branch_id,
                 'user_id' => $userId,
-                'cash_box_closing_id' => $sale->cash_box_closing_id,
+                'cash_box_closing_id' => $cashBc?->id,
                 'amount' => $amount,
                 'payment_method' => $paymentMethod,
                 'notes' => $notes,

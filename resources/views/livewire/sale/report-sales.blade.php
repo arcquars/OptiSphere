@@ -152,12 +152,31 @@
                                             <i class="fa-solid fa-eye"></i> Ver
                                         </a>
                                     </li>
+                                    @if(strcmp($sale->status, \App\Models\Sale::SALE_STATUS_CREDIT) == 0)
+                                    <li>
+                                        <a
+                                            @click="$dispatch('toggleViewSalePayment', {saleId: '{{$sale->id}}'}); return false;"
+                                            class="text-primary" title="Registrar pago"
+                                        >
+                                            <i class="fa-solid fa-cash-register"></i> Reg. Pago
+                                        </a>
+                                    </li>
+                                    @endif
                                     <li>
                                         <a href="{{ route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" target="_blank" class="text-primary">
                                             <i class="fa-solid fa-print"></i> Imprimir recibo
                                         </a>
                                     </li>
-                                    <li><a @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); return false;" class="text-danger-500"><i class="fa-solid fa-trash-can"></i> Eliminar</a></li>
+                                    @if($sale->can_edit)
+                                    <li>
+                                        <a
+                                            @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); return false;"
+                                            class="text-danger-500"
+                                        >
+                                            <i class="fa-solid fa-trash-can"></i> Eliminar
+                                        </a>
+                                    </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

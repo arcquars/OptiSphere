@@ -76,12 +76,17 @@ class Sale extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function cashBoxClosing(): BelongsTo
+    {
+        return $this->belongsTo(CashBoxClosing::class); // Asumo que tienes un modelo User
+    }
+
     /**
      * Relación uno a muchos con los abonos/pagos de la venta.
      */
     public function payments(): HasMany
     {
-        return $this->hasMany(SalePayment::class);
+        return $this->hasMany(SalePayment::class)->where('deleted', false);
     }
 
     public function scopeNotVoided($q) {
@@ -92,6 +97,22 @@ class Sale extends Model
         return $this->status === 'voided';
     }
 
+    public function getCanEditAttribute(){
+        if($this->cashBoxClosing == null)
+            return true;
+        return (strcmp($this->cashBoxClosing->status, CashBoxClosing::STATUS_OPEN) == 0)? true : false;
+    }
+
+    public function getIsPaidAttribute(){
+        return ($this->final_total == $this->paid_amount);
+    }
+
+    public function getTotalPartialPaymentsAttribute(){
+        if(strcmp($this->status, self::SALE_STATUS_CREDIT) == 0){
+            return $this->payments->sum('amount');
+        }
+        return 0;
+    }
     // ... otras relaciones (customer, branch, user)
 
     // ---------------------------------------------

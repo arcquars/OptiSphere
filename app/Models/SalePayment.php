@@ -44,4 +44,15 @@ class SalePayment extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function cashBoxClosing(): BelongsTo
+    {
+        return $this->belongsTo(CashBoxClosing::class); // Asumo que tienes un modelo User
+    }
+
+    public function getCanEditAttribute(){
+        if($this->cashBoxClosing == null)
+            return true;
+        return (strcmp($this->cashBoxClosing->status, CashBoxClosing::STATUS_OPEN) == 0)? true : false;
+    }
 }
