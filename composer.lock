@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6f2e11d713b68f492116a0a5d8d0fd0c",
+    "content-hash": "2b32670f3c84943bef83d5bacaacded8",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -3192,16 +3192,16 @@
         },
         {
             "name": "laravel-lang/lang",
-            "version": "15.23.3",
+            "version": "15.26.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Laravel-Lang/lang.git",
-                "reference": "583acd258e8fd5a8199dac80cb5323e66079f812"
+                "reference": "3cae5a9b4c5553a065fc701499ffee2c7bc12ffb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Laravel-Lang/lang/zipball/583acd258e8fd5a8199dac80cb5323e66079f812",
-                "reference": "583acd258e8fd5a8199dac80cb5323e66079f812",
+                "url": "https://api.github.com/repos/Laravel-Lang/lang/zipball/3cae5a9b4c5553a065fc701499ffee2c7bc12ffb",
+                "reference": "3cae5a9b4c5553a065fc701499ffee2c7bc12ffb",
                 "shasum": ""
             },
             "require": {
@@ -3215,7 +3215,7 @@
             "require-dev": {
                 "dragon-code/codestyler": "^6.0",
                 "laravel-lang/status-generator": "^2.11",
-                "phpunit/phpunit": "^10.0 || ^11.0 || ^12.0",
+                "phpunit/phpunit": "^11.0 || ^12.0",
                 "symfony/var-dumper": "^7.0"
             },
             "type": "library",
@@ -3252,7 +3252,7 @@
                 "issues": "https://github.com/Laravel-Lang/lang/issues",
                 "source": "https://github.com/Laravel-Lang/lang"
             },
-            "time": "2025-08-24T03:27:37+00:00"
+            "time": "2025-10-06T23:59:01+00:00"
         },
         {
             "name": "laravel-lang/locale-list",
