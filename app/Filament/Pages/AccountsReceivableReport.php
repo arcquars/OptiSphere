@@ -16,11 +16,9 @@ class AccountsReceivableReport extends Page implements HasTable
 
     protected string $view = 'filament.pages.accounts-receivable-report';
 
-    // El ícono que elegiste
     protected static string|\BackedEnum|null $navigationIcon = "c-banknotes";
 
-    // (OPCIONAL) El orden en el menú
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $title = 'Cuentas por Cobrar';
 
@@ -30,6 +28,7 @@ class AccountsReceivableReport extends Page implements HasTable
     {
         return __('Cuentas por cobrar');
     }
+
 
     /**
      * @param Table $table

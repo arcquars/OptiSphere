@@ -29,7 +29,13 @@ class ServiceForm
                         TextInput::make('code')
                             ->required()
                             ->maxLength(255)
-                            ->label('Código / SKU'),
+                            ->label('Código / SKU')
+                            ->unique(
+                                table: 'services',
+                                column: 'name',
+                                ignoreRecord: true
+                            )
+                            ->withoutTrashed(),
 
                         Textarea::make('description')
                             ->maxLength(65535)

@@ -3,15 +3,16 @@
 namespace App\Filament\Resources\Products\Schemas;
 
 use App\Models\BaseCode;
+use App\Models\Product;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -28,7 +29,13 @@ class ProductForm
                         TextInput::make('name')
                             ->required(),
                         TextInput::make('code')
-                            ->required(),
+                            ->required()
+                            ->unique(
+                                table: 'products',        // La tabla donde debe ser único
+                                column: 'code',           // La columna que debe ser única
+                                ignoreRecord: true        // Ignora el registro actual al editar
+                            )
+                            ->withoutTrashed(),
 //                        TextInput::make('supplier_id')
 //                            ->required()
 //                            ->numeric(),
@@ -38,7 +45,15 @@ class ProductForm
                             ->preload(),
                         Toggle::make('is_active')
                             ->default(true)
-                            ->required(),
+                            ->required()
+                            ->disabled(
+                            // $get es una utilidad que nos permite "leer" el valor de
+                            // otros campos del formulario en tiempo real.
+                                fn (Get $get): bool =>
+                                    // $get('opticalProperties') devuelve el array de items del Repeater.
+                                    // Si el array NO está vacío (!empty), devolvemos true (deshabilitado).
+                                !empty($get('has_optical_properties'))
+                            ),
                         FileUpload::make('image_path')
                             ->image()
                             ->disk('public')
@@ -63,7 +78,21 @@ class ProductForm
                     ->columnSpan('full'),
                 Checkbox::make('has_optical_properties')
                     ->label('¿Agregar Propiedades Ópticas?')
-                    ->reactive(),
+                    ->live() // 'reactive()' se llama 'live()' en v4
+                    // Este hook personaliza cómo se "hidrata" (carga) el estado
+                    // del checkbox al abrir la página de "Editar".
+                    ->afterStateHydrated(function (Component $component, ?Product $record) {
+                        // $record es el Product que se está editando.
+                        if ($record === null) {
+                            return; // Estamos en "Crear", no hacer nada.
+                        }
+
+                        // Esta es la consulta Eloquent
+                        if ($record->opticalProperties()->exists()) {
+                            // Usamos $component->state() para establecer el estado.
+                            $component->state(true);
+                        }
+                    }),
                 Section::make('Propiedades Ópticas')
                     ->visible(fn (Get $get) => $get('has_optical_properties'))
                     ->schema([

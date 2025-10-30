@@ -29,7 +29,6 @@ class InventoryWarehouse extends Component
     public function render()
     {
         $query = Product::query();
-//        dd("cccc 1:: " . $this->querySearch);
         if(strcmp($this->querySearch, "") != 0){
             $query->where(function($subQuery){
                 $subQuery->where('name', 'like', '%' . $this->querySearch . '%')

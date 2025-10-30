@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Price;
 use App\Models\Service;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -53,6 +54,7 @@ class ServicesTable
                 //
             ])
             ->recordActions([
+                DeleteAction::make(),
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('set-price-service')

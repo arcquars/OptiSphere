@@ -45,6 +45,11 @@ class SalePayment extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function cashBoxClosing(): BelongsTo
     {
         return $this->belongsTo(CashBoxClosing::class); // Asumo que tienes un modelo User

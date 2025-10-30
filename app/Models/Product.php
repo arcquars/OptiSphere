@@ -11,12 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
 
 class Product  extends Model implements SalableInterface
 {
     use HasPricesAndPromotions;
     use HasPricesByBranch;
+    use SoftDeletes;
+
     /**
      * @var list<string>
      */

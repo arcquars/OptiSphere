@@ -8,6 +8,7 @@ use App\Traits\HasPricesByBranch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model implements SalableInterface
 {
@@ -15,6 +16,7 @@ class Service extends Model implements SalableInterface
 
     use HasPricesAndPromotions;
     use HasPricesByBranch;
+    use SoftDeletes;
 
     protected $fillable = ['name', 'code', 'description', 'path_image','is_active'];
 
