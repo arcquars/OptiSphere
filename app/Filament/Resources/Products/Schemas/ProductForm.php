@@ -18,6 +18,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Validation\Rule;
+use Illuminate\Database\Eloquent\Model;
 
 class ProductForm
 {
@@ -31,11 +32,17 @@ class ProductForm
                             ->required(),
                         TextInput::make('code')
                             ->required()
-                            ->rule(
-                                Rule::unique('products', 'code')
-                                    ->ignore(fn (?Product $record): ?Product => $record)
-                                    ->withoutTrashed()
-                            ),
+                            ->rule(function (Get $get, ?Model $record): \Illuminate\Validation\Rules\Unique {
+                                // 2. Construimos la regla 'unique' aquí dentro
+                                $rule = Rule::unique('products', 'code')
+                                    ->withoutTrashed();
+
+                                // 3. Le decimos a la regla qué ID ignorar (solo al editar)
+                                if ($record) {
+                                    $rule->ignore($record->id);
+                                }
+                                return $rule;
+                            }),
                         Select::make('supplier_id')
                             ->relationship(name: 'supplier', titleAttribute: 'name')
                             ->searchable(['name'])
