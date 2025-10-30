@@ -17,6 +17,7 @@ use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rule;
 
 class ProductForm
 {
@@ -30,15 +31,11 @@ class ProductForm
                             ->required(),
                         TextInput::make('code')
                             ->required()
-                            ->unique(
-                                table: 'products',        // La tabla donde debe ser único
-                                column: 'code',           // La columna que debe ser única
-                                ignoreRecord: true        // Ignora el registro actual al editar
-                            )
-                            ->withoutTrashed(),
-//                        TextInput::make('supplier_id')
-//                            ->required()
-//                            ->numeric(),
+                            ->rule(
+                                Rule::unique('products', 'code')
+                                    ->ignore(fn (?Product $record): ?Product => $record)
+                                    ->withoutTrashed()
+                            ),
                         Select::make('supplier_id')
                             ->relationship(name: 'supplier', titleAttribute: 'name')
                             ->searchable(['name'])
@@ -47,11 +44,7 @@ class ProductForm
                             ->default(true)
                             ->required()
                             ->disabled(
-                            // $get es una utilidad que nos permite "leer" el valor de
-                            // otros campos del formulario en tiempo real.
                                 fn (Get $get): bool =>
-                                    // $get('opticalProperties') devuelve el array de items del Repeater.
-                                    // Si el array NO está vacío (!empty), devolvemos true (deshabilitado).
                                 !empty($get('has_optical_properties'))
                             ),
                         FileUpload::make('image_path')
@@ -65,10 +58,6 @@ class ProductForm
                             ->columnSpan(2),
 
                         ])->columns(4),
-//                Select::make('category_id')
-//                    ->relationship(name: 'categories', titleAttribute: 'name')
-//                    ->searchable()
-//                    ->loadingMessage('Cargando categorías...'),
                 Select::make('categories')
                     ->relationship('categories', 'name')
                     ->multiple()
