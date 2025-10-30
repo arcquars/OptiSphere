@@ -166,8 +166,8 @@ class SaleService
             if ($paidAmount > 0) {
                 // Utilizamos el CreditService para registrar el primer abono.
                 $this->creditService->registerPayment(
-                    $sale,
                     $paidAmount,
+                    $sale,
                     $data['payment_method'], // Método del abono inicial
                     $data['user_id'],
                     'Abono inicial de la venta a crédito'
