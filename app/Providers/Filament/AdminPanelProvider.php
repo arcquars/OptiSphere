@@ -37,12 +37,6 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot(): void
     {
-//        FilamentView::registerRenderHook(
-//            'panels::head.end',
-//            fn () => <<<'HTML'
-//        @vite(['resources/css/app.css', 'resources/js/app.js'])
-//    HTML,
-//        );
     }
 
     public function panel(Panel $panel): Panel

@@ -51,20 +51,11 @@ class Login extends Component
             if ($user->hasRole('admin')) {
                 $this->redirectRoute('filament.admin.pages.dashboard');
             } elseif ($user->hasRole('accountant')) {
-                $this->redirectIntended(
-                    default: route('filament.accountant.pages.dashboard', absolute: false),
-                    navigate: true
-                );
+                $this->redirectRoute('filament.accountant.pages.dashboard');
             } elseif ($user->hasRole('branch-manager')) {
-                $this->redirectIntended(
-                    default: route('filament.branch-manager.pages.dashboard', absolute: false),
-                    navigate: true
-                );
+                $this->redirectRoute('filament.branch-manager.pages.dashboard');
             } elseif ($user->hasRole('branch-coordinator')) {
-                $this->redirectIntended(
-                    default: route('filament.branch-coordinator.pages.dashboard', absolute: false),
-                    navigate: true
-                );
+                $this->redirectRoute('filament.branch-coordinator.pages.dashboard');
             }
         }
     }

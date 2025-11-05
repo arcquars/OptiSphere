@@ -7,6 +7,7 @@ use App\Filament\Resources\Branches\Pages\CashBoxView;
 use App\Filament\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Resources\Branches\Pages\EditBranch;
 use App\Filament\Resources\Branches\Pages\InventoryBranch;
+use App\Filament\Resources\Branches\Pages\InvoiceConfig;
 use App\Filament\Resources\Branches\Pages\ListBranches;
 use App\Filament\Resources\Branches\Pages\ManageBranch;
 use App\Filament\Resources\Branches\Schemas\BranchForm;
@@ -58,7 +59,8 @@ class BranchResource extends Resource
             'matrix' => ManageBranch::route('/{branch_id}/matrix'),
             'inventory' => InventoryBranch::route('/{branch_id}/inventory'),
             'cash-box-report' => CashBoxReport::route('/{branch_id}/cash-box'),
-            'cash-box-view' => CashBoxView::route('/cash-box-report/{cashBoxClosingId}/cash-box-view')
+            'cash-box-view' => CashBoxView::route('/cash-box-report/{cashBoxClosingId}/cash-box-view'),
+            'invoice-config' => InvoiceConfig::route('/{branch_id}/invoice-config')
         ];
     }
 }
