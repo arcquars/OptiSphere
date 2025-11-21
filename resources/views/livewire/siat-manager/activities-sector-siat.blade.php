@@ -32,6 +32,7 @@
                 </tr>
             </thead>
             <tbody>
+                @if($items)
                 @foreach ($items as $index => $item)
                 <tr>
                     <th>{{ $index }}</th>
@@ -40,6 +41,7 @@
                     <td>{{ $item->tipo_documento_sector }}</td>
                 </tr>    
                 @endforeach
+                @endif
             </tbody>
         </table>
     </div>

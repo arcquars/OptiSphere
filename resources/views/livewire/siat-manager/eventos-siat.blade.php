@@ -32,6 +32,7 @@
                 </tr>
             </thead>
             <tbody>
+                @if($items)
                 @foreach ($items as $index => $act)
                 <tr>
                     <th>{{ $index + 1 }}</th>
@@ -39,6 +40,7 @@
                     <td>{{ $act->descripcion }}</td>
                 </tr>    
                 @endforeach
+                @endif
             </tbody>
         </table>
     </div>

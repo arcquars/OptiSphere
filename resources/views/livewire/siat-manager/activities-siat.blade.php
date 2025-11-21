@@ -32,6 +32,7 @@
                 </tr>
             </thead>
             <tbody>
+                @if($items)
                 @foreach ($items as $act)
                 <tr>
                     <th>{{ $act->nro }}</th>
@@ -40,6 +41,7 @@
                     <td>{{ $act->tipo }}</td>
                 </tr>    
                 @endforeach
+                @endif
             </tbody>
         </table>
     </div>
