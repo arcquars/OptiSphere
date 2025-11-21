@@ -334,7 +334,16 @@
                     <button type="submit" class="btn btn-success btn-block" @if(!$isOpenCashBoxClosing) disabled @endif>
                         <i class="fa-solid fa-check"></i>Completar Pago
                     </button>
-                    <button class="btn btn-info btn-block" @if(!$isOpenCashBoxClosing) disabled @endif>
+                    <button 
+                        class="btn btn-info btn-block" 
+                        @if(!$isOpenCashBoxClosing) 
+                        disabled 
+                        @else
+                            @if(!$this->branch->is_facturable)
+                                disabled
+                            @endif
+                        @endif
+                    >
                         <i class="fa-solid fa-print"></i>Generar Factura
                     </button>
                 </div>

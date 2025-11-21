@@ -62,6 +62,8 @@ class ManagerBranch extends Component
     public function mount($branchId): void
     {
         $this->branch = Branch::find($branchId);
+        
+        // dd($this->branch->is_facturable);
         $this->categories = Category::where('is_active', true)->get();
 
         $this->promotionActives = Promotion::active()->get();

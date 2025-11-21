@@ -6,6 +6,7 @@ use App\Filament\Resources\Branches\Pages\CashBoxReport;
 use App\Filament\Resources\Branches\Pages\InventoryBranch;
 use App\Filament\Resources\Branches\Pages\InvoiceConfig;
 use App\Filament\Resources\Branches\Pages\ManageBranch;
+use App\Filament\Resources\Branches\Pages\SiatManager;
 use App\Filament\Tables\Columns\BranchActionsColumn;
 use App\Models\Branch;
 use App\Models\Warehouse;
@@ -65,11 +66,17 @@ class BranchesTable
                     ->icon('fas-table-list')
                     ->url(fn (Branch $record) => InventoryBranch::getUrl(['branch_id' => $record->id]))
                     ->color('success'),
-                Action::make('invoice-config')
+                // Action::make('invoice-config')
+                //     ->label('')
+                //     ->tooltip('Configurar SIAT') 
+                //     ->icon('fas-file-invoice')
+                //     ->url(fn (Branch $record) => InvoiceConfig::getUrl(['branch_id' => $record->id]))
+                //     ->color('info'),
+                Action::make('siat-manager')
                     ->label('')
-                    ->tooltip('Configurar SIAT') 
+                    ->tooltip('Administrar SIAT') 
                     ->icon('fas-file-invoice')
-                    ->url(fn (Branch $record) => InvoiceConfig::getUrl(['branch_id' => $record->id]))
+                    ->url(fn (Branch $record) => SiatManager::getUrl(['branch_id' => $record->id]))
                     ->color('info'),
                 EditAction::make()
                     ->label('')

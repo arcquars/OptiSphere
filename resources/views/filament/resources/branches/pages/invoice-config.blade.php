@@ -11,7 +11,7 @@
                 <x-filament::button type="submit" size="sm" color="info">
                     Guardar Configuración
                 </x-filament::button>
-                <x-filament::button type="button" size="sm" color="success">
+                <x-filament::button type="button" size="sm" color="success" wire:click="validateSiat">
                     Validar
                 </x-filament::button>
             </div>
