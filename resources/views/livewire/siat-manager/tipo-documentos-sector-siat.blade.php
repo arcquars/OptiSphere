@@ -1,7 +1,7 @@
 <div>
     <div class="grid grid-cols-2 gap-1">
         <div>
-            <h2 class="text-xl text-primary font-bold">Motivo de anulaciones</h2>
+            <h2 class="text-xl text-primary font-bold">Tipos documentos sector</h2>
         </div>
         <div class="text-right">
             <button 

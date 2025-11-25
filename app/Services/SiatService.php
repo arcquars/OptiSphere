@@ -255,4 +255,64 @@ class SiatService
         }
         return $eventos;
     }
+
+    public function getDocumentosIdentidad(SiatProperty $siatProperty){
+        $codigos = [];
+        $siatSpV = $siatProperty->siatSucursalPuntoVentaActive;
+        $config = new SiatConfig([
+            'codigoSistema'    => $siatProperty->system_code,
+            'nit'              => $siatProperty->nit,
+            'apiKey'           => $siatProperty->token,
+            'ambiente'         => $siatProperty->environment,
+            'modalidad'        => $siatProperty->modality,
+            'codigoSucursal'   => $siatSpV->sucursal,
+            'codigoPuntoVenta' => $siatSpV->punto_venta,
+            'cuis'             => $siatSpV->cuis
+        ]);
+
+        $client = new SiatClient($config);
+        $service = $client->sincronizacion();
+        $request = new SolicitudSincronizacion($siatSpV->punto_venta);
+        $response = $service->sincronizarParametricaTipoDocumentoIdentidad($request);
+
+        if ($response->transaccion) {
+            $codigos = $response->listaCodigos;
+            Log::info('Response Tipos Documentos identidad: ' . json_encode($response));
+        } else {
+            Log::info('Error en '. self::class .' || ' . __FUNCTION__ . ':: ' . json_encode($response));
+            $message = $response->mensajesList[0];
+            throw new Exception($message->descripcion, $message->codigo);
+        }
+        return $codigos;
+    }
+
+    public function getTipoDocumentosSector(SiatProperty $siatProperty){
+        $codigos = [];
+        $siatSpV = $siatProperty->siatSucursalPuntoVentaActive;
+        $config = new SiatConfig([
+            'codigoSistema'    => $siatProperty->system_code,
+            'nit'              => $siatProperty->nit,
+            'apiKey'           => $siatProperty->token,
+            'ambiente'         => $siatProperty->environment,
+            'modalidad'        => $siatProperty->modality,
+            'codigoSucursal'   => $siatSpV->sucursal,
+            'codigoPuntoVenta' => $siatSpV->punto_venta,
+            'cuis'             => $siatSpV->cuis
+        ]);
+
+        $client = new SiatClient($config);
+        $service = $client->sincronizacion();
+        $request = new SolicitudSincronizacion($siatSpV->punto_venta);
+        $response = $service->sincronizarParametricaTipoDocumentoSector($request);
+
+        if ($response->transaccion) {
+            $codigos = $response->listaCodigos;
+            Log::info('Response Tipos Documento Sector: ' . json_encode($response));
+        } else {
+            Log::info('Error en '. self::class .' || ' . __FUNCTION__ . ':: ' . json_encode($response));
+            $message = $response->mensajesList[0];
+            throw new Exception($message->descripcion, $message->codigo);
+        }
+        return $codigos;
+    }
 }

@@ -22,5 +22,7 @@
         <li><a x-on:click="reloadActiveSiat(5)" :class="active===5? 'menu-active' : ''">Productos / Servicios</a></li>
         <li><a x-on:click="reloadActiveSiat(6)" :class="active===6? 'menu-active' : ''">Eventos Significativos</a></li>
         <li><a x-on:click="reloadActiveSiat(7)" :class="active===7? 'menu-active' : ''">Motivos de anulación</a></li>
+        <li><a x-on:click="reloadActiveSiat(8)" :class="active===8? 'menu-active' : ''">Tipos de documentos de identidad</a></li>
+        <li><a x-on:click="reloadActiveSiat(9)" :class="active===9? 'menu-active' : ''">Tipos de documentos de sector</a></li>
     </ul>
 </div>

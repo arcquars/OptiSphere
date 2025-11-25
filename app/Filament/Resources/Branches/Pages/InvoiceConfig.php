@@ -123,11 +123,14 @@ class InvoiceConfig extends Page implements HasSchemas
                     ->integer()->minValue(0)
                     ->maxValue(4)
                     ->required(),
-                FileUpload::make('path_logo')
-                    ->label('Logo')
+                FileUpload::make('path_digital_signature')
+                    ->label('Firma digital (.pem)')
                     ->disk('public')
-                    ->directory('logos/siat/' . $this->branch->id)
-                    ->image(),
+                    ->directory('keys/siat/' . $this->branch->id)
+                    // 1. FRONTEND: Le decimos al navegador qué mostrar (filtro visual)
+                    // ->extraInputAttributes(['accept' => '.pem'])
+                    // 2. BACKEND: Validamos SOLO por extensión, ignorando el tipo MIME confuso
+                    ->rules(['file', 'extensions:pem']),
                 Fieldset::make('Estado y Validación')
                 ->schema([
                     Toggle::make('is_actived')
@@ -136,8 +139,12 @@ class InvoiceConfig extends Page implements HasSchemas
                     Toggle::make('is_validated')
                         ->label('Validado Por Impuestos Internos')
                         ->disabled()
-                ])
-                ->columns(1) 
+                ])->columns(1),
+                FileUpload::make('path_logo')
+                    ->label('Logo')
+                    ->disk('public')
+                    ->directory('logos/siat/' . $this->branch->id)
+                    ->image(),
             ])
             ->statePath('data')
             ->model($this->siatProperty);

@@ -19,6 +19,12 @@
         @case(7)
             @livewire('siat-manager.motivo-anulacion-siat', ['branchId' => $branchId])
             @break
+        @case(8)
+            @livewire('siat-manager.documentos-identidad-siat', ['branchId' => $branchId])
+            @break
+        @case(9)
+            @livewire('siat-manager.tipo-documentos-sector-siat', ['branchId' => $branchId])
+            @break
         @default
             <livewire:siat-manager.codes-siat :branchId="$branchId" />
 

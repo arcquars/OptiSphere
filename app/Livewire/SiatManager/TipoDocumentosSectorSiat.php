@@ -4,21 +4,21 @@ namespace App\Livewire\SiatManager;
 
 use Amyrit\SiatBoliviaClient\Exceptions\SiatException;
 use App\Livewire\SiatManager\Base\BaseSiat;
-use App\Models\SiatDataMotivoAnulacion;
+use App\Models\SiatDataTipoDocSector;
 use App\Services\SiatService;
 use DB;
 use Log;
 
-class MotivoAnulacionSiat extends BaseSiat
+class TipoDocumentosSectorSiat extends BaseSiat
 {
     public function render()
     {
-        return view('livewire.siat-manager.motivo-anulacion-siat');
+        return view('livewire.siat-manager.tipo-documentos-sector-siat');
     }
 
     public function loadData(){
         if (isset($this->siatSucursalPuntoVenta)) {
-            $this->items = SiatDataMotivoAnulacion::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->get();
+            $this->items = SiatDataTipoDocSector::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->get();
         }
     }
 
@@ -28,21 +28,21 @@ class MotivoAnulacionSiat extends BaseSiat
     public function getItems(SiatService $siatService){
         DB::beginTransaction();
         try {
-            $motivoAnulaciones = $siatService->getMotivoAnulaciones($this->siatProperty);
+            $tipoDocumentoSectores = $siatService->getTipoDocumentosSector($this->siatProperty);
             
-            SiatDataMotivoAnulacion::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->delete();
+            SiatDataTipoDocSector::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->delete();
 
             $dataToInsert = [];
             $now = now(); // Para usar el mismo timestamp en todos los registros
-            $tipoCatalogo = SiatDataMotivoAnulacion::$catalogoType; // Usar la propiedad estática
+            $tipoCatalogo = SiatDataTipoDocSector::$catalogoType; // Usar la propiedad estática
             
             // 2. CONSTRUIR EL ARRAY DE DATOS
-            foreach($motivoAnulaciones as $motivoAnulacion){
+            foreach($tipoDocumentoSectores as $tipoDocumentoSector){
                 $dataToInsert[] = [
                     // *** Usamos la propiedad estática para asegurar el valor correcto ***
                     "tipo_catalogo"       => $tipoCatalogo, 
-                    "codigo_clasificador" => $motivoAnulacion->codigoClasificador,
-                    "descripcion"         => $motivoAnulacion->descripcion,
+                    "codigo_clasificador" => $tipoDocumentoSector->codigoClasificador,
+                    "descripcion"         => $tipoDocumentoSector->descripcion,
                     "siat_spv_id"         => $this->siatSucursalPuntoVenta->id,
                     "created_at"          => $now,
                     "updated_at"          => $now,
@@ -54,14 +54,14 @@ class MotivoAnulacionSiat extends BaseSiat
             if (!empty($dataToInsert)) {
                 // Nota: Aquí se usa SiatDataDocIdentidadTipo::insert() o SiatData::insert()
                 // dependiendo de dónde se encuentre el trait HasTable. Ambos funcionan si la tabla es la misma.
-                SiatDataMotivoAnulacion::insert($dataToInsert); 
+                SiatDataTipoDocSector::insert($dataToInsert); 
             }
-
+            
             DB::commit();
             $this->loadData();
             \Filament\Notifications\Notification::make()
-                ->title('Siat Motivo anulaciones')
-                ->body('Se actualizaron los motivos anulaciones')
+                ->title('Siat Eventos significativos')
+                ->body('Se actualizaron los Eventos significativos')
                 ->success()
                 ->send();
         } catch (SiatException $e) {

@@ -4,45 +4,49 @@ namespace App\Livewire\SiatManager;
 
 use Amyrit\SiatBoliviaClient\Exceptions\SiatException;
 use App\Livewire\SiatManager\Base\BaseSiat;
-use App\Models\SiatDataMotivoAnulacion;
+use App\Models\SiatDataDocIdentidadTipo;
+use App\Models\SiatDataLeyenda;
 use App\Services\SiatService;
 use DB;
 use Log;
 
-class MotivoAnulacionSiat extends BaseSiat
+class DocumentosIdentidadSiat extends BaseSiat
 {
     public function render()
     {
-        return view('livewire.siat-manager.motivo-anulacion-siat');
+        return view('livewire.siat-manager.documentos-identidad-siat');
     }
 
     public function loadData(){
         if (isset($this->siatSucursalPuntoVenta)) {
-            $this->items = SiatDataMotivoAnulacion::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->get();
+            $this->items = SiatDataDocIdentidadTipo::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->get();
         }
     }
 
     /**
      * @param SiatService $siatService
      */
-    public function getItems(SiatService $siatService){
+    public function getItems(SiatService $siatService)
+    {
         DB::beginTransaction();
         try {
-            $motivoAnulaciones = $siatService->getMotivoAnulaciones($this->siatProperty);
+            $documentosIdentidad = $siatService->getDocumentosIdentidad($this->siatProperty);
             
-            SiatDataMotivoAnulacion::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->delete();
+            // 1. ELIMINAR REGISTROS ANTERIORES
+            // Esto es necesario ya que vamos a insertar la lista completa de nuevo.
+            SiatDataDocIdentidadTipo::where('siat_spv_id', $this->siatSucursalPuntoVenta->id)->delete();
 
             $dataToInsert = [];
             $now = now(); // Para usar el mismo timestamp en todos los registros
-            $tipoCatalogo = SiatDataMotivoAnulacion::$catalogoType; // Usar la propiedad estática
+            $tipoCatalogo = SiatDataDocIdentidadTipo::$catalogoType; // Usar la propiedad estática
             
             // 2. CONSTRUIR EL ARRAY DE DATOS
-            foreach($motivoAnulaciones as $motivoAnulacion){
+            foreach($documentosIdentidad as $documentoIdentidad){
                 $dataToInsert[] = [
                     // *** Usamos la propiedad estática para asegurar el valor correcto ***
                     "tipo_catalogo"       => $tipoCatalogo, 
-                    "codigo_clasificador" => $motivoAnulacion->codigoClasificador,
-                    "descripcion"         => $motivoAnulacion->descripcion,
+                    "codigo_clasificador" => $documentoIdentidad->codigoClasificador,
+                    "descripcion"         => $documentoIdentidad->descripcion,
                     "siat_spv_id"         => $this->siatSucursalPuntoVenta->id,
                     "created_at"          => $now,
                     "updated_at"          => $now,
@@ -54,32 +58,32 @@ class MotivoAnulacionSiat extends BaseSiat
             if (!empty($dataToInsert)) {
                 // Nota: Aquí se usa SiatDataDocIdentidadTipo::insert() o SiatData::insert()
                 // dependiendo de dónde se encuentre el trait HasTable. Ambos funcionan si la tabla es la misma.
-                SiatDataMotivoAnulacion::insert($dataToInsert); 
+                SiatDataDocIdentidadTipo::insert($dataToInsert); 
             }
 
             DB::commit();
             $this->loadData();
             \Filament\Notifications\Notification::make()
-                ->title('Siat Motivo anulaciones')
-                ->body('Se actualizaron los motivos anulaciones')
+                ->title('Siat Tipos documento identidad')
+                ->body('Se actualizaron los tipos de documento de identidad')
                 ->success()
                 ->send();
         } catch (SiatException $e) {
-            Log::error($e->getMessage());
+            DB::rollBack();
+            Log::error("Error Siat en getItems: " . $e->getMessage());
             \Filament\Notifications\Notification::make()
                 ->title('Error Siat')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
-            DB::rollBack();
         } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            DB::rollBack();
+            Log::error("Error General en getItems: " . $e->getMessage());
             \Filament\Notifications\Notification::make()
                 ->title('Error General Siat: ' . $e->getCode())
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
-                DB::rollBack();
         }
     }
 }

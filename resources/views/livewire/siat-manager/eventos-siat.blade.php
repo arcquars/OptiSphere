@@ -21,27 +21,6 @@
         Sincronizando...
     </span>
     <div class="overflow-x-auto">
-        <table class="table table-zebra">
-            <!-- head -->
-            <thead>
-                <tr>
-                    <th>Nro</th>
-                    <th>Código</th>
-                    <th>Descripción</th>
-                    <th>Tipo</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($items)
-                @foreach ($items as $index => $act)
-                <tr>
-                    <th>{{ $index + 1 }}</th>
-                    <td>{{ $act->codigo_clasificador }}</td>
-                    <td>{{ $act->descripcion }}</td>
-                </tr>    
-                @endforeach
-                @endif
-            </tbody>
-        </table>
+        @include('partials.siat-code-list', ['items' => $items])
     </div>
 </div>
