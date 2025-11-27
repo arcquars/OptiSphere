@@ -25,6 +25,24 @@
         @case(9)
             @livewire('siat-manager.tipo-documentos-sector-siat', ['branchId' => $branchId])
             @break
+        @case(10)
+            @livewire('siat-manager.tipo-emisiones-siat', ['branchId' => $branchId])
+            @break
+        @case(11)
+            @livewire('siat-manager.tipo-metodo-pago-siat', ['branchId' => $branchId])
+            @break
+        @case(12)
+            @livewire('siat-manager.tipo-moneda-siat', ['branchId' => $branchId])
+            @break
+        @case(13)
+            @livewire('siat-manager.tipo-punto-venta-siat', ['branchId' => $branchId])
+            @break
+        @case(14)
+            <livewire:siat-manager.tipo-factura-siat :branchId="$branchId" />
+            @break
+        @case(15)
+            <livewire:siat-manager.unidad-medida-siat :branchId="$branchId" />
+            @break  
         @default
             <livewire:siat-manager.codes-siat :branchId="$branchId" />
 

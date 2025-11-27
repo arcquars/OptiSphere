@@ -6,6 +6,7 @@ use App\Contracts\SalableInterface;
 use App\Traits\HasPricesAndPromotions;
 use App\Traits\HasPricesByBranch;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +19,7 @@ class Service extends Model implements SalableInterface
     use HasPricesByBranch;
     use SoftDeletes;
 
-    protected $fillable = ['name', 'code', 'description', 'path_image','is_active'];
+    protected $fillable = ['name', 'code', 'description', 'path_image','is_active', 'siat_data_medida_code', 'siat_data_actividad_code', 'siat_data_product_code'];
 
     public function prices(): MorphMany
     {
@@ -39,6 +40,16 @@ class Service extends Model implements SalableInterface
             ->where('is_active', true) // Solo promociones activas
             ->where('start_date', '<=', now()) // Que ya hayan iniciado
             ->where('end_date', '>=', now()); // Que aún no hayan terminado
+    }
+
+    public function siatDataProducto(): HasOne
+    {
+        return $this->hasOne(SiatDataProducto::class, 'siat_data_product_code', 'codigo_producto');
+    }
+
+    public function siatDataActividad(): HasOne
+    {
+        return $this->hasOne(SiatDataActividad::class, 'siat_data_actividad_code', 'codigo');
     }
 
     public function getPriceByType($branchId = null, $priceType = "normal"): float

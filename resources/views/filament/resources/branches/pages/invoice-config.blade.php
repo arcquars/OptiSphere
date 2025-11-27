@@ -14,6 +14,9 @@
                 <x-filament::button type="button" size="sm" color="success" wire:click="validateSiat">
                     Validar
                 </x-filament::button>
+                <x-filament::button type="button" size="sm" color="success" wire:click="crearPuntoVenta">
+                    Crear Punto de Venta
+                </x-filament::button>
             </div>
         </form>
     </div>

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Amyrit\SiatBoliviaClient\Data\Responses\RespuestaCufd;
+use App\Services\SiatCodigos;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -31,6 +33,19 @@ class SiatSucursalPuntoVenta extends Model
     {
         // Asumiendo que has definido la llave foránea 'siat_property_id'
         return $this->belongsTo(SiatProperty::class, 'siat_property_id');
+    }
+
+    public function getSiatCufdActive(): SiatCufd|null
+    {
+        /**
+         * @var SiatCufd $cufd
+         */
+        $cufd = SiatCufd::where('siat_spv_id', $this->id)
+            ->where('fecha_vigencia', '>=', now())
+            ->orderBy('fecha_vigencia', 'desc')
+            ->first();
+        return $cufd;
+        
     }
     
 }

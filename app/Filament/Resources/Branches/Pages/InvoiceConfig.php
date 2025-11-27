@@ -3,11 +3,13 @@
 namespace App\Filament\Resources\Branches\Pages;
 
 use Amyrit\SiatBoliviaClient\Data\Requests\SolicitudSincronizacion;
+use Amyrit\SiatBoliviaClient\Data\Responses\RespuestaCuis;
 use Amyrit\SiatBoliviaClient\Exceptions\SiatException;
 use Amyrit\SiatBoliviaClient\SiatClient;
 use App\Filament\Resources\Branches\BranchResource;
 use App\Models\Branch;
 use App\Models\SiatSucursalPuntoVenta;
+use App\Services\SiatOperaciones;
 use App\Services\SiatService;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -26,7 +28,7 @@ use Log;
 class InvoiceConfig extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
-    
+
     public ?array $data = [];
 
     protected static string $resource = BranchResource::class;
@@ -46,10 +48,13 @@ class InvoiceConfig extends Page implements HasSchemas
         $this->siatProperty = $this->branch->siatProperty ?? $this->branch->siatProperty()->make();
 
         $datas = $this->siatProperty->attributesToArray();
-        if($this->siatProperty->siatSucursalPuntoVentaActive){
-            $datas = array_merge($datas, [
-                'sucursal' => $this->siatProperty->siatSucursalPuntoVentaActive->sucursal, 
-                'point_sale' => $this->siatProperty->siatSucursalPuntoVentaActive->punto_venta]
+        if ($this->siatProperty->siatSucursalPuntoVentaActive) {
+            $datas = array_merge(
+                $datas,
+                [
+                    'sucursal' => $this->siatProperty->siatSucursalPuntoVentaActive->sucursal,
+                    'point_sale' => $this->siatProperty->siatSucursalPuntoVentaActive->punto_venta
+                ]
             );
         }
 
@@ -132,14 +137,14 @@ class InvoiceConfig extends Page implements HasSchemas
                     // 2. BACKEND: Validamos SOLO por extensión, ignorando el tipo MIME confuso
                     ->rules(['file', 'extensions:pem']),
                 Fieldset::make('Estado y Validación')
-                ->schema([
-                    Toggle::make('is_actived')
-                        ->label('Activo'),
-                        
-                    Toggle::make('is_validated')
-                        ->label('Validado Por Impuestos Internos')
-                        ->disabled()
-                ])->columns(1),
+                    ->schema([
+                        Toggle::make('is_actived')
+                            ->label('Activo'),
+
+                        Toggle::make('is_validated')
+                            ->label('Validado Por Impuestos Internos')
+                            ->disabled()
+                    ])->columns(1),
                 FileUpload::make('path_logo')
                     ->label('Logo')
                     ->disk('public')
@@ -149,7 +154,7 @@ class InvoiceConfig extends Page implements HasSchemas
             ->statePath('data')
             ->model($this->siatProperty);
     }
-    
+
     public function submit(): void
     {
         // dd($this->form->getState());
@@ -169,10 +174,10 @@ class InvoiceConfig extends Page implements HasSchemas
                 where('siat_property_id', $this->siatProperty->id)
                 ->where('sucursal', $data['sucursal'])
                 ->where('punto_venta', $data['point_sale'])->first();
-            if($siatSucursalPuntoVenta){
+            if ($siatSucursalPuntoVenta) {
                 $siatSucursalPuntoVenta->sucursal = $data['sucursal'];
                 $siatSucursalPuntoVenta->punto_venta = $data['point_sale'];
-                
+
             } else {
                 $siatSucursalPuntoVenta = new SiatSucursalPuntoVenta();
                 $siatSucursalPuntoVenta->siat_property_id = $this->siatProperty->id;
@@ -184,7 +189,7 @@ class InvoiceConfig extends Page implements HasSchemas
             // Colocamos el active false en los demas siat_sucursales_puntos_ventas
             SiatSucursalPuntoVenta::where('siat_property_id', $this->siatProperty->id)
                 ->where('id', "<>", $siatSucursalPuntoVenta->id)->update(['active' => false]);
-            
+
             \Filament\Notifications\Notification::make()
                 ->title('Configuración SIAT guardada')
                 ->success()
@@ -202,20 +207,82 @@ class InvoiceConfig extends Page implements HasSchemas
     /**
      * @param SiatService $siatService
      */
-    public function validateSiat(SiatService $siatService): void{
-        $isValid = $siatService->validConfig($this->siatProperty);
-        $this->siatProperty->is_validated = $isValid;
-        $this->siatProperty->save();
-        if($isValid) {
-            \Filament\Notifications\Notification::make()
-                ->title('Configuración SIAT Valida')
-                ->success()
-                ->send();
-        } else {
-            \Filament\Notifications\Notification::make()
+    public function validateSiat(SiatService $siatService): void
+    {
+        try {
+
+            /**
+             * @var RespuestaCuis $responseCuis
+             */
+            $responseCuis = $siatService->getCuis($this->siatProperty);
+
+            if(!$responseCuis->transaccion && $responseCuis->codigoCuis === ""){
+                \Filament\Notifications\Notification::make()
                 ->title('Configuración SIAT No Valida')
+                ->body(json_encode($responseCuis->mensajesList))
                 ->danger()
                 ->send();
+                return;
+            }
+            $this->siatProperty->is_validated = true;
+            $this->siatProperty->siatSucursalPuntoVentaActive->cuis = $responseCuis->codigoCuis;
+            $this->siatProperty->siatSucursalPuntoVentaActive->save();
+            $this->siatProperty->save();
+            \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT Valida : ')
+                    ->body(json_encode($responseCuis->mensajesList))
+                    ->success()
+                    ->send();
+        } catch (SiatException $e) {
+            \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT No Valida 1')
+                    ->body($e->getMessage())
+                    ->danger()
+                    ->send();
+            
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT No Valida 2')
+                    ->body($e->getMessage())
+                    ->danger()
+                    ->send();
+        }
+    }
+
+    /**
+     * @param SiatOperaciones $siatOperaciones
+     */
+    public function crearPuntoVenta(SiatOperaciones $siatOperaciones): void
+    {
+        try {
+
+            $isValid = $siatOperaciones->registrarPuntoVenta($this->siatProperty);
+
+            if ($isValid) {
+                \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT Valida')
+                    ->success()
+                    ->send();
+            } else {
+                \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT No Valida')
+                    ->body('La configuración proporcionada no es válida según SIAT.')
+                    ->danger()
+                    ->send();
+            }
+        } catch (SiatException $e) {
+            \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT No Valida 1')
+                    ->body($e->getMessage())
+                    ->danger()
+                    ->send();
+            
+        } catch (\Exception $e) {
+            \Filament\Notifications\Notification::make()
+                    ->title('Configuración SIAT No Valida 2')
+                    ->body($e->getMessage())
+                    ->danger()
+                    ->send();
         }
     }
 

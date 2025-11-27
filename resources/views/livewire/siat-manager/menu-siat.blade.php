@@ -24,5 +24,11 @@
         <li><a x-on:click="reloadActiveSiat(7)" :class="active===7? 'menu-active' : ''">Motivos de anulación</a></li>
         <li><a x-on:click="reloadActiveSiat(8)" :class="active===8? 'menu-active' : ''">Tipos de documentos de identidad</a></li>
         <li><a x-on:click="reloadActiveSiat(9)" :class="active===9? 'menu-active' : ''">Tipos de documentos de sector</a></li>
+        <li><a x-on:click="reloadActiveSiat(10)" :class="active===10? 'menu-active' : ''">Tipos de emisiones</a></li>
+        <li><a x-on:click="reloadActiveSiat(11)" :class="active===11? 'menu-active' : ''">Tipos Metodo de pagos</a></li>
+        <li><a x-on:click="reloadActiveSiat(12)" :class="active===12? 'menu-active' : ''">Tipo Monedas</a></li>
+        <li><a x-on:click="reloadActiveSiat(13)" :class="active===13? 'menu-active' : ''">Tipo Puntos de venta</a></li>
+        <li><a x-on:click="reloadActiveSiat(14)" :class="active===14? 'menu-active' : ''">Tipo Factura</a></li>
+        <li><a x-on:click="reloadActiveSiat(15)" :class="active===15? 'menu-active' : ''">Unidad de Medida</a></li>
     </ul>
 </div>
