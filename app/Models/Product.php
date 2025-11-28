@@ -29,7 +29,11 @@ class Product  extends Model implements SalableInterface
         'image_path',
         'description',
         'is_active',
-        'supplier_id'
+        'supplier_id',
+        'siat_sucursal_punto_venta_id',
+        'siat_data_medida_code', 
+        'siat_data_actividad_code', 
+        'siat_data_product_code'
     ];
 
     public function categories(): MorphToMany

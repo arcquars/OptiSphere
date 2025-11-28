@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('services', function (Blueprint $table) {
+        Schema::table('products', function (Blueprint $table) {
             $table->string('siat_sucursal_punto_venta_id', 25)->nullable()->after('is_active');
             $table->string('siat_data_medida_code', 25)->nullable()->after('siat_sucursal_punto_venta_id');
             $table->string('siat_data_actividad_code', 25)->nullable()->after('siat_data_medida_code');
@@ -24,7 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('services', function (Blueprint $table) {
+        Schema::table('products', function (Blueprint $table) {
             $table->dropColumn('siat_sucursal_punto_venta_id');
             $table->dropColumn('siat_data_medida_code');
             $table->dropColumn('siat_data_actividad_code');
