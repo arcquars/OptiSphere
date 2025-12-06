@@ -12,6 +12,14 @@
             >
                 Sincronizar
             </button>
+            <button 
+                class="btn btn-s, btn-primary"
+                wire:click="getApiItems"
+                wire:loading.attr="disabled"  {{-- Deshabilita el botón mientras carga --}}
+                wire:target="getApiItems"
+            >
+                Sincronizar Api
+            </button>
         </div>
     </div>
 

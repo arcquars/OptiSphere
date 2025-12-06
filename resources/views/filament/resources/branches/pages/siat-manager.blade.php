@@ -11,7 +11,7 @@
             >
                 <li>
                     <a 
-                        href="{{ $urlInvoiceConfig }}"
+                        href="{{ $urlSiatConfig }}"
                         class="hover:bg-warning-focus active:bg-warning-focus"
                     >
                         Configurar SIAT

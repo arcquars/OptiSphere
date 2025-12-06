@@ -23,7 +23,9 @@ class EditProduct extends EditRecord
         if(!$this->data['has_optical_properties']){
             /** @var OpticalProperty $op */
             $op = OpticalProperty::where('product_id', $this->record->id)->first();
-            $op->delete();
+            if($op) {
+                $op->delete();
+            }
         }
     }
 }

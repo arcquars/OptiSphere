@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SiatProperty extends Model
 {
+    const ENVIRONMENT_ELECTRONICA_ENLINEA = 1;
+	const ENVIRONMENT_COMPUTARIZADA_ENLINEA = 2;
+
     use HasFactory;
 
     protected $fillable = [

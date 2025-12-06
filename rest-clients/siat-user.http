@@ -1,0 +1,15 @@
+POST facturaciones.lab-cdcc.com/api/v1.0.0/users/get-token
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "cerisier",
+  "password": "123pedro"
+}
+
+###
+GET facturaciones.lab-cdcc.com/api/invoices/siat/v2/actividades
+Content-Type: application/json
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczpcL1wvaHVwZXIuaGVtb2xhYi1iby5jb20iLCJhdWQiOiJodHRwczpcL1wvaHVwZXIuaGVtb2xhYi1iby5jb20iLCJpYXQiOjE3NjQ2NDQ4MTcsIm5iZiI6MTc2NDY0NDgxNywidXNlciI6eyJ1c2VyX2lkIjozOCwidXNlcm5hbWUiOiJjZXJpc2llciIsInB3ZCI6ImE2YzRmYzY4OWY4NzRlYmY4Yzk1NzExM2IxMjY2ZTIyIn19.kAFzDOXlpX6NvYuxZp7Yt1WPU2n6xEtN3drPod2LALdBWk2K_iyr4ZbVOBHM8XG-MER7IXhJklGYboz1-2F9Pg
+
+

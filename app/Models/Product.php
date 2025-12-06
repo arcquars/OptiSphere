@@ -30,7 +30,7 @@ class Product  extends Model implements SalableInterface
         'description',
         'is_active',
         'supplier_id',
-        'siat_sucursal_punto_venta_id',
+        'siat_branch_id',
         'siat_data_medida_code', 
         'siat_data_actividad_code', 
         'siat_data_product_code'

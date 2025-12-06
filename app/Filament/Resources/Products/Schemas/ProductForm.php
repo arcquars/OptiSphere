@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\DAOs\SiatApiDocumentoTipoDAO;
+use App\Models\AmyrConnectionBranch;
 use App\Models\BaseCode;
+use App\Models\Branch;
 use App\Models\Product;
 use App\Models\SiatDataActividad;
 use App\Models\SiatDataProducto;
@@ -36,8 +39,10 @@ class ProductForm
                 Fieldset::make('Producto')
                     ->schema([
                         TextInput::make('name')
+                            ->label('Nombre del Producto')
                             ->required(),
                         TextInput::make('code')
+                            ->label('Codigo')
                             ->required()
                             ->rule(function (Get $get, ?Model $record): \Illuminate\Validation\Rules\Unique {
                                 // 2. Construimos la regla 'unique' aquí dentro
@@ -51,10 +56,12 @@ class ProductForm
                                 return $rule;
                             }),
                         Select::make('supplier_id')
+                            ->label('Proveedor')
                             ->relationship(name: 'supplier', titleAttribute: 'name')
                             ->searchable(['name'])
                             ->preload(),
                         Toggle::make('is_active')
+                            ->label('Estado Activo')
                             ->default(true)
                             ->required()
                             ->disabled(
@@ -62,17 +69,21 @@ class ProductForm
                                 !empty($get('has_optical_properties'))
                             ),
                         FileUpload::make('image_path')
+                            ->label('Imagen')
                             ->image()
                             ->disk('public')
                             ->directory('product-attachments')
                             ->visibility('public')
-                            ->required()->columnSpan(2),
+                            // ->required()
+                            ->columnSpan(2),
                         Textarea::make('description')
+                            ->label('Descripcion')
                             ->required()
                             ->columnSpan(2),
 
                         ])->columns(4),
                 Select::make('categories')
+                    ->label('Categorías')
                     ->relationship('categories', 'name')
                     ->multiple()
                     ->searchable()
@@ -156,19 +167,20 @@ class ProductForm
 
                     Section::make('SIAT')
                     ->schema([
-                        Select::make('siat_sucursal_punto_venta_id')
+                        Select::make('siat_branch_id')
                             ->label('Punto venta SIAT')
                             ->options(
-                                SiatSucursalPuntoVenta::query()
-                                    ->select([
-                                        DB::raw("CONCAT(branches.name, ' - ', siat_sucursales_puntos_ventas.sucursal, ' - ', siat_sucursales_puntos_ventas.punto_venta) as description"),
-                                        'siat_sucursales_puntos_ventas.id'
-                                    ])
-                                    ->join('siat_properties', 'siat_sucursales_puntos_ventas.siat_property_id', '=', 'siat_properties.id')
-                                    ->join('branches', 'siat_properties.branch_id', '=', 'branches.id')
-                                    ->where('siat_sucursales_puntos_ventas.active', true)
-                                    ->where('branches.is_active', true)
-                                    ->pluck('description', 'siat_sucursales_puntos_ventas.id')
+                                    AmyrConnectionBranch::query()
+                                        ->select(
+                                            DB::raw("CONCAT(branches.name, ' - ', amyr_connection_branches.sucursal, ' - ', amyr_connection_branches.point_sale) as description"),
+                                            'amyr_connection_branches.id'
+                                            )
+                                        ->join('branches', 'branches.id', '=', 'amyr_connection_branches.branch_id')
+                                        ->where('amyr_connection_branches.is_actived', true)
+                                        ->whereNotNull('token')
+                                        ->where('branches.is_active', true)
+                                        ->pluck('description', 'branches.id')
+
                             )
                             ->searchable()
                             ->preload()
@@ -183,63 +195,59 @@ class ProductForm
                         Select::make('siat_data_actividad_code')
                             ->label('Actividad SIAT')
                             ->options(function (Get $get) {
-                                $sucursalPuntoVentaId = $get('siat_sucursal_punto_venta_id');
-                                if (!$sucursalPuntoVentaId) {
+                                $branchId = $get('siat_branch_id');
+                                if (!$branchId) {
                                     return [];
                                 }
-                                return SiatDataActividad::query()
-                                    ->where('siat_spv_id', $sucursalPuntoVentaId)
-                                    ->pluck('descripcion', 'codigo');
+                                $siatApiDocumentoTipoDAO = new SiatApiDocumentoTipoDAO($branchId);
+                                return $siatApiDocumentoTipoDAO->getPluck();
                             })
                             ->searchable()
                             ->preload()
                             ->live()
-                            ->disabled(fn(Get $get): bool => !$get('siat_sucursal_punto_venta_id'))
+                            ->disabled(fn(Get $get): bool => !$get('siat_branch_id'))
                             ->afterStateUpdated(function (Set $set) {
                                 $set('siat_data_product_code', null);
                                 $set('siat_data_medida_code', null);
                             })
                             // SOLUCIÓN: Obligatorio si el padre tiene valor
-                            ->required(fn(Get $get): bool => filled($get('siat_sucursal_punto_venta_id'))),
+                            ->required(fn(Get $get): bool => filled($get('siat_branch_id'))),
 
                         // 3. TERCER SELECT: Producto
                         Select::make('siat_data_product_code')
                             ->label('Producto SIAT')
                             ->options(function (Get $get) {
-                                $sucursalPuntoVentaId = $get('siat_sucursal_punto_venta_id');
-                                if (!$sucursalPuntoVentaId) {
+                                $branchId = $get('siat_branch_id');
+                                if (!$branchId) {
                                     return [];
                                 }
-                                return SiatDataProducto::query()
-                                    ->where('siat_spv_id', $sucursalPuntoVentaId)
-                                    ->where('codigo_actividad', $get('siat_data_actividad_code'))
-                                    ->pluck('descripcion_producto', 'codigo_producto');
+                                $siatApiProductoServicioDAO = new \App\DAOs\SiatApiProductoServicioDAO($branchId);
+                                return $siatApiProductoServicioDAO->getPluckByActividad($get('siat_data_actividad_code'));
                             })
                             ->searchable()
                             ->preload()
                             ->live()
                             ->disabled(fn(Get $get): bool => !$get('siat_data_actividad_code'))
                             // SOLUCIÓN: Obligatorio si el padre principal tiene valor
-                            ->required(fn(Get $get): bool => filled($get('siat_sucursal_punto_venta_id'))),
+                            ->required(fn(Get $get): bool => filled($get('siat_branch_id'))),
 
                         // 4. CUARTO SELECT: Unidad de Medida
                         Select::make('siat_data_medida_code')
                             ->label('Unidad de Medida SIAT')
                             ->options(
                                 function (Get $get) {
-                                $sucursalPuntoVentaId = $get('siat_sucursal_punto_venta_id');
-                                if (!$sucursalPuntoVentaId) {
+                                $branchId = $get('siat_branch_id');
+                                if (!$branchId) {
                                     return [];
                                 }
-                                return SiatDataUnidadMedida::query()
-                                    ->where('siat_spv_id', $sucursalPuntoVentaId)
-                                    ->pluck('descripcion', 'codigo_clasificador');
+                                $siatApiUnidadMedidaDAO = new \App\DAOs\SiatApiUnidadMedidaDAO($branchId);
+                                return $siatApiUnidadMedidaDAO->getPluck();
                             })
                             ->searchable()
                             ->preload()
                             ->disabled(fn(Get $get): bool => !$get('siat_data_actividad_code'))
                             // SOLUCIÓN: Obligatorio si el padre principal tiene valor
-                            ->required(fn(Get $get): bool => filled($get('siat_sucursal_punto_venta_id')))
+                            ->required(fn(Get $get): bool => filled($get('siat_branch_id')))
                     ])
 
 

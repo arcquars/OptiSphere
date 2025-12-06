@@ -25,7 +25,7 @@ class Service extends Model implements SalableInterface
         'description', 
         'path_image',
         'is_active',
-        'siat_sucursal_punto_venta_id',
+        'siat_branch_id',
         'siat_data_medida_code', 
         'siat_data_actividad_code', 
         'siat_data_product_code'

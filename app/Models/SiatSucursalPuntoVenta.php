@@ -21,6 +21,11 @@ class SiatSucursalPuntoVenta extends Model
         "punto_venta",
         "cuis",
         "cuis_date",
+        "amyr_user",
+        "amyr_password",
+        "is_siat_actived",
+        "amyr_token",
+        
         "siat_property_id"
     ];
 
@@ -35,6 +40,7 @@ class SiatSucursalPuntoVenta extends Model
         return $this->belongsTo(SiatProperty::class, 'siat_property_id');
     }
 
+
     public function getSiatCufdActive(): SiatCufd|null
     {
         /**
@@ -44,6 +50,9 @@ class SiatSucursalPuntoVenta extends Model
             ->where('fecha_vigencia', '>=', now())
             ->orderBy('fecha_vigencia', 'desc')
             ->first();
+        // if (!$cufd) {
+
+        // }
         return $cufd;
         
     }

@@ -10,6 +10,7 @@ use App\Filament\Resources\Branches\Pages\InventoryBranch;
 use App\Filament\Resources\Branches\Pages\InvoiceConfig;
 use App\Filament\Resources\Branches\Pages\ListBranches;
 use App\Filament\Resources\Branches\Pages\ManageBranch;
+use App\Filament\Resources\Branches\Pages\SiatConfig;
 use App\Filament\Resources\Branches\Pages\SiatManager;
 use App\Filament\Resources\Branches\Schemas\BranchForm;
 use App\Filament\Resources\Branches\Tables\BranchesTable;
@@ -62,6 +63,7 @@ class BranchResource extends Resource
             'cash-box-report' => CashBoxReport::route('/{branch_id}/cash-box'),
             'cash-box-view' => CashBoxView::route('/cash-box-report/{cashBoxClosingId}/cash-box-view'),
             'invoice-config' => InvoiceConfig::route('/{branch_id}/siat/invoice-config'),
+            'siat-config' => SiatConfig::route('/{branch_id}/siat/siat-config'),
             'siat-manager' => SiatManager::route('/{branch_id}/siat/siat-manager'),
         ];
     }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('sucursal')->default(0);
             $table->integer('punto_venta')->default(0);
-            $table->string('cuis')->nullable();
+            $table->string(column: 'cuis')->nullable();
             $table->dateTime('cuis_date')->nullable();
             $table->boolean('active')->default(true);
 

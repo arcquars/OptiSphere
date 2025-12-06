@@ -32,9 +32,14 @@ class SiatManager extends Page
 
     protected function getViewData(): array
     {
-        $urlInvoiceConfig = InvoiceConfig::getUrl(['branch_id' => $this->branch->id]);
+        // $urlInvoiceConfig = InvoiceConfig::getUrl(['branch_id' => $this->branch->id]);
+        // return [
+        //     'urlInvoiceConfig' => $urlInvoiceConfig,
+        //     'branch' => $this->branch,
+        // ];
+        $urlSiatConfig = SiatConfig::getUrl(['branch_id' => $this->branch->id]);
         return [
-            'urlInvoiceConfig' => $urlInvoiceConfig,
+            'urlSiatConfig' => $urlSiatConfig,
             'branch' => $this->branch,
         ];
     }

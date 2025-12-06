@@ -50,6 +50,10 @@ class ListProducts extends ListRecords
                 ->label('Crear con códigos Base')
                 ->url(fn (): string => route('filament.admin.resources.products.generate'))
                 ->color('success'),
+            Action::make('edit-base-code')
+                ->label('Editar códigos Base')
+                ->url(fn (): string => route('filament.admin.resources.products.generate-edit'))
+                ->color('success'),
             CreateAction::make()
         ];
     }

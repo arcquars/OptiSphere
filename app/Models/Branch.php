@@ -40,6 +40,11 @@ class Branch extends Model
         return $this->hasOne(SiatProperty::class);
     }
 
+    public function amyrConnectionBranch(): HasOne
+    {
+        return $this->hasOne(AmyrConnectionBranch::class);
+    }
+
     public function getIsFacturableAttribute(): bool {
         if($this->siatProperty() == null) {
             return false;
