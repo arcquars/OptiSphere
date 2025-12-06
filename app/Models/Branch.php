@@ -46,11 +46,18 @@ class Branch extends Model
     }
 
     public function getIsFacturableAttribute(): bool {
-        if($this->siatProperty() == null) {
+        $amyrConnectionBranch = $this->amyrConnectionBranch;
+        if($amyrConnectionBranch == null) {
+            return false;
+        }
+        if(!$amyrConnectionBranch->is_actived) {
             return false;
         }
         
-        return $this->siatProperty->is_actived && $this->siatProperty->is_validated;
+        if($amyrConnectionBranch->is_actived && $amyrConnectionBranch->token == null) {
+            return false;
+        }   
+        return true;
     }
     
     public function isOpenCashBoxClosingByUser($userId){
@@ -60,4 +67,5 @@ class Branch extends Model
     public function getCashBoxClosingByUser($userId){
         return CashBoxClosing::where('branch_id', $this->id)->where('user_id', $userId)->where('status', '=', CashBoxClosing::STATUS_OPEN)->first();
     }
+
 }

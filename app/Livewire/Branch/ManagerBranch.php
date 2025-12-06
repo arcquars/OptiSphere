@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Branch;
 
+use App\Helpers\ValidateSiatHelper;
 use App\Models\Branch;
 use App\Models\CashBoxClosing;
 use App\Models\Category;
@@ -346,8 +347,12 @@ class ManagerBranch extends Component
     }
 
     // Lógica para finalizar la venta
-    public function completePayment(SaleService $saleService)
+    public function completePayment(SaleService $saleService, $isFacturable = false)
     {
+        if($isFacturable && ValidateSiatHelper::isValidSiatCode($this->cart) == false){
+            $this->message_error = 'No se puede facturar, algunos productos o servicios no tienen datos SIAT completos.';
+            return;
+        }   
         $this->message_error = "";
         if(count($this->cart) == 0){
             $this->message_error = 'Debe seleccionar productos / servicios a vender';
@@ -362,6 +367,7 @@ class ManagerBranch extends Component
             return;
         }
 
+        dd("dddd");
 
         $userId = auth()->id();
         $total = $this->total;

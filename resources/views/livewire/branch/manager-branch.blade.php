@@ -288,7 +288,23 @@
                     <div class="space-y-1 text-md">
                         <div class="flex justify-between"><span>Subtotal:</span> <span>${{ number_format($subtotal, 2) }}</span></div>
                         <div class="flex justify-between"><span>Descuento ({{ $discountPercentage }}%):</span> <span class="text-error">-${{ number_format($discountAmount, 2) }}</span></div>
-                        <div class="flex justify-between font-bold text-xl"><span>TOTAL:</span> <span>${{ number_format($total, 2) }}</span></div>
+                        @if(!$this->branch->is_facturable)
+                        <div class="flex justify-between font-bold text-xl">
+                            <span>TOTAL:</span> <span>${{ number_format($total, 2) }}</span>
+                        </div>
+
+
+
+                        @else
+                        <div class="flex justify-between font-bold text-lg">
+                            <span>Total base Crédito Fiscal:</span> <span>${{ number_format($total, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg">
+                            <span>Crédito Fiscal:</span> <span>${{ number_format(($total*0.13), 2) }}</span>
+                        </div>
+                        @endif
+
+
                         @if ($isSaleCredit)
                             <div class="mt-4">
                                 <label class="font-semibold">Pago parcial:</label>
@@ -334,7 +350,9 @@
                     <button type="submit" class="btn btn-success btn-block" @if(!$isOpenCashBoxClosing) disabled @endif>
                         <i class="fa-solid fa-check"></i>Completar Pago
                     </button>
-                    <button 
+                    <button
+                        type="button"
+                        wire:click="completePayment(true)" 
                         class="btn btn-info btn-block" 
                         @if(!$isOpenCashBoxClosing) 
                         disabled 

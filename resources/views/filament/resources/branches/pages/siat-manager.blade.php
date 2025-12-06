@@ -18,8 +18,11 @@
                     </a>
                 </li>
                 <li>
-                    <a class="hover:bg-warning-focus active:bg-warning-focus">
-                        Manejo de Eventos
+                    <a 
+                        href="https://facturaciones.lab-cdcc.com/admin/login-i.php?username=cerisier&amp;pwd=123pedro" target="_blank" 
+                        class="hover:bg-warning-focus active:bg-warning-focus"
+                    >
+                        Manejo de Siat
                     </a>
                 </li>
             </ul>
