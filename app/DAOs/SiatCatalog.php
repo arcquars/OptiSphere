@@ -26,11 +26,15 @@ class SiatCatalog
      */
     public function getCatalog(): ?array
     {
+        Log::info("ddd 1.1");
         // Construye el endpoint completo del catálogo
         $endpoint = "invoices/siat/v2/{$this->catalogName}";
+        Log::info("ddd 1.2");
         $fullUrl = $this->apiBaseUrl . '/' . $endpoint;
 
         Log::info("Amyr API Catalog request to {$this->amyrConnectionBranch->token}");
+        Log::info("Amyr API URL {$this->apiBaseUrl}");
+        Log::info("Amyr API Endpoint {$endpoint}");
         try {
             // Realiza la petición GET con el token y los parámetros de consulta
             $response = Http::baseUrl($this->apiBaseUrl)

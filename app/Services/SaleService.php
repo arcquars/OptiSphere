@@ -57,7 +57,6 @@ class SaleService
         $isCredit = $data['status'] === Sale::SALE_STATUS_PARTIAL_PAYMENT;
 
         if ($isCredit) {
-            Log::info("Registro de update ProductStock:::: a14 ");
             // Redirigir la lógica a createCreditSale si es a crédito
             return $this->createCreditSale($data, $processedItems, $totals);
         }
@@ -66,12 +65,10 @@ class SaleService
         $status = Sale::SALE_STATUS_PAID;
         $paidAmount = $totals['total_amount'];
         $dueAmount = 0.00;
-        Log::info("Registro de update ProductStock:::: a16 ");
+        Log::info("Registro de update ProductStock:::: a16 ", $data);
         // 4. Ejecutar la transacción de la venta
         return DB::transaction(function () use ($data, $processedItems, $totals, $status, $paidAmount, $dueAmount) {
-
-            // a) Creación de la venta (Sale)
-            $sale = Sale::create([
+            $tempData = [
                 'customer_id' => $data['customer_id'],
                 'branch_id' => $data['branch_id'],
                 'user_id' => $data['user_id'],
@@ -82,11 +79,17 @@ class SaleService
                 'status' => $status,
                 'payment_method' => $data['payment_method'],
                 'sale_type' => $data['sale_type'],
+                'date_sale' => $data['date_sale'] ?? now(),
                 'paid_amount' => $paidAmount,
                 'due_amount' => $dueAmount,
-                'notes' => $data['notes'] ?? null,
-            ]);
-            Log::info("Registro de update ProductStock:::: p12 ");
+                'notes' => $data['notes'] ?? '',
+                'siat_invoice_id' => $data['siat_invoice_id'] ?? null,
+                'siat_status' => $data['siat_status'] ?? null,
+            ];
+            Log::info("Registro de update ProductStock:::: a16.1 ", $tempData);
+            // a) Creación de la venta (Sale)
+            $sale = Sale::create($tempData);
+            Log::info(message: "Registro de update ProductStock:::: p12 ");
 
             // b) Adjuntar ítems de la venta (Pivot table sale_item)
             $this->attachSaleItems($sale, $processedItems);

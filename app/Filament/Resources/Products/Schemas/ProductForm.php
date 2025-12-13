@@ -26,6 +26,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Model;
 
@@ -142,7 +143,9 @@ class ProductForm
                 // Repeater para los diferentes tipos de precios
                 Repeater::make('prices')
                     ->label('Precios por Tipo de Cliente')
-                    ->relationship('prices')
+                    ->relationship(name: 'prices', modifyQueryUsing: function (Builder $query) {
+                        return $query->where('branch_id', null);
+                    })
                     ->schema([
                         Select::make('type')
                             ->label('Tipo de cliente')

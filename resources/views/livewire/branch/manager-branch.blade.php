@@ -347,13 +347,19 @@
 
                 <!-- Botones de Acción -->
                 <div class="grid grid-cols-2 gap-2">
-                    <button type="submit" class="btn btn-success btn-block" @if(!$isOpenCashBoxClosing) disabled @endif>
+                    <button 
+                        type="submit" 
+                        class="btn btn-success btn-block"
+                        wire:loading.target="completePayment"
+                        wire:loading.attr="disabled"
+                         @if(!$isOpenCashBoxClosing) disabled @endif>
                         <i class="fa-solid fa-check"></i>Completar Pago
                     </button>
                     <button
                         type="button"
                         wire:click="completePayment(true)" 
                         class="btn btn-info btn-block" 
+                        wire:loading.attr="disabled"
                         @if(!$isOpenCashBoxClosing) 
                         disabled 
                         @else

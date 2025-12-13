@@ -9,11 +9,13 @@ use Illuminate\Support\Facades\Log;
 
 class SiatApiDocumentoTipoDAO extends SiatCatalog implements SiatDocumentoTipoDAO
 {   
-    public function __construct($branchId)
+    public function __construct($amyrConnectionBranchId)
     {
-        $this->amyrConnectionBranch = AmyrConnectionBranch::where('branch_id',$branchId)->first();
+        $this->amyrConnectionBranch = AmyrConnectionBranch::find($amyrConnectionBranchId);
         $this->apiBaseUrl = config('amyr.base_url');
         $this->catalogName = 'actividades';
+
+        Log::info("ddd 0:: " . $this->amyrConnectionBranch->token);
     }
 
     /**
@@ -24,7 +26,9 @@ class SiatApiDocumentoTipoDAO extends SiatCatalog implements SiatDocumentoTipoDA
     public function getTiposDocumentoSector(): ?array
     {
         try {
+            Log::info("ddd 1");
             $data = $this->getCatalog();
+            Log::info("ddd 2");
             if($data !== null){
                 if (isset($data['RespuestaListaActividades']['listaActividades'])) {
                     return $data['RespuestaListaActividades']['listaActividades'];

@@ -1,7 +1,13 @@
 <x-filament-panels::page>
     <div class="grid items-center grid-cols-2 gap-1">
         <div>
-            <p>Sucursal: <b>{{ $sucursalId }}</b> <i class="fa-solid fa-grip-lines-vertical"></i> Punto de venta <b>{{ $puntoVentaId }}</i></b></p>
+            <p>
+                Sucursal: <b>{{ $sucursalId }}</b> 
+                <i class="fa-solid fa-grip-lines-vertical"></i> 
+                Punto de venta <b>{{ $puntoVentaId }}</i></b>
+                <i class="fa-solid fa-grip-lines-vertical"></i>
+                <span class="{{ $activeSiat ? 'text-green-500' : 'text-red-500' }}">Activo SIAT: <b>{{ $activeSiat ? 'Sí' : 'No' }}</b></span>
+            </p>
         </div>
         <div class="justify-self-end">
             <ul 
@@ -19,7 +25,7 @@
                 </li>
                 <li>
                     <a 
-                        href="https://facturaciones.lab-cdcc.com/admin/login-i.php?username=cerisier&amp;pwd=123pedro" target="_blank" 
+                        href="{{ env('AMYR_APIREST_HOST') }}/admin/login-i.php?username=cerisier&amp;pwd=123pedro" target="_blank" 
                         class="hover:bg-warning-focus active:bg-warning-focus"
                     >
                         Manejo de Siat
@@ -30,7 +36,7 @@
         
     </div>
     
-    
+    {{--  
     <div class="flex border border-gray-200 p-2">
         <livewire:siat-manager.menu-siat />
 
@@ -39,4 +45,5 @@
             <livewire:siat-manager.switch-siat :active="1" :branchId="$branch->id" />
         </div>
     </div>
+    --}}
 </x-filament-panels::page>

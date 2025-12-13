@@ -31,7 +31,9 @@ class Sale extends Model
         'paid_amount', // Monto almacenado
         'due_amount',  // Saldo almacenado (aunque se puede recalcular con el accessor)
         'notes',
-        'date_sale'
+        'date_sale',
+        'siat_invoice_id',
+        'siat_status',
     ];
 
     protected $casts = [

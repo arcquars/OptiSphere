@@ -19,14 +19,16 @@ class SiatManager extends Page
     public int $sucursalId = 0;
     public int $puntoVentaId = 0;
 
+    public bool $activeSiat = false;
+
     public function mount(int $branch_id): void
     {
         $this->branch = Branch::find($branch_id);
 
-        $this->siatProperty = $this->branch->siatProperty ?? $this->branch->siatProperty()->make();
-        if($this->siatProperty->siatSucursalPuntoVentaActive){
-            $this->sucursalId = $this->siatProperty->siatSucursalPuntoVentaActive->sucursal;
-            $this->puntoVentaId = $this->siatProperty->siatSucursalPuntoVentaActive->punto_venta;
+        if($this->branch->amyrConnectionBranch){
+            $this->sucursalId = $this->branch->amyrConnectionBranch->sucursal;
+            $this->puntoVentaId = $this->branch->amyrConnectionBranch->point_sale;
+            $this->activeSiat = $this->branch->is_facturable;
         }
     }
 

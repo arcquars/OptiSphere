@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Branch;
 
+use App\DTOs\CustomerSiatDto;
+use App\DTOs\InvoiceCreationDto;
 use App\Helpers\ValidateSiatHelper;
 use App\Models\Branch;
 use App\Models\CashBoxClosing;
@@ -14,10 +16,12 @@ use App\Models\Sale;
 use App\Models\SaleItemService;
 use App\Models\SalePayment;
 use App\Models\Service;
+use App\Services\MonoInvoiceApiService;
 use App\Services\SaleService;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use League\Config\Exception\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -48,7 +52,7 @@ class ManagerBranch extends Component
     public $paymentType = SalePayment::METHOD_CASH;
 
     // Customer select
-    public $customer;
+    public Customer $customer;
 
     public $canTypeMayor = false;
     public $isSaleCredit = false;
@@ -349,6 +353,7 @@ class ManagerBranch extends Component
     // Lógica para finalizar la venta
     public function completePayment(SaleService $saleService, $isFacturable = false)
     {
+        $siatData = [];
         if($isFacturable && ValidateSiatHelper::isValidSiatCode($this->cart) == false){
             $this->message_error = 'No se puede facturar, algunos productos o servicios no tienen datos SIAT completos.';
             return;
@@ -367,8 +372,21 @@ class ManagerBranch extends Component
             return;
         }
 
-        dd("dddd");
+        if($isFacturable){
+            $this->getCustomerSiatByNit();
+            $resultSiat = $this->createSiatInvoice();
+            Log::info("Resultado siat invoice::: ", ['result' => $resultSiat]);
+            if($resultSiat == null){
+                return;
+            } else {
+                $siatData = [
+                    'siat_invoice_id' => $resultSiat['invoice_id'] ?? null,
+                    'siat_status' => $resultSiat['status'] ?? null,
+                ];
+            }
+        }
 
+        // dd("wwww:: ", $siatData);
         $userId = auth()->id();
         $total = $this->total;
         // 1. Preparar los datos del DETALLE de la venta (SaleItem)
@@ -404,7 +422,7 @@ class ManagerBranch extends Component
         }
 
         // 2. Preparar los datos del ENCABEZADO de la venta
-        $saleData = [
+        $saleData = array_merge($siatData, [
             'customer_id' => $this->customer->id,
             'branch_id' => $this->branch->id,
             'user_id' => $userId,
@@ -418,7 +436,7 @@ class ManagerBranch extends Component
             'paid_amount' => ($this->isSaleCredit)? $this->partial_payment : null,
             'due_amount' => ($this->isSaleCredit)? $this->total - $this->partial_payment : null,
             'items' => $itemsData,
-        ];
+        ]);
 
         try {
 
@@ -443,6 +461,11 @@ class ManagerBranch extends Component
         } catch (\Exception $e) {
             // Fracaso: El servicio hizo Rollback.
             Log::info($e->getTraceAsString());
+            if($isFacturable && isset($siatData['siat_invoice_id']) && isset($siatData['siat_status']) && $siatData['siat_status'] == 'issued'){
+                // Anular la factura en SIAT
+                Log::info("Se debe anular la factura SIAT con ID: " . $siatData['siat_invoice_id']);
+                $this->voidSiatInvoice($siatData['siat_invoice_id']);
+            }
             Notification::make()
                 ->title('Error')
                 ->body("Error al procesar la venta: " . $e->getMessage())
@@ -492,5 +515,191 @@ class ManagerBranch extends Component
         $this->partial_payment = 0;
         $this->isSaleCredit = false;
 
+    }
+
+    private function createSiatInvoice()
+    {
+        $invoiceApiService = new MonoInvoiceApiService($this->branch);
+        $itemsData = [];
+        foreach ($this->cart as $item) {
+            // Se transforma la estructura del carrito a la estructura de la tabla SaleItem
+            $productTemp = Product::find($item['id']);
+            if(strcmp($item['type'], 'service') == 0){
+                $productTemp = Service::find($item['id']);
+            }
+
+            $itemsData[] = [
+                'product_id' => $productTemp->id,
+                'product_code' => $productTemp->code,
+                'product_name' => $productTemp->name,
+                'price' => $item['price'],
+                'quantity' => $item['quantity'],
+                'unidad_medida' => $productTemp->siat_data_medida_code,
+                'numero_seria'  => '',
+                'numero_imei'   => '',
+                'codigo_producto_sin' => $productTemp->siat_data_product_code,
+                'codigo_actividad' => $productTemp->siat_data_actividad_code,
+                'discount' => (isset($item['promotion']))? $item['price'] * ($item['promotion']/100) * $item['quantity'] : 0,
+                'total' => (isset($item['promotion']))? ($item['price'] - ($item['price'] * ($this->promotion->discount_percentage/100))) * $item['quantity'] : $item['price'] * $item['quantity'],
+            ];
+
+            // Buscamos sub servicios por producto
+            if(isset($item['services']) && count($item['services']) > 0){
+                foreach ($item['services'] as $key => $sub){
+                    $servideTemp = Service::find($sub['id']);
+                    $itemsData[] = [
+                        'product_id' => $sub['id'],
+                        'product_code' => $servideTemp->code,
+                        'product_name' => $servideTemp->name,
+                        'price' => $sub['price'],
+                        'quantity' => $sub['quantity'],
+                        'unidad_medida' => $servideTemp->siat_data_medida_code,
+                        'numero_seria'  => '',
+                        'numero_imei'   => '',
+                        'codigo_producto_sin' => $servideTemp->siat_data_product_code,
+                        'codigo_actividad' => $servideTemp->siat_data_actividad_code,
+                        'discount' => (isset($sub['promotion']))? $sub['price'] * ($sub['promotion']/100) * $sub['quantity'] : 0,
+                        'total' => SaleItemService::calculateSubtotal($sub['quantity'], $sub['price'], $sub['promotion'])
+                    ];
+                }
+            }
+
+            
+        }
+
+        // 3. Prepara los datos (típicamente desde una solicitud o base de datos)
+        $invoiceDataArray = [
+            'customerId' => $this->customer->amyr_customer_id,
+            'customer' => $this->customer->name,
+            'nitRucNif' => $this->customer->nit,
+            'subTotal' => $this->subtotal,
+            'totalTax' => number_format($this->total * 0.13, 2),
+            'discount' => number_format($this->discountAmount, 2),
+            'montoGiftcard' => '0.00',
+            'total' => $this->total,
+            // 'invoiceDateTime' => now()->toIso8601String(),
+            'invoiceDateTime' => "",
+            'currencyCode' => 'BOB',
+            'codigoSucursal' => $this->branch->amyrConnectionBranch->sucursal,
+            'puntoVenta' => $this->branch->amyrConnectionBranch->point_sale,
+            'codigoDocumentoSector' => 1,
+            'tipoDocumentoIdentidad' => $this->customer->document_type,
+            'codigoMetodoPago' => 1,
+            'codigoMoneda' => 1,
+            'complemento' => $this->customer->complement ?? '',
+            'numeroTarjeta' => null,
+            'tipoCambio' => 1,
+            'tipoFacturaDocumento' => 1,
+            'data' => '{}',
+            'items' => $itemsData,
+        ];
+        try {
+            // 4. Crea el DTO y valida los datos
+            $invoiceDto = new InvoiceCreationDto($invoiceDataArray);
+
+            // 5. Llama al servicio para crear la factura
+            $response = $invoiceApiService->createInvoice($invoiceDto);
+
+            if ($response) {
+                Log::info("Factura creada con éxito en MonoInvoices", [
+                    'response' => $response,
+                    'code' => $response['code']
+                ]);
+                if($response['response'] == 'ok' && $response['code'] == 200){
+                    Log::info("fffff pppppp 1");
+                    return $response['data'];
+                } else {
+                    Log::info("fffff pppppp 2");
+                    Notification::make()
+                    ->title('Error')
+                    ->body("No se pudo crear la factura en el sistema SIAT. " . $response['message'])
+                    ->danger()
+                    ->send();
+                    return null;
+                }
+            } else {
+                Log::info("Factura Error al crear la factura en MonoInvoices", [
+                    'invoiceData' => $invoiceDataArray
+                ]);     
+                Notification::make()
+                ->title('Error')
+                ->body("No se pudo crear la factura en el sistema SIAT.")
+                ->danger()
+                ->send();
+                return null;
+            }
+        } catch (ValidationException $e) {
+            // Los datos de entrada no cumplen con la estructura del DTO
+            // echo "Error de validación del payload: " . $e->getMessage();
+            Notification::make()
+                ->title('Error en validacion')
+                ->body("Error de validación del payload: " . $e->getMessage())
+                ->danger()
+                ->send();
+            return null;
+        }   
+    }
+    
+    private function voidSiatInvoice($siatInvoiceId)
+    {
+        $invoiceApiService = new MonoInvoiceApiService($this->branch);
+        $result = $invoiceApiService->voidInvoice($siatInvoiceId);
+        if($result != null && $result['response'] == 'ok' && $result['code'] == 200){
+            Notification::make()
+                ->title('Se anulo la factura SIAT')
+                ->body("")
+                ->success()
+                ->send();
+            return true;
+        }
+
+        Notification::make()
+            ->title('Error al anular la factura SIAT')
+            ->body("Error: " . $result['message'])
+            ->danger()
+            ->send();
+        return false;
+    }
+
+    private function getCustomerSiatByNit()
+    {
+        $amyrCustomerApiService = new \App\Services\AmyrCustomerApiService($this->branch->amyrConnectionBranch->token);
+        // $amyrCustomerApiService->withToken($this->branch->amyrConnectionBranch->token);
+
+        $response = $amyrCustomerApiService->searchByNit($this->customer->nit);
+        // dd($response);
+        if($response == null){
+            // $this->customer
+            $customerDto = new CustomerSiatDto([
+                'code' => "",
+                'storeId' => $this->branch->id,
+                'firstname' => "",
+                'lastname' => $this->customer->name,
+                'identityDocument' => $this->customer->identity_document,
+                'company' => $this->customer->name,
+                'phone' => $this->customer->phone,
+                'email' => $this->customer->email,
+                'address1' => $this->customer->address,
+                'meta' => ['_nit_ruc_nif' => $this->customer->nit, '_billing_name' => null],
+                
+            ]);
+
+            $response = $amyrCustomerApiService->create($customerDto);
+            Log::info("Respuesta creacion cliente Amyr::: ", ['response' => $response]);
+        } else {
+            $customerUpdate = [
+                "customer_id" => $response['customer_id'],
+                'last_name' => $this->customer->name,
+                'identity_document' => $this->customer->identity_document,
+                'company' => $this->customer->name,
+                'phone' => $this->customer->phone,
+                'email' => $this->customer->email,
+                'address1' => $this->customer->address,
+                'meta' => ['_nit_ruc_nif' => $this->customer->nit, '_billing_name' => null],
+            ];
+            $response = $amyrCustomerApiService->update($customerUpdate);
+        }
+        $this->customer->amyr_customer_id = $response['customer_id'];
+        $this->customer->save();
     }
 }
