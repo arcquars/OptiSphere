@@ -36,8 +36,7 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
         $endpoint = '/invoices';
         $fullUrl = $this->baseUrl . $endpoint;
 
-        try {
-            Log::info("Enviando factura a MonoInvoices", [
+        Log::info("Enviando factura a MonoInvoices", [
                 'endpoint' => $fullUrl,
                 'payload_summary' => ['nitEmisor' => $invoiceData->nitRucNif, 'items' => count($invoiceData->items)]
             ]);
@@ -55,23 +54,15 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
                 return $response->json();
             }
 
+            $errorJson = $response->json();
             // 2. Manejo de Errores del Servidor o del Cliente (4xx, 5xx)
             Log::error("MonoInvoice API Error al crear factura.", [
                 'status' => $response->status(),
-                'response_body' => $response->body(),
+                'response_body' => $errorJson,
                 'request_payload' => $invoiceData->toArray(),
             ]);
             
-            // Lanza una excepción específica si es necesario, o devuelve null
-            return null;
-
-        } catch (\Exception $e) {
-            // 3. Manejo de Errores de Conexión (cURL, timeouts, etc.)
-            Log::critical("MonoInvoice API EXCEPCIÓN al crear factura: " . $e->getMessage(), [
-                'full_url' => $fullUrl
-            ]);
-            return null;
-        }
+            throw new \Exception("MonoInvoice API devolvió un error (Mensaje: " . $errorJson['error'] . ")", $response->status());
     }
 
     /**

@@ -144,7 +144,7 @@
 
             <form wire:submit.prevent="completePayment">
                 <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
-                    {{ $customer? $customer->name . "(NIT: " . $customer->nit . ")" : "Sin Cliente seleccionado" }}
+                    {{ $customer? $customer->name . "(" . $customer->document_type_show . ")" : "Sin Cliente seleccionado" }}
                 </h1>
                 <!-- Tipo de Venta -->
                 <div role="tablist" class="tabs tabs-boxed tabs-sm">

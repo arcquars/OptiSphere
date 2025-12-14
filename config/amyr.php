@@ -17,4 +17,20 @@ return [
         'subdir' => env('AMYR_APIREST_HOST_SUBDIR', ''),
         'api_base' => env('AMYR_APIREST_BASEURL', 'api'),
     ],
+
+    'document_types' => [
+        '5' => 'NIT',
+        '1' => 'CI',
+        '2' => 'CEX',
+        '3' => 'PAS',
+        '4' => 'OD'
+    ],
+
+    'tipo_documento_identidad' => [
+        '1' => 'CI - CÉDULA DE IDENTIDAD',
+        '2' => 'CEX - CÉDULA DE IDENTIDAD DE EXTRANJERO',
+        '5' => 'NIT - NÚMERO DE IDENTIFICACIÓN TRIBUTARIA',
+        '3' => 'PAS - PASAPORTE',
+        '4' => 'OD - OTRO DOCUMENTO DE IDENTIDAD'
+    ],
 ];

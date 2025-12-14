@@ -51,4 +51,15 @@ class Customer extends Model
             get: fn (mixed $value, array $attributes) => $this->sales()->sum('due_amount'),
         );
     }
+
+    public function getDocumentTypeShowAttribute(): string
+    {
+        $documentTypes = config('amyr.document_types', []);
+        $dt = $documentTypes[$this->document_type] ?? 'N/A';
+        $dt .= ": " . $this->nit;
+        if($this->document_type == 1 && !empty($this->complement)){
+            $dt .= " - Comp: " . $this->complement . "";
+        }
+        return "{$dt}";
+    }
 }

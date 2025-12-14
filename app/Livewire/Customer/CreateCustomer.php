@@ -41,7 +41,7 @@ class CreateCustomer extends Component implements HasSchemas
                     ->required()->minLength(5)->maxLength(250),
                 Select::make('document_type')
                     ->label('Tipo de documento')->options(
-                        config('cerisier.tipo_documento_identidad')
+                        config('amyr.tipo_documento_identidad')
                     )->required(),
                 Grid::make(4)
                     ->schema([

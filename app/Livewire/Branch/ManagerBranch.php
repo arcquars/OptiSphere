@@ -18,6 +18,7 @@ use App\Models\SalePayment;
 use App\Models\Service;
 use App\Services\MonoInvoiceApiService;
 use App\Services\SaleService;
+use Exception;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -628,7 +629,17 @@ class ManagerBranch extends Component
                 ->send();
                 return null;
             }
-        } catch (ValidationException $e) {
+        } catch (Exception $e) {
+            // Los datos de entrada no cumplen con la estructura del DTO
+            // echo "Error de validación del payload: " . $e->getMessage();
+            Notification::make()
+                ->title('Error en validacion')
+                ->body("Error de validación de la venta: " . $e->getMessage())
+                ->danger()
+                ->send();
+            return null;
+        }
+         catch (ValidationException $e) {
             // Los datos de entrada no cumplen con la estructura del DTO
             // echo "Error de validación del payload: " . $e->getMessage();
             Notification::make()
