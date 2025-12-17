@@ -107,4 +107,87 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
             return null;
         }
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function pdfInvoice($invoiceId): ?array
+    {
+        $endpoint = DIRECTORY_SEPARATOR.'invoices' . DIRECTORY_SEPARATOR . $invoiceId . DIRECTORY_SEPARATOR . 'pdf';
+        $fullUrl = $this->baseUrl . $endpoint;
+
+        try {
+            Log::info("Enviando factura pdf MonoInvoices", [
+                'endpoint' => $fullUrl,
+            ]);
+
+            $response = Http::baseUrl($this->baseUrl)
+                            ->withToken($this->token) // Adjunta el Bearer Token
+                            ->acceptJson()
+                            ->timeout(120) // Tiempo de espera de 120 segundos
+                            ->get($endpoint, ['invoice_id' => $invoiceId, 'motivo_id' =>1]); // Usa el DTO convertido a array
+
+            // 1. Manejo de Respuesta Exitosa (2xx)
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                return $data['data'] ?? null; 
+            }
+
+            // 2. Manejo de Errores del Servidor o del Cliente (4xx, 5xx)
+            Log::error("MonoInvoice API Error al pdf factura.", [
+                'status' => $response->status(),
+                'response_body' => $response->body(),
+                'request_payload' => ['invoice_id' => $invoiceId, 'motivo_id' =>1],
+            ]);
+            
+            // Lanza una excepción específica si es necesario, o devuelve null
+            return null;
+
+        } catch (\Exception $e) {
+            // 3. Manejo de Errores de Conexión (cURL, timeouts, etc.)
+            Log::critical("MonoInvoice API EXCEPCIÓN al PDF factura: " . $e->getMessage(), [
+                'full_url' => $fullUrl
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function verificarOnlineSiat(): bool|null
+    {
+        $endpoint = DIRECTORY_SEPARATOR.'invoices' . DIRECTORY_SEPARATOR . 'siat' . DIRECTORY_SEPARATOR . 'v2' . DIRECTORY_SEPARATOR . 'check-online-status';
+        $fullUrl = $this->baseUrl . $endpoint;
+
+        try {
+            Log::info("Enviando factura pdf MonoInvoices", [
+                'endpoint' => $fullUrl,
+            ]);
+
+            $response = Http::baseUrl($this->baseUrl)
+                            ->withToken($this->token) // Adjunta el Bearer Token
+                            ->acceptJson()
+                            ->timeout(120) // Tiempo de espera de 120 segundos
+                            ->get($endpoint); // Usa el DTO convertido a array
+
+            // 1. Manejo de Respuesta Exitosa (2xx)
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                return strcmp($data['response'], 'ok') == 0; 
+                //return false;
+            }
+
+            return false;
+
+        } catch (\Exception $e) {
+            // 3. Manejo de Errores de Conexión (cURL, timeouts, etc.)
+            Log::critical("MonoInvoice API EXCEPCIÓN al PDF factura: " . $e->getMessage(), [
+                'full_url' => $fullUrl
+            ]);
+            return false;
+        }
+    }
 }

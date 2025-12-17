@@ -2,7 +2,6 @@
 
 namespace App\DTOs;
 
-use Brick\Math\BigInteger;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Validation\ValidationException;
 

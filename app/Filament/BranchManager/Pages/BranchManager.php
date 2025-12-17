@@ -7,7 +7,9 @@ use Filament\Pages\Page;
 use Filament\Panel;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\HtmlString;
+use Illuminate\Contracts\View\View;
 
 class BranchManager extends Page
 {
@@ -19,27 +21,39 @@ class BranchManager extends Page
 
     public $branch;
 
-    public function getTitle(): string | Htmlable
+    public function getHeader(): ?View
     {
-        // Comprueba si la sucursal se ha cargado correctamente
-        if ($this->branch) {
-            return "Terminal de Venta - " . $this->branch->name;
-        }
-
-        return "Terminal de Venta";
+        $isOpenCashBox = CashBoxClosing::isOpenCashBoxByBranchAndUser($this->branch->id, Auth::id());
+        $isFacturable = $this->branch->is_facturable;
+        return view('filament.branch-manager.pages.header', 
+        [
+            'branch' => $this->branch, 
+            'isOpenCashBox' => $isOpenCashBox, 
+            'isFacturable' => $isFacturable
+        ]);
     }
+
+    // public function getTitle(): string | Htmlable
+    // {
+    //     // Comprueba si la sucursal se ha cargado correctamente
+    //     if ($this->branch) {
+    //         return "Terminal de Venta - " . $this->branch->name;
+    //     }
+
+    //     return "Terminal de Venta";
+    // }
 
     /**
      * 3. Sobrescribe el método getHeading() para el encabezado H1 dinámico en la página.
      */
-    public function getHeading(): string | Htmlable
-    {
-        if ($this->branch) {
-            return "Punto de Venta: " . $this->branch->name;
-        }
+    // public function getHeading(): string | Htmlable
+    // {
+    //     if ($this->branch) {
+    //         return "Punto de Venta: " . $this->branch->name;
+    //     }
 
-        return "Punto de Venta";
-    }
+    //     return "Punto de Venta";
+    // }
 
     /**
      * 4. (Opcional) Sobrescribe el subtítulo para dar más contexto.
@@ -48,7 +62,16 @@ class BranchManager extends Page
     {
         if ($this->branch) {
             if(CashBoxClosing::isOpenCashBoxByBranchAndUser($this->branch->id, Auth::id())){
-                return new HtmlString('<p class="text-success">Gestionando ventas para la sucursal seleccionada <i class="fa-solid fa-lock-open"></i></p>');
+                return new HtmlString(Blade::render('
+                    <div class="flex justify-between items-center w-full">
+                        <p class="text-success">
+                            Gestionando ventas para la sucursal seleccionada <i class="fa-solid fa-lock-open"></i>
+                        </p>
+                        <div>
+                            <livewire:branch.siat-connection-status :branch="$branch" />
+                        </div>
+                    </div>
+                ', ['branch' => $this->branch]));
             } else {
                 return new HtmlString('<p class="text-error">Caja se encuentra cerrada <i class="fa-solid fa-lock"></i></p>');
             }

@@ -387,7 +387,6 @@ class ManagerBranch extends Component
             }
         }
 
-        // dd("wwww:: ", $siatData);
         $userId = auth()->id();
         $total = $this->total;
         // 1. Preparar los datos del DETALLE de la venta (SaleItem)
@@ -454,6 +453,15 @@ class ManagerBranch extends Component
                 ->body("¡Venta N° {$sale->id} registrada con éxito! Stock descontado.")
                 ->success()
                 ->send();
+
+            if($isFacturable && isset($siatData['siat_invoice_id']) && isset($siatData['siat_status']) && $siatData['siat_status'] == 'issued'){
+                $pdfUrl = route('sales.invoice_pdf', $sale->id);
+                
+            } else {
+                $pdfUrl = route('sales.receipt_pdf', $sale->id);
+            }
+            $this->dispatch('open-pdf', url: $pdfUrl);
+            
             $this->reset(['cart', 'customer', 'selectedPromo', 'discountPercentage', 'saleType', 'paymentType']);
             // Puedes emitir un evento para imprimir la factura aquí
             $this->cart = [];
@@ -607,10 +615,8 @@ class ManagerBranch extends Component
                     'code' => $response['code']
                 ]);
                 if($response['response'] == 'ok' && $response['code'] == 200){
-                    Log::info("fffff pppppp 1");
                     return $response['data'];
                 } else {
-                    Log::info("fffff pppppp 2");
                     Notification::make()
                     ->title('Error')
                     ->body("No se pudo crear la factura en el sistema SIAT. " . $response['message'])

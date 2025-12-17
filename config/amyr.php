@@ -33,4 +33,11 @@ return [
         '3' => 'PAS - PASAPORTE',
         '4' => 'OD - OTRO DOCUMENTO DE IDENTIDAD'
     ],
+
+    'eventos_siat' => [
+        '1' => 'CORTE DEL SERVICIO DE INTERNET',
+        '2' => 'INACCESIBILIDAD AL SERVICIO WEB DE LA ADMINISTRACIÓN TRIBUTARIA',
+        '3' => 'INGRESO A ZONAS SIN INTERNET POR DESPLIEGUE DE PUNTO DE VENTA',
+        '4' => 'VENTA EN LUGARES SIN INTERNET'
+    ],
 ];
