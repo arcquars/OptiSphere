@@ -98,7 +98,7 @@
                 @foreach($sales as $sale)
                     <tr>
                         <td class="font-bold">{{ $sale->id }}</td>
-                        <td>{{ $sale->date_sale }}</td>
+                        <td>{{ $sale->date_sale->format('Y-m-d') }}</td>
                         <td>{{ $sale->customer->name }} <small>({{ $sale->customer->nit }})</small></td>
                         <td>{{ $sale->branch->name }}</td>
                         <td>
@@ -157,14 +157,14 @@
                             <div class="dropdown dropdown-bottom dropdown-end">
                                 <div tabindex="0" role="button" class="btn m-1">Acciones <i class="fa-solid fa-sort-down"></i></div>
                                 <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-                                    <li><a @click="$dispatch('toggleViewSale', {saleId: '{{$sale->id}}'}); return false;" class="text-primary">
+                                    <li><a @click="$dispatch('toggleViewSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;" class="text-primary">
                                             <i class="fa-solid fa-eye"></i> Ver
                                         </a>
                                     </li>
                                     @if(strcmp($sale->status, \App\Models\Sale::SALE_STATUS_CREDIT) == 0)
                                     <li>
                                         <a
-                                            @click="$dispatch('toggleViewSalePayment', {saleId: '{{$sale->id}}'}); return false;"
+                                            @click="$dispatch('toggleViewSalePayment', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;"
                                             class="text-primary" title="Registrar pago"
                                         >
                                             <i class="fa-solid fa-cash-register"></i> Reg. Pago
@@ -172,14 +172,18 @@
                                     </li>
                                     @endif
                                     <li>
-                                        <a href="{{ route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" target="_blank" class="text-primary">
+                                        <a href="{{ (isset($sale->siat_invoice_id))? route('sales.invoice_pdf', ['sale' => $sale->id]) : route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" onclick="document.activeElement.blur();" target="_blank" class="text-primary">
+                                            @if(isset($sale->siat_invoice_id))
+                                            <i class="fa-solid fa-print"></i> Imprimir factura
+                                            @else
                                             <i class="fa-solid fa-print"></i> Imprimir recibo
+                                            @endif
                                         </a>
                                     </li>
                                     @if($sale->can_edit)
                                     <li>
                                         <a
-                                            @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); return false;"
+                                            @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;"
                                             class="text-danger-500"
                                         >
                                             <i class="fa-solid fa-trash-can"></i> Eliminar

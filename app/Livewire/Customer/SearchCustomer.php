@@ -3,6 +3,7 @@
 namespace App\Livewire\Customer;
 
 use App\Models\Customer;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class SearchCustomer extends Component
@@ -32,6 +33,12 @@ class SearchCustomer extends Component
         })
             ->take(5)
             ->get();
+    }
+
+    #[On('customer-clear-search')]
+    public function clearSearch(){
+        $this->searchResults = [];
+        $this->customerSearch = "";
     }
 
     public function render()

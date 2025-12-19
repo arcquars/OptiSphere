@@ -108,6 +108,11 @@ class AmyrCatalogsService
         // return $this->getCatalog('productos-servicios', ['page' => 1, 'limit' => 50]);
         return $this->getCatalog('productos-servicios');
     }
+
+    public function getMotivoAnulacion(): ?array
+    {
+        return $this->getCatalog('sync-motivos-anulacion');
+    }
     
     // Puedes agregar más métodos específicos para cada catálogo que necesites (ej: Unidades de Medida, Paises, etc.)
 }

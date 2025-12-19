@@ -145,6 +145,7 @@ class SiatConnectionStatus extends Component
         try {
             $response = $service->createEvent($eventSiatDto);
             if ($response) {
+                $this->hasActiveContingency = true;
                 Notification::make()->title('Evento Creado')
                     ->body('Evento SIAT creado con ID: ' . $response['id'])
                     ->success()->send();

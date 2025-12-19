@@ -18,11 +18,11 @@ class BaseCodeResource extends Resource
 {
     protected static ?string $model = BaseCode::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'm-cog';
+    // protected static string|BackedEnum|null $navigationIcon = 'm-cog';
 
-    protected static ?int $navigationSort = 5;
+    // protected static ?int $navigationSort = 5;
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Catálogos';
+    // protected static string | \UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $modelLabel = 'Código base';
 

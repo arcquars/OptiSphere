@@ -87,7 +87,7 @@ class AmyrCustomerApiService
         $endpoint = 'customers'; 
         $fullUrl = $this->baseUrl . '/' . $endpoint;
 
-        Log::info("Amyr API datas", $customerUpdate);
+        Log::info("Amyr API CUSTOMER datas", $customerUpdate);
         try {
             $response = Http::baseUrl($this->baseUrl)
                             ->acceptJson()

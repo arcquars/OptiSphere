@@ -68,44 +68,34 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
     /**
      * @inheritDoc
      */
-    public function voidInvoice($invoiceId): ?array
+    public function voidInvoice($invoiceId, $motivo): ?array
     {
         $endpoint = DIRECTORY_SEPARATOR.'invoices' . DIRECTORY_SEPARATOR . $invoiceId . DIRECTORY_SEPARATOR . 'void';
         $fullUrl = $this->baseUrl . $endpoint;
 
-        try {
-            Log::info("Enviando factura a anular MonoInvoices", [
-                'endpoint' => $fullUrl,
-            ]);
+        Log::info("Enviando factura a anular MonoInvoices", [
+            'endpoint' => $fullUrl,
+        ]);
 
-            $response = Http::baseUrl($this->baseUrl)
-                            ->withToken($this->token) // Adjunta el Bearer Token
-                            ->acceptJson()
-                            ->timeout(120) // Tiempo de espera de 120 segundos
-                            ->post($endpoint, ['invoice_id' => $invoiceId, 'motivo_id' =>1]); // Usa el DTO convertido a array
+        $response = Http::baseUrl($this->baseUrl)
+                        ->withToken($this->token) // Adjunta el Bearer Token
+                        ->acceptJson()
+                        ->timeout(120) // Tiempo de espera de 120 segundos
+                        ->post($endpoint, ['invoice_id' => $invoiceId, 'motivo_id' => $motivo]); // Usa el DTO convertido a array
 
-            // 1. Manejo de Respuesta Exitosa (2xx)
-            if ($response->successful()) {
-                return $response->json();
-            }
-
-            // 2. Manejo de Errores del Servidor o del Cliente (4xx, 5xx)
-            Log::error("MonoInvoice API Error al anular factura.", [
-                'status' => $response->status(),
-                'response_body' => $response->body(),
-                'request_payload' => ['invoice_id' => $invoiceId, 'motivo_id' =>1],
-            ]);
-            
-            // Lanza una excepción específica si es necesario, o devuelve null
-            return null;
-
-        } catch (\Exception $e) {
-            // 3. Manejo de Errores de Conexión (cURL, timeouts, etc.)
-            Log::critical("MonoInvoice API EXCEPCIÓN al anular factura: " . $e->getMessage(), [
-                'full_url' => $fullUrl
-            ]);
-            return null;
+        // 1. Manejo de Respuesta Exitosa (2xx)
+        if ($response->successful()) {
+            return $response->json();
         }
+
+        $errorJson = $response->json();
+        // 2. Manejo de Errores del Servidor o del Cliente (4xx, 5xx)
+        Log::error("MonoInvoice API Error al Anular factura.", [
+            'status' => $response->status(),
+            'response_body' => $errorJson,
+        ]);
+        
+        throw new \Exception("MonoInvoice API devolvió un error (Mensaje: " . $errorJson['error'] . ")", $response->status());
     }
 
     /**

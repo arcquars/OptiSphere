@@ -461,7 +461,9 @@ class ManagerBranch extends Component
                 $pdfUrl = route('sales.receipt_pdf', $sale->id);
             }
             $this->dispatch('open-pdf', url: $pdfUrl);
-            
+            $this->dispatch('customer-clear-search');
+            $this->searchTerm = "";
+            $this->searchResults = [];
             $this->reset(['cart', 'customer', 'selectedPromo', 'discountPercentage', 'saleType', 'paymentType']);
             // Puedes emitir un evento para imprimir la factura aquí
             $this->cart = [];
@@ -593,7 +595,7 @@ class ManagerBranch extends Component
             'puntoVenta' => $this->branch->amyrConnectionBranch->point_sale,
             'codigoDocumentoSector' => 1,
             'tipoDocumentoIdentidad' => $this->customer->document_type,
-            'codigoMetodoPago' => 1,
+            'codigoMetodoPago' => (strcmp($this->paymentType, SalePayment::METHOD_TRANSFER) == 0)? 7 : 1,
             'codigoMoneda' => 1,
             'complemento' => $this->customer->complement ?? '',
             'numeroTarjeta' => null,
