@@ -26,6 +26,10 @@ class Customer extends Model
         'type'
     ];
 
+    protected $appends = [
+        'saldo_credito', 
+        'document_type_show'
+    ];
     /**
      * Un cliente tiene muchas ventas (Sales).
      * Esta es la clave para acceder a sus abonos y saldos pendientes.
@@ -61,5 +65,23 @@ class Customer extends Model
             $dt .= " - Comp: " . $this->complement . "";
         }
         return "{$dt}";
+    }
+
+    /**
+     * Accesor para calcular el saldo pendiente basado en la diferencia 
+     * entre el total final y el monto pagado.
+     * Se accede como: $customer->saldo_credito
+     */
+    protected function saldoCredito(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                // Usamos la relación definida en tu modelo
+                return $this->sales()
+                    ->where('status', Sale::SALE_STATUS_CREDIT)
+                    ->selectRaw('SUM(final_total - paid_amount) as total_pendiente')
+                    ->value('total_pendiente') ?? 0;
+            },
+        );
     }
 }

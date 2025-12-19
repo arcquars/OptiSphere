@@ -14,6 +14,7 @@ class CustomersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordUrl(null)
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombres')
@@ -51,12 +52,12 @@ class CustomersTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                // EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                // BulkActionGroup::make([
+                //     DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 }

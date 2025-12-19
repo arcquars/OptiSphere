@@ -209,7 +209,8 @@
             <div class="join">
                 <input type="number" x-model="amount" min="1" class="input input-sm focus-within:outline-none" />
                 <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
-                <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
+                <!-- <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button> -->
+                <button class="btn btn-sm join-item" @click="modal_confirm_clear.showModal()">Limpiar</button>
                 <button class="btn btn-primary btn-sm join-item"
                         @click="modal_confirm_income.showModal()"
 {{--                        @click="$wire.call('saveIncome', markedAmountCells)"--}}
@@ -234,7 +235,7 @@
                     </select>
                     <input type="number" x-model="amount" min="1" class="input input-sm focus-within:outline-none" placeholder="cantidad" />
                     <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
-                    <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
+                    <button class="btn btn-sm join-item" @click="modal_confirm_clear.showModal()">Limpiar</button>
                     <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_delivery.showModal()"
                             :disabled="markedAmountCells.length === 0 || markedAmountCells.some(item => item.state === 'danger') || branchId=== null"
                     >
@@ -263,7 +264,7 @@
                         <option value="{{ \App\Models\Price::TYPE_MAYORISTA }}">{{ \App\Models\Price::TYPE_MAYORISTA }}</option>
                     </select>
                     <button class="btn btn-sm join-item" @click="changeSelected('{{ $action }}')">Cambiar</button>
-                    <button class="btn btn-sm join-item" @click="clearCells">Limpiar</button>
+                    <button class="btn btn-sm join-item" @click="modal_confirm_clear.showModal()">Limpiar</button>
                     <button class="btn btn-primary btn-sm join-item" @click="modal_confirm_change_prices.showModal()"
                             :disabled="!disableSavePrices"
                     >
@@ -404,6 +405,20 @@
             </div>
         </dialog>
 
+        <!-- Modal Confirmar Limpiar datos -->
+        <dialog id="modal_confirm_clear" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">Limpiar matriz</h3>
+                <p class="py-4">¿Está seguro de que desea limpiar las celdas seleccionadas? Esta acción no se puede deshacer.</p>
+                <div class="modal-action">
+                    <form method="dialog">
+                        <!-- if there is a button in form, it will close the modal -->
+                        <button class="btn btn-sm btn-secondary">Cerrar</button>
+                        <button class="btn btn-sm btn-primary" @click="clearCells" >Confirmar</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
     </div>
 @endif
 

@@ -97,8 +97,20 @@
                             <tr wire:key="{{ $product->id }}">
                                 <td>{{ $product->name }} <small>({{ $product->code }})</small></td>
                                 <td>
-                                    <input type="number" class="input input-sm input-bordered w-20 focus-within:outline-none"
-                                           wire:model.live="productQuantities.{{ $product->id }}" min="1">
+                                    <!-- <input type="number" class="input input-sm input-bordered w-20 focus-within:outline-none"
+                                           wire:model.live="productQuantities.{{ $product->id }}" min="1"> -->
+                                    <input type="number" 
+                                           class="qty-input input input-sm input-bordered w-20 focus-within:outline-none"
+                                           wire:model.live="productQuantities.{{ $product->id }}" 
+                                           min="1"
+                                           x-on:keydown.enter.prevent="
+                                                let inputs = [...$root.querySelectorAll('.qty-input')];
+                                                let index = inputs.indexOf($el);
+                                                if (index < inputs.length - 1) {
+                                                    inputs[index + 1].focus();
+                                                    inputs[index + 1].select();
+                                                }
+                                           ">
                                 </td>
                                 <td class="text-right">
                                     <button wire:click="removeProduct({{ $product->id }})" class="btn btn-error btn-sm">

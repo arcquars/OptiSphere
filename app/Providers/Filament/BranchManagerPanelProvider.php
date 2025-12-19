@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\BranchManager\Pages\BranchManager;
+use App\Filament\BranchManager\Pages\BranchManagerCode;
 use App\Filament\BranchManager\Pages\CashClosing;
 use App\Filament\BranchManager\Pages\SalesReport;
 use App\Filament\BranchManager\Resources\CashMovements\CashMovementResource;
@@ -60,6 +61,7 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
             ->pages([
                 Dashboard::class,
                 BranchManager::class,
+                BranchManagerCode::class,
                 SalesReport::class,
                 CashClosing::class
             ])
@@ -155,7 +157,6 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
     {
         $items = [];
 
-        Log::info("xxxxxxdd " . auth()->check());
         $branches = collect();
         if(auth()->user()->hasRole('admin')){
             $branches = Branch::where('is_active', true)->get();
@@ -173,7 +174,7 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
                 $items[] = NavigationItem::make()
                     ->label("Sucursal {$branch->name}")
                     ->icon('heroicon-o-building-office')
-                    ->url(route(BranchManager::getRouteName(), ['branchId' => $branch->id]))
+                    ->url(route(BranchManagerCode::getRouteName(), ['branchId' => $branch->id]))
                     ->isActiveWhen(fn () => request()->route('branchId') == $branch->id)
                     ->badge($isBranchCashBoxOpen
                         ? 'A'

@@ -89,10 +89,18 @@
                             <tr wire:key="{{ $product->id }}">
                                 <td>{{ $product->name }} <small>({{ $product->code }} | q: {{ ($product->stockByStockWarehouse($warehouseId))? $product->stockByStockWarehouse($warehouseId)->quantity : "0" }})</small></td>
                                 <td class="text-right">
-                                    <input type="number" class="input input-sm input-bordered w-20 focus-within:outline-none"
+                                    <input type="number" class="qty-input-1 input input-sm input-bordered w-20 focus-within:outline-none"
                                            wire:model.live="productQuantities.{{ $product->id }}"
                                            min="1"
                                            max="{{ ($product->stockByStockWarehouse($warehouseId))? $product->stockByStockWarehouse($warehouseId)->quantity : "0" }}"
+                                           x-on:keydown.enter.prevent="
+                                            let inputs = [...$root.querySelectorAll('.qty-input-1')];
+                                            let index = inputs.indexOf($el);
+                                            if (index < inputs.length - 1) {
+                                                inputs[index + 1].focus();
+                                                inputs[index + 1].select();
+                                            }
+                                           "
                                     >
                                 </td>
                                 <td class="text-right">

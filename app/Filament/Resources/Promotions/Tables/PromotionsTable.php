@@ -18,6 +18,7 @@ class PromotionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordUrl(null)
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombre')
@@ -51,9 +52,9 @@ class PromotionsTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                // BulkActionGroup::make([
+                //     DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 }

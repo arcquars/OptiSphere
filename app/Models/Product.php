@@ -92,7 +92,7 @@ class Product  extends Model implements SalableInterface
         return $quantity;
     }
 
-    public function stockByBranch($branchId){
+    public function stockByBranch($branchId): int {
         $productStock = ProductStock::where('product_id', $this->id)
             ->where('branch_id', $branchId)->first();
         if($productStock)

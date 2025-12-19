@@ -29,6 +29,7 @@ class ServicesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->recordUrl(null)
             ->columns([
                 TextColumn::make('name')
                     ->label('Nombre del Servicio')
@@ -184,9 +185,9 @@ class ServicesTable
                     ->modalWidth(Width::Small)
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                // BulkActionGroup::make([
+                //     DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 }

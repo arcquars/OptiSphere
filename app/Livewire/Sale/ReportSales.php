@@ -24,6 +24,9 @@ class ReportSales extends Component
     public $branchSelect = 'all';
     public $saleTypeSelect = 'all';
     public $statusSelect = 'all';
+    public $typeSales;
+    public $typeSale;
+    public $clientSearch;
 
     public $branches;
 
@@ -31,7 +34,7 @@ class ReportSales extends Component
     {
         $this->dateStart = now()->startOfMonth()->format('Y-m-d');
         $this->dateEnd = now()->endOfMonth()->format('Y-m-d');
-
+        $this->typeSales = Sale::SALE_TYPE_SALES;
         if(auth()->user()->hasRole('admin')){
             $this->branches = Branch::where('is_active', true)->get();
         } elseif (auth()->user()->hasRole('branch-manager')) {
@@ -85,6 +88,19 @@ class ReportSales extends Component
             $query->where('status', 'like', $this->statusSelect);
         }
 
+        if($this->typeSale){
+            $query->where('sale_type', '=', $this->typeSale);
+        }
+
+        if($this->clientSearch && !empty($this->clientSearch)){
+            $search = $this->clientSearch;
+            $query->whereHas('customer', function ($q) use ($search) {
+                $q->where(function ($subQuery) use ($search) {
+                    $subQuery->where('name', 'like', '%' . $search . '%')
+                            ->orWhere('nit', 'like', '%' . $search . '%');
+                });
+            })->with('customer');
+        }
         // Clonar la consulta ANTES de la paginación para calcular los KPIs
         $kpiQuery = clone $query;
 

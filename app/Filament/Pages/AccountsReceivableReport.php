@@ -48,6 +48,9 @@ class AccountsReceivableReport extends Page implements HasTable
                         // Si la columna de unión en 'sales' es diferente, la usamos aquí.
                     ])
             )
+            ->extraAttributes([
+                'class' => 'tabla-cerisier shadow-md border-separate border-spacing-0',
+            ])
             ->defaultSort('total_credito_ventas', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
@@ -64,19 +67,13 @@ class AccountsReceivableReport extends Page implements HasTable
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_credito_ventas')
                     ->label('Total Comprado (Histórico)')
-                    ->money('BOB') // Asumo Bolivianos, puedes cambiarlo o quitarlo
+                    ->money(config('cerisier.currency_symbol')) // Asumo Bolivianos, puedes cambiarlo o quitarlo
                     ->sortable()
                     ->alignEnd()
                     ->default(0),
             ])
             ->filters([
                 // Aquí puedes añadir filtros
-            ])
-            ->actions([
-                // Aquí puedes añadir acciones por fila
-            ])
-            ->bulkActions([
-                // Aquí puedes añadir acciones masivas
             ])
             ->paginated(); // Habilitar paginación
     }

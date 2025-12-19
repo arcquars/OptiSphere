@@ -1,5 +1,18 @@
-@import 'tailwindcss';
+/* @import 'tailwindcss';
 
 .form-group{
     @apply mb-4;
+} */
+
+
+.fi-ta-text:not(.fi-inline) {
+    padding-block: .4em;
+}
+
+.fi-ta-icon:not(.fi-inline){
+    padding-block: .4em;
+}
+
+.fi-ta-cell:has(.fi-ta-actions){
+    padding-block: .4em;
 }

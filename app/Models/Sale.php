@@ -17,6 +17,8 @@ class Sale extends Model
     const SALE_STATUS_CREDIT = 'CREDIT';
     const SALE_STATUS_VOIDED = 'VOIDED';
 
+    const SALE_TYPE_SALES = ["normal", "mayorista", "especial"];
+
     protected $fillable = [
         'branch_id',
         'customer_id',

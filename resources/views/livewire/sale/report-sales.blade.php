@@ -5,7 +5,7 @@
         <!-- 1. Cabecera y Filtros -->
         <form wire:submit="search">
         <div class="border-b border-base-300 pb-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end mb-1">
                 <!-- Filtro Fecha Inicio -->
                 <label class="form-control w-full">
                     <div class="label"><span class="label-text">Fecha de Inicio</span></div>
@@ -41,7 +41,28 @@
                         <option value="{{ \App\Models\Sale::SALE_STATUS_CREDIT }}">{{ __('cerisier.'.\App\Models\Sale::SALE_STATUS_CREDIT) }}</option>
                     </select>
                 </label>
-                <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                @can('report sale admin')
+                <!-- Filtro Tipo venta -->
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Tipo venta</span></div>
+                    <select wire:model.defer="typeSale" class="select select-bordered w-full focus:outline-none">
+                        <option value="">Todas</option>
+                        @foreach($typeSales as $ts)
+                            <option value="{{ $ts }}">{{ $ts }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <!-- Filtro Tipo venta -->
+                <label class="form-control w-full">
+                    <div class="label"><span class="label-text">Cliente</span></div>
+                    <input wire:model.defer="clientSearch" type="text" class="input">
+                </label>
+                @endcan
+
+                <!-- <div class="col-span-1 md:col-span-2 lg:col-span-4"> -->
+                <div class="col-span-1 md:col-span-2 lg:col-span-2">
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Generar Reporte</button>
                 </div>
             </div>

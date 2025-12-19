@@ -28,7 +28,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use function PHPUnit\Framework\isNull;
 
-class ManagerBranch extends Component
+class ManagerBranchCode extends Component
 {
     use WithPagination;
     public $branch;
@@ -101,7 +101,7 @@ class ManagerBranch extends Component
 
         $services = Service::where("is_active", true)->orderBy('name')->get();
 
-        return view('livewire.branch.manager-branch', [
+        return view('livewire.branch.manager-branch-code', [
 //            'products' => $products,
             'products1' => $products1,
             'services' => $services,
@@ -117,9 +117,9 @@ class ManagerBranch extends Component
     }
 
     // Añade un ítem (producto o servicio) al carrito
-    public function addToCart($itemId, $type, $name, $price, $quantity)
+    public function addToCart($itemId, $type, $name, $price, int $quantity)
     {
-        if($quantity == 0){
+        if($quantity == 0 && strcmp($type, 'service') != 0){
             Notification::make()
                 ->title('Cuidado')
                 ->body('El producto seleccionado no tiene items')
@@ -131,18 +131,26 @@ class ManagerBranch extends Component
         $cartKey = $type . '-' . $itemId;
 
         if (isset($this->cart[$cartKey])) {
-            if(($this->cart[$cartKey]['quantity'] + 1) <= $quantity) {
+            if(strcmp($type, 'service') == 0){
                 $this->cart[$cartKey]['quantity'] = (is_numeric($this->cart[$cartKey]['quantity']))? $this->cart[$cartKey]['quantity']+1 : 1;
                 $this->cart[$cartKey]['limit'] = $quantity;
                 $this->cart[$cartKey]['promotion'] = null;
             } else {
-                Notification::make()
-                    ->title('Cuidado')
-                    ->body('El producto tiene solo ' . $quantity . " para ser vendidos.")
-                    ->warning()
-                    ->send();
-                return;
+                Log::info("AddddddddCart product: cantidad en tienda: " . $quantity . " || cantidad en el carrito: " . $this->cart[$cartKey]['quantity']);
+                if(($this->cart[$cartKey]['quantity'] + 1) <= $quantity) {
+                    $this->cart[$cartKey]['quantity'] = (is_numeric($this->cart[$cartKey]['quantity']))? $this->cart[$cartKey]['quantity']+1 : 1;
+                    $this->cart[$cartKey]['limit'] = $quantity;
+                    $this->cart[$cartKey]['promotion'] = null;
+                } else {
+                    Notification::make()
+                        ->title('Cuidado')
+                        ->body('El producto tiene solo ' . $quantity . " para ser vendidos.")
+                        ->warning()
+                        ->send();
+                    return;
+                }
             }
+            
 
         } else {
             $itemTemp = Product::find($itemId);
@@ -188,6 +196,64 @@ class ManagerBranch extends Component
             ];
         }
         $this->calculateTotals();
+    }
+
+    public function scanCode($value = null)
+    {
+        // Priorizamos el valor enviado directamente desde el DOM (parámetro $value)
+        $term = trim($value ?? $this->searchTerm);
+
+        if (empty($term)) {
+            return;
+        }
+
+        // 1. Búsqueda exacta de Producto por código
+        $product = Product::where('code', $term)
+            ->where('is_active', true)
+            ->first();
+
+        if ($product) {
+            $this->addToCart(
+                $product->id, 
+                'product', 
+                $product->name, 
+                $product->getPriceByType($this->branch->id, $this->saleType),
+                $product->stockByBranch($this->branch->id)
+            );
+            
+            // Usamos reset para asegurar que Livewire limpie las propiedades en el servidor
+            $this->reset(['searchTerm', 'searchResults']); 
+            
+            Notification::make()->title('Agregado')->body($product->name)->success()->send();
+            return;
+        }
+
+        // 2. Búsqueda exacta de Servicio por código
+        $service = Service::where('code', $term)
+            ->where('is_active', true)
+            ->first();
+
+        if ($service) {
+            $this->addToCart(
+                $service->id, 
+                'service', 
+                $service->name, 
+                $service->getPriceByType($this->branch->id, $this->saleType),
+                -1
+            );
+            $this->reset(['searchTerm', 'searchResults']); 
+            Notification::make()->title('Agregado')->body($service->name)->success()->send();
+            return;
+        }
+
+        // 3. Si no se encuentra el código
+        Notification::make()
+            ->title('No encontrado')
+            ->body("No se encontró ningún ítem con el código: {$term}")
+            ->warning()
+            ->send();
+            
+        $this->reset(['searchTerm', 'searchResults']); 
     }
 
     // Actualiza la cantidad de un ítem en el carrito
@@ -495,31 +561,6 @@ class ManagerBranch extends Component
                 ->danger()
                 ->send();
         }
-    }
-
-    public function selectAndAddToCart($itemId, $type)
-    {
-        // Lógica para encontrar el item y añadirlo al carrito...
-        // (Esto es una simulación, en la vida real buscarías en la BD)
-        if ($type === 'product') {
-            $item = collect([
-                ['id' => 1, 'name' => 'Gafas Sol Adidas', 'price' => 1.50],
-                ['id' => 2, 'name' => 'Anteojos co-85', 'price' => 2.00],
-            ])->firstWhere('id', $itemId);
-        } else {
-            $item = collect([
-                ['id' => 1, 'name' => 'Servicio de Reparación', 'price' => 50.00],
-                ['id' => 2, 'name' => 'Mantenimiento Preventivo', 'price' => 35.00],
-            ])->firstWhere('id', $itemId);
-        }
-
-        if ($item) {
-            $this->addToCart($item['id'], $type, $item['name'], $item['price']);
-        }
-
-        // Limpiar la búsqueda después de seleccionar
-        $this->searchTerm = '';
-        $this->searchResults = [];
     }
 
     #[On('customer-updated')]

@@ -16,7 +16,7 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
-//            ->heading('Usuarios')
+            ->recordUrl(null)
             ->headerActions([
 //                Action::make('import')
 //                    ->label('Importar')
@@ -49,9 +49,9 @@ class UsersTable
                 DeleteAction::make()
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+                // BulkActionGroup::make([
+                //     DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 }

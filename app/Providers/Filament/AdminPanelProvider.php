@@ -87,7 +87,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn (): string => Blade::render("@vite(['resources/css/app.css', 'resources/js/app.js'])"),
+                fn (): string => Blade::render("@vite(['resources/css/cerisier.css', 'resources/css/app.css', 'resources/js/app.js'])"),
             )
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->authGuard('web');
