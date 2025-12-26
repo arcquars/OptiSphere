@@ -7,6 +7,9 @@
                 Punto de venta <b>{{ $puntoVentaId }}</i></b>
                 <i class="fa-solid fa-grip-lines-vertical"></i>
                 <span class="{{ $activeSiat ? 'text-green-500' : 'text-red-500' }}">Activo SIAT: <b>{{ $activeSiat ? 'Sí' : 'No' }}</b></span>
+                <i class="fa-solid fa-grip-lines-vertical"></i>
+                <span>Activo Qr: <b>Sí</b></span>
+                <i class="fa-solid fa-grip-lines-vertical"></i>
             </p>
         </div>
         <div class="justify-self-end">
@@ -21,6 +24,14 @@
                         class="hover:bg-warning-focus active:bg-warning-focus"
                     >
                         Configurar SIAT
+                    </a>
+                </li>
+                <li>
+                    <a 
+                        href="{{ $urlSiatConfig }}"
+                        class="hover:bg-warning-focus active:bg-warning-focus"
+                    >
+                        Configurar Qr banco
                     </a>
                 </li>
                 <li>

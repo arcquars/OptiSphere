@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -17,7 +18,8 @@ class Branch extends Model
     protected $fillable = [
         'name',
         'address',
-        'is_active'
+        'is_active',
+        'configuracion_banco_id'
     ];
 
     use HasFactory;
@@ -43,6 +45,11 @@ class Branch extends Model
     public function amyrConnectionBranch(): HasOne
     {
         return $this->hasOne(AmyrConnectionBranch::class);
+    }
+
+    public function configuracionBanco(): BelongsTo
+    {
+        return $this->belongsTo(ConfiguracionBanco::class, 'configuracion_banco_id');
     }
 
     public function getIsFacturableAttribute(): bool {

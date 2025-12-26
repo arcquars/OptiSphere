@@ -22,6 +22,8 @@ class UserResource extends Resource
 
     protected static string | \UnitEnum | null $navigationGroup = 'Configuración';
 
+    protected static ?int $navigationSort = 0;
+    
     // Cambia el nombre singular que aparece en el menú
     protected static ?string $modelLabel = 'Usuario';
 

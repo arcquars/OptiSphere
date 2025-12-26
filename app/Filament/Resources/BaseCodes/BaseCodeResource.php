@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 
 class BaseCodeResource extends Resource
 {
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $model = BaseCode::class;
 
     // protected static string|BackedEnum|null $navigationIcon = 'm-cog';

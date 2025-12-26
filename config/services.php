@@ -34,5 +34,8 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'baneco' => [
+        'base_url' => env('BANECO_BASE_URL', 'https://apimktdesa.baneco.com.bo/ApiGateway/'),
+    ],
 
 ];

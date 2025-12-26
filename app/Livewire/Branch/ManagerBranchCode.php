@@ -200,14 +200,12 @@ class ManagerBranchCode extends Component
 
     public function scanCode($value = null)
     {
-        // Priorizamos el valor enviado directamente desde el DOM (parámetro $value)
         $term = trim($value ?? $this->searchTerm);
 
         if (empty($term)) {
             return;
         }
 
-        // 1. Búsqueda exacta de Producto por código
         $product = Product::where('code', $term)
             ->where('is_active', true)
             ->first();
@@ -220,15 +218,12 @@ class ManagerBranchCode extends Component
                 $product->getPriceByType($this->branch->id, $this->saleType),
                 $product->stockByBranch($this->branch->id)
             );
-            
-            // Usamos reset para asegurar que Livewire limpie las propiedades en el servidor
             $this->reset(['searchTerm', 'searchResults']); 
             
             Notification::make()->title('Agregado')->body($product->name)->success()->send();
             return;
         }
 
-        // 2. Búsqueda exacta de Servicio por código
         $service = Service::where('code', $term)
             ->where('is_active', true)
             ->first();

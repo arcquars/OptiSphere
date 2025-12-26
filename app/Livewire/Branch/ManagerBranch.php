@@ -375,9 +375,6 @@ class ManagerBranch extends Component
 
         if($this->isSaleCredit){
             $saldoTemp = number_format($this->customer->credit_limit - ($this->customer->saldo_credito + ($this->total - $this->partial_payment)), 2);
-            Log::info("www ppp1:: " . $this->customer->credit_limit . " || " . $this->customer->saldo_credito . " || " . $this->total . " || " . $this->partial_payment);
-            Log::info("www ppp2:: " . $saldoTemp);
-
             if($saldoTemp < 0){
                 $this->message_error = 'El Cliente ' . $this->customer->name . " Sobre pasa su CREDITO :: " . $saldoTemp;
                 return;

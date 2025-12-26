@@ -304,7 +304,12 @@
                     <a role="tab" class="tab @if($paymentType === \App\Models\SalePayment::METHOD_TRANSFER) tab-active @endif" wire:click="$set('paymentType', '{{ \App\Models\SalePayment::METHOD_TRANSFER }}')">
                         <i class="fa-solid fa-credit-card mr-2"></i>{{ \App\Models\SalePayment::METHOD_TRANSFER }}
                     </a>
-                    <a role="tab" class="tab @if($paymentType === \App\Models\SalePayment::METHOD_QR) tab-active @endif" wire:click="$set('paymentType', '{{ \App\Models\SalePayment::METHOD_QR }}')">
+                    <a 
+                        role="tab" 
+                        class="tab @if($paymentType === \App\Models\SalePayment::METHOD_QR) tab-active @endif" 
+                        wire:click="$set('paymentType', '{{ \App\Models\SalePayment::METHOD_QR }}')"
+                        @if($branch->configuracionBanco && $branch->configuracionBanco->activo) data-test="123" @else disabled @endif
+                    >
                         <i class="fa-solid fa-qrcode mr-2"></i>Pago {{ \App\Models\SalePayment::METHOD_QR }}
                     </a>
                     @if(isset($customer) && $customer->can_buy_on_credit)

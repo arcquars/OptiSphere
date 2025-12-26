@@ -152,7 +152,7 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
         $fullUrl = $this->baseUrl . $endpoint;
 
         try {
-            Log::info("Enviando factura pdf MonoInvoices", [
+            Log::info("Enviando Verificar online MonoInvoices: " . __METHOD__, [
                 'endpoint' => $fullUrl,
             ]);
 
@@ -162,9 +162,13 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
                             ->timeout(120) // Tiempo de espera de 120 segundos
                             ->get($endpoint); // Usa el DTO convertido a array
 
+            Log::info("Enviando Verificar online MonoInvoices 2: " . __METHOD__, [
+                    'endpoint' => $response->json(),
+                ]);
             // 1. Manejo de Respuesta Exitosa (2xx)
             if ($response->successful()) {
                 $data = $response->json();
+               
                 
                 return strcmp($data['response'], 'ok') == 0; 
                 //return false;
@@ -174,7 +178,7 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
 
         } catch (\Exception $e) {
             // 3. Manejo de Errores de Conexión (cURL, timeouts, etc.)
-            Log::critical("MonoInvoice API EXCEPCIÓN al PDF factura: " . $e->getMessage(), [
+            Log::critical("MonoInvoice API EXCEPCIÓN al Verificar online: " . $e->getMessage(), [
                 'full_url' => $fullUrl
             ]);
             return false;
