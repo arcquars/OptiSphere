@@ -60,7 +60,6 @@ class SiatConnectionStatus extends Component
             $activeEvent = $serviceEvent->getEventActive($this->branch->amyrConnectionBranch->point_sale); // Cambiar a la consulta real
             
             if ($activeEvent) {
-                dd();
                 $this->hasActiveContingency = true;
                 $this->eventId = $activeEvent['id']; // o codigo_recepcion
                 $this->eventStartTime = $activeEvent['fecha_inicio']; // format('H:i d/m')
