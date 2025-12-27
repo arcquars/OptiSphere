@@ -334,31 +334,70 @@
                     <button 
                         type="submit" 
                         class="btn btn-success btn-block"
-                        wire:loading.target="completePayment"
+                        wire:loading.target="completePayment1"
                         wire:loading.attr="disabled"
                          @if(!$isOpenCashBoxClosing) disabled @endif>
                         <i class="fa-solid fa-check"></i>Completar Pago
                     </button>
                     <button
                         type="button"
-                        wire:click="completePayment(true)" 
-                        class="btn btn-info btn-block" 
+                        wire:click="completePayment1(true)" 
+                        class="btn btn-info btn-block text-white" 
                         wire:loading.attr="disabled"
-                        @if(!$isOpenCashBoxClosing) 
-                        disabled 
-                        @else
-                            @if(!$this->branch->is_facturable)
-                                disabled
-                            @endif
-                        @endif
+                        @if(!$isOpenCashBoxClosing || !$this->branch->is_facturable) disabled @endif
                     >
-                        <i class="fa-solid fa-print"></i>Generar Factura
+                        <i class="fa-solid fa-file-invoice"></i> Facturar
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- MODAL DE PAGO QR -->
+    @if($showQrModal)
+    <div class="modal modal-open bg-black/50 backdrop-blur-sm z-50">
+        <div class="modal-box w-11/12 max-w-md text-center shadow-2xl relative">
+            
+            <!-- Botón cerrar (X) -->
+            <button wire:click="closeQrModal" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            
+            <h3 class="font-bold text-2xl text-primary mb-2">Pago con QR</h3>
+            <p class="text-gray-500 text-sm mb-4">Escanea el código desde tu aplicación bancaria</p>
+            
+            <!-- Contenedor del QR -->
+            <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-200 shadow-inner mb-4">
+                @if($qrImage)
+                    <img src="data:image/png;base64,{{ $qrImage }}" alt="Código QR" class="w-64 h-64 object-contain">
+                    <p class="mt-2 font-mono text-xs text-gray-400">Generado por Banco Económico</p>
+                @else
+                    <div class="w-64 h-64 flex flex-col items-center justify-center text-gray-400">
+                        <span class="loading loading-spinner loading-lg"></span>
+                        <span class="mt-2 text-xs">Generando QR...</span>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Monto -->
+            <div class="stat p-0 mb-6">
+                <div class="stat-title">Monto a Pagar</div>
+                <div class="stat-value text-primary">{{ number_format($total, 2) }} BOB</div>
+            </div>
+
+            <!-- Acciones del Modal -->
+            <div class="grid grid-cols-1 gap-3">
+                <!-- Botón de Confirmación Manual -->
+                <button wire:click="confirmQrPayment" class="btn btn-primary w-full">
+                    <i class="fa-solid fa-check-circle"></i> Confirmar Pago Recibido
+                </button>
+                
+                <!-- Botón Cancelar -->
+                <button wire:click="closeQrModal" class="btn btn-outline w-full text-gray-500">
+                    Cancelar Operación
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 <script>
     window.addEventListener('open-pdf', (event) => {

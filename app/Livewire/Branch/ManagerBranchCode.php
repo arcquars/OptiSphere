@@ -4,6 +4,7 @@ namespace App\Livewire\Branch;
 
 use App\DTOs\CustomerSiatDto;
 use App\DTOs\InvoiceCreationDto;
+use App\DTOs\PaymentQr;
 use App\Helpers\ValidateSiatHelper;
 use App\Models\Branch;
 use App\Models\CashBoxClosing;
@@ -16,6 +17,7 @@ use App\Models\Sale;
 use App\Models\SaleItemService;
 use App\Models\SalePayment;
 use App\Models\Service;
+use App\Services\EconomicoApiService;
 use App\Services\MonoInvoiceApiService;
 use App\Services\SaleService;
 use Exception;
@@ -65,13 +67,19 @@ class ManagerBranchCode extends Component
     public $message_error = null;
     public $isOpenCashBoxClosing = false;
 
+    // PROPIEDADES PARA PAGO QR ---
+    public $payment_method = 'Efectivo'; // Valor por defecto
+    public $showQrModal = false;
+    public $qrImage = null;
+    public $isInvoicePending = false;
+
     public function mount($branchId): void
     {
         $this->branch = Branch::find($branchId);
         
         // dd($this->branch->is_facturable);
         $this->categories = Category::where('is_active', true)->get();
-
+        $this->customer = new Customer();
         $this->promotionActives = Promotion::active()->get();
         $this->promoActive = (count($this->promotionActives) > 0)? true : false;
 
@@ -769,4 +777,103 @@ class ManagerBranchCode extends Component
         $this->customer->amyr_customer_id = $response['customer_id'];
         $this->customer->save();
     }
+
+    public function completePayment1($generateInvoice = false)
+    {
+        $this->validateCart();
+
+        if ($this->message_error) {
+            return;
+        }
+
+        // Intercepción para Pago QR
+        if ($this->paymentType === SalePayment::METHOD_QR) {
+            $this->isInvoicePending = $generateInvoice;
+            $this->generateQrCode();
+            return;
+        }
+
+        dd("sssssss");
+        // Flujo normal para Efectivo/Tarjeta
+        $this->finalizeSale($generateInvoice);
+    }
+
+    /**
+     * Llama al servicio EconomicoApiService para generar el QR.
+     */
+    public function generateQrCode()
+    {
+        try {
+            // Instanciamos tu servicio
+            $apiService = new EconomicoApiService($this->branch->id);
+
+            // Preparamos el DTO PaymentQr usando el constructor con argumentos nombrados
+            // para respetar la estructura definida en PaymentQr.php
+            $paymentQr = new PaymentQr(
+                amount: (float) $this->total, // El DTO espera float, no string formateado
+                currency: 'BOB',
+                gloss: "Compra en " . $this->branch->name,
+                singleUse: 'true', // El DTO espera string 'true' o 'false', no boolean
+                expirationDate: now()->addHours(24)->format('Y-m-d'),
+                additionalData: [
+                    'cajero' => Auth::user()->name ?? 'Sistema',
+                    'sucursal' => $this->branch->name,
+                    'cliente' => $this->customer->name ?? 'SN'
+                ]
+            );
+
+            // Llamada al servicio
+            $response = $apiService->generateQr($paymentQr->amount, $paymentQr->gloss,
+                $paymentQr->currency, 
+                null, 
+                (strcmp($paymentQr->singleUse, "true") == 0));
+
+            // Verificamos si obtuvimos la imagen (el DTO sugiere que puede venir como qrImage o qrBase64)
+            // Asumimos que el servicio devuelve un array o el mismo DTO poblado.
+            $qrImage = $response['qrImage'] ?? $response['qrBase64'] ?? null;
+
+            if ($qrImage) {
+                $this->qrImage = $qrImage;
+                $this->showQrModal = true;
+            } else {
+                throw new Exception("La respuesta del banco no contiene la imagen QR.");
+            }
+
+        } catch (Exception $e) {
+            Log::error("Error generando QR: " . $e->getMessage());
+            Notification::make()
+                ->title('Error al generar QR')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    /**
+     * Acción para cerrar el modal y limpiar el QR (cancelar operación).
+     */
+    public function closeQrModal()
+    {
+        $this->showQrModal = false;
+        $this->qrImage = null;
+    }
+
+    /**
+     * Acción para confirmar que el pago QR fue exitoso (botón manual en el modal).
+     */
+    public function confirmQrPayment()
+    {
+        $this->closeQrModal();
+        // Procedemos a guardar la venta como pagada
+        $this->finalizeSale($this->isInvoicePending);
+    }
+    
+    private function validateCart()
+    {
+        $this->message_error = '';
+        if (empty($this->cart)) {
+            $this->message_error = "El carrito está vacío.";
+        }
+    }
+
 }
