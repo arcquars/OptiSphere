@@ -18,6 +18,8 @@ class DeleteSaleModal extends Component
 
     public int $voidSaleId;
 
+    public bool $deleteSale;
+
     public bool $isSiat = false;
     public string $voidReason = '';
 
@@ -29,11 +31,12 @@ class DeleteSaleModal extends Component
     /**
      * @param AmyrCatalogsService $amyrCatalogsService
      */
-    public function confirmVoid(AmyrCatalogsService $amyrCatalogsService, $saleId= null): void
+    public function confirmVoid(AmyrCatalogsService $amyrCatalogsService, $saleId= null, $deleteSale = false): void
     {
         if($saleId){
             $this->sale = Sale::find($saleId);
             $this->motivo = null;
+            $this->deleteSale = $deleteSale;
             if(isset($this->sale->siat_invoice_id) && isset($this->sale->siat_status) && strcmp($this->sale->siat_status, "issued") == 0){
                 $amyrCatalogsService->setToken($this->sale->branch->amyrConnectionBranch->token);
                 $result = $amyrCatalogsService->getMotivoAnulacion();
@@ -60,13 +63,8 @@ class DeleteSaleModal extends Component
     {
         if($this->isSiat){
             $validated = Validator::make(
-                // Data to validate...
                 ['motivo' => $this->motivo],
-    
-                // Validation rules to apply...
                 ['motivo' => 'required'],
-    
-                // Custom validation messages...
                 ['required' => 'El :attribute es requerido'],
             )->validate();
         }
@@ -77,6 +75,11 @@ class DeleteSaleModal extends Component
                 if(strcmp($result['response'], 'ok') == 0 && $result['code'] === 200){
                     $this->sale->siat_status = 'void';
                     $this->sale->save();
+                    Notification::make()
+                    ->title('Exito')
+                    ->body("¡La factura se anulo correctamente.")
+                    ->success()
+                    ->send();
                 } else {
                     Notification::make()
                         ->title('Error Siat')
@@ -84,25 +87,24 @@ class DeleteSaleModal extends Component
                         ->danger()
                         ->send();        
                 }
-                // dd($result);
             }
 
-            // dd("ddd");
-            $service->voidSale(
-                saleId: $this->sale->id,
-                userId: auth()->id(),
-                reason: $this->voidReason ?: null
-            );
+            if($this->deleteSale){
+                $service->voidSale(
+                    saleId: $this->sale->id,
+                    userId: auth()->id(),
+                    reason: $this->voidReason ?: null
+                );
 
+                Notification::make()
+                    ->title('Exito')
+                    ->body("¡Venta N° {$this->sale->id} anulada y stock restaurado.")
+                    ->success()
+                    ->send();
+            }
+    
             $this->closeModal();
-            Notification::make()
-                ->title('Exito')
-                ->body("¡Venta N° {$this->sale->id} anulada y stock restaurado.")
-                ->success()
-                ->send();
             $this->reset('voidSaleId', 'voidReason');
-
-            // Refresca listas/carrito/estadísticas
             $this->dispatch('refresh-report-sales');
         } catch (\DomainException $e) {
             Notification::make()

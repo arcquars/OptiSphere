@@ -10,6 +10,7 @@ use Livewire\Component;
 use Filament\Notifications\Notification;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
 
 class SiatConnectionStatus extends Component
 {
@@ -21,12 +22,17 @@ class SiatConnectionStatus extends Component
 
     // Estado de Contingencia
     public bool $hasActiveContingency = false;
+    
+    public ?string $eId = null;
     public ?string $eventId = null;
     public ?string $eventStartTime = null;
+    public ?string $eventEndTime = null;
 
     public ?string $eventDescription = null;
 
     public Array $eventosSiat = [];
+
+    public Array $eventosSiatCafc = [];
     // Modal
     public bool $showModal = false;
 
@@ -36,36 +42,36 @@ class SiatConnectionStatus extends Component
     {
         $this->branch = $branch;
         $this->eventosSiat = config('amyr.eventos_siat');
+        $this->eventosSiatCafc = config('amyr.eventos_siat_cafc');
         $this->checkStatus();
     }
 
     /**
      * Esta función se ejecuta automáticamente por el wire:poll
      */
+    #[On('siat-checkstatus')] 
     public function checkStatus()
     {
         try {
             $service = new MonoInvoiceApiService($this->branch);
             $serviceEvent = new AmyrEventsApiService($this->branch->amyrConnectionBranch->token);
-            // 1. Verificar conexión
-            // Nota: Es ideal que 'verificarOnlineSiat' tenga un timeout bajo en el servicio 
-            // para no congelar este proceso si el SIAT no responde.
             $this->isOnline = $service->verificarOnlineSiat();
 
             // 2. Verificar si hay un evento de contingencia activo en tu BD local
             // (Aquí debes adaptar según tu modelo de eventos, esto es un ejemplo)
             // $activeEvent = $this->branch->siatEvents()->where('status', 'active')->first();
-            
-            // SIMULACIÓN DE DATOS (Reemplazar con tu lógica real de DB)
             $activeEvent = $serviceEvent->getEventActive($this->branch->amyrConnectionBranch->point_sale); // Cambiar a la consulta real
             
             if ($activeEvent) {
                 $this->hasActiveContingency = true;
-                $this->eventId = $activeEvent['id']; // o codigo_recepcion
+                $this->eId = $activeEvent['id'];
+                $this->eventId = $activeEvent['evento_id']; // o codigo_recepcion
                 $this->eventStartTime = $activeEvent['fecha_inicio']; // format('H:i d/m')
+                $this->eventEndTime = $activeEvent['fecha_fin'];
                 $this->eventDescription = $activeEvent['descripcion'] ?? '';
             } else {
                 $this->hasActiveContingency = false;
+                $this->eId = null;
                 $this->eventId = null;
             }
 
@@ -106,21 +112,23 @@ class SiatConnectionStatus extends Component
         // --- LÓGICA PARA CERRAR EL EVENTO EN TU BASE DE DATOS Y/O SIAT ---
         $service = new AmyrEventsApiService($this->branch->amyrConnectionBranch->token);
         try{
-            $response = $service->closeEvent($this->eventId);
+            $response = $service->closeEvent($this->eId);
             if(strcmp($response['response'], 'ok') == 0){
                 $this->hasActiveContingency = false;
                 $this->eventId = null;
+                $this->eId = null;
                 $this->eventStartTime = null;
+                $this->dispatch('set-event-active');
 
                 Notification::make()->title('Contingencia Cerrada')
                     ->body($response['message'])
                     ->success()->send();
             } else {
-                Notification::make()->title('Error Cerrando Contingencia')
+                Notification::make()->title('Error Cerrando Contingencia 1')
                     ->body('No se pudo cerrar el evento de contingencia: ' . $response['message'])->danger()->send();
             }        // Simulación de cierre
         } catch(\Exception $e){
-            Notification::make()->title('Error Cerrando Contingencia')
+            Notification::make()->title('Error Cerrando  2')
                 ->body($e->getMessage())
                 ->danger()->send();
         }

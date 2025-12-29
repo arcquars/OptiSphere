@@ -65,6 +65,7 @@ class AmyrEventsApiService
             $eventId . DIRECTORY_SEPARATOR . 'cerrar';
 
         $fullUrl = $this->baseUrl . DIRECTORY_SEPARATOR . $endpoint;
+        Log::info("sssss kkkkk:: " . $fullUrl);
         $response = Http::baseUrl($this->baseUrl)
             ->acceptJson()
             ->withToken($this->token)
@@ -77,7 +78,7 @@ class AmyrEventsApiService
                 'data' => $response->json('data')
             ];
         }
-        
+        Log::error("Error pdm: " . $response->body());
         throw new \Exception($response->json('error') ?? 'Desconocido', $response->json('code'));
         
     }

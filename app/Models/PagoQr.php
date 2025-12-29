@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PagoQr extends Model
 {
-    protected $table = 'pagos_qrs';
+    protected $table = 'pago_qrs';
 
     protected $fillable = [
         'transaction_id',

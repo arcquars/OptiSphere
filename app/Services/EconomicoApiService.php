@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTOs\PaymentQr;
 use App\Models\Branch;
 use App\Models\ConfiguracionBanco; // Importamos tu modelo
+use App\Models\PagoQr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -112,6 +113,7 @@ class EconomicoApiService
             //     ->timeout(30)
             //     ->post($this->baseUrl . self::ENDPOINT_GENERATE_QR, $payload);
 
+            Log::info("www pppooo::::: " . json_encode($payload));
             $response = Http::timeout(30)
             ->withHeaders([
                 'Authorization' => 'Bearer ' . $token,
@@ -121,13 +123,27 @@ class EconomicoApiService
 
             if ($response->successful() && ($response->json('responseCode') === 0)) {
                 $data = $response->json();
+                Log::info("paymentQr data:: " . json_encode($data));
                 $responseData = $data['body'] ?? $data; 
                 $responseData['transactionId'] = $responseData['transactionId'] ?? $transactionId;
                 
-                return PaymentQr::fromArray($responseData);
+                $paymentQr = PaymentQr::fromArray($responseData);
+                PagoQr::create([
+                    'transaction_id' => $responseData['transactionId'],
+                    'qr_id' => $paymentQr->qrId,
+                    'amount' => $payload['amount'],
+                    'currency' => $payload['currency'],
+                    'description' => $payload['description'],
+                    'branch_code' => null,
+                    'status' => 1,
+                    'payment_date' => $payload['dueDate'],
+                    'qr_image' => $paymentQr->qrImage,
+                    'extra_data' => null
+                ]);
+                return $paymentQr;
             }
 
-            Log::error('Baneco API Error (GenerateQR): ' . $response->body());
+            Log::error('Baneco API Error (GenerateQR): ' . json_encode($response));
             throw new Exception('Error al generar el QR Qr: ' . ($response->json('message') ?? 'Error desconocido'));
 
         } catch (Exception $e) {
@@ -146,17 +162,53 @@ class EconomicoApiService
     {
         $token = $this->authenticate();
 
-        $response = Http::withToken($token)
-            ->post($this->baseUrl . self::ENDPOINT_CHECK_QR, [
-                'qrId' => $qrId
-            ]);
+        try{
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $token['token'],
+            ])
+            ->get($this->baseUrl . self::ENDPOINT_CHECK_QR . DIRECTORY_SEPARATOR . urlencode($qrId));
 
-        if ($response->successful()) {
-            return $response->json();
+        $data = $response->json();
+        if (!$response->successful() || !isset($data['statusQrCode'])) {
+            return ['success' => false, 'error' => $data['message'] ?? 'Error al verificar QR'];
         }
 
-        Log::error('Baneco API Error (CheckStatus): ' . $response->body());
-        return ['success' => false, 'message' => 'Error al consultar estado'];
+        $estado = $data['statusQrCode'];
+        $fechaPago = $estado === 1 && !empty($data['payment'][0]['paymentDate'])
+            ? substr($data['payment'][0]['paymentDate'], 0, 10)
+            : null;
+
+        if ($estado == 1) {
+            PagoQr::updateOrCreate(
+                ['qr_id' => $qrId],
+                [
+                    'transaction_id' => $data['transactionId'] ?? $qrId,
+                    'qr_id' => $qrId,
+                    'amount' => $data['payment'][0]['amount'] ?? 0,
+                    'currency' => $data['payment'][0]['currency'] ?? 'BOB',
+                    'description' => $data['description'] ?? null,
+                    'branch_code' => $data['branchCode'] ?? null,
+                    'status' => 1,
+                    'payment_date' => $fechaPago,
+                    'qr_image' => null,
+                    'extra_data' => $data,
+                ]
+            );
+        }
+
+        return [
+                'success' => true,
+                'qrId' => $qrId,
+                'estado' => $estado,
+                'fechaPago' => $fechaPago,
+                'message' => $data['message'] ?? null,
+                'body' => $data
+            ];
+        } catch (Exception $e) {
+            Log::error('Error verificarQr: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
     }
 
     // --- Métodos Privados ---
@@ -211,6 +263,7 @@ class EconomicoApiService
                 'aesKey' => $this->apiKey
             ]);
 
+        Log::info("WWW pppp bbbb:: " . $response->body());
         if ($response->successful()) {
             return ['success' => true, 'data' => preg_replace('/[^A-Za-z0-9\+\/\=]/', '', trim($response->body()))];
         }

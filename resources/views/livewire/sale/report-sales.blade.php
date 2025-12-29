@@ -202,9 +202,28 @@
                                         </a>
                                     </li>
                                     @if($sale->can_edit)
+                                        @if(strcmp($sale->siat_status, "void") == 0)
+                                        <li>
+                                            <a
+                                                @click="$dispatch('toggleRevertirAnularSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;"
+                                                class="text-emerald-500" title="Deshacer anulación factura"
+                                            >
+                                                <i class="fa-solid fa-link"></i> DesAnular factura
+                                            </a>
+                                        </li>
+                                        @elseif(strcmp($sale->siat_status, "issued") == 0)
+                                        <li>
+                                            <a
+                                                @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;"
+                                                class="text-danger-500" title="Anular factura"
+                                            >
+                                                <i class="fa-solid fa-link-slash"></i> Anular factura
+                                            </a>
+                                        </li>
+                                        @endif
                                     <li>
                                         <a
-                                            @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;"
+                                            @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}', deleteSale: true}); document.activeElement.blur(); return false;"
                                             class="text-danger-500"
                                         >
                                             <i class="fa-solid fa-trash-can"></i> Eliminar

@@ -1,4 +1,4 @@
-<div wire:poll.5s="checkStatus" class="flex items-center justify-end">
+<div wire:poll.20s="checkStatus" class="flex items-center justify-end">
     
     {{-- CASO 1: HAY UN EVENTO DE CONTINGENCIA ACTIVO --}}
     @if($hasActiveContingency)
@@ -7,7 +7,7 @@
             <div class="flex flex-col leading-none">
                 <span class="text-xs font-bold uppercase">Contingencia Activa</span>
                 <span class="text-[10px]">{{ $eventDescription }}</span>
-                <span class="text-[10px] mb-1">ID: {{ $eventId }} - Inicio: {{ $eventStartTime }}</span>
+                <span class="text-[10px] mb-1">Código: {{ $eventId }} - Inicio: {{ $eventStartTime }} - Fin: {{ $eventEndTime?? "" }}</span>
                 @if($isOnline)
                 <button 
                     wire:click="closeContingencyEvent" 
@@ -29,58 +29,71 @@
                 @endif
             </div>
         </div>
-    @endif
-    {{-- CASO 2: CONEXIÓN EXITOSA (ONLINE) --}}
-    @if($isOnline)
-        <!-- <div class="badge badge-success gap-2 p-3 font-semibold text-white shadow-sm" title="Conexión con SIAT estable">
-            <i class="fa-solid fa-wifi text-xs"></i>
-            SIAT EN LÍNEA
-        </div> -->
-        <div class="dropdown dropdown-bottom dropdown-end">
-            <div tabindex="0" 
-                role="button" 
-                class="btn btn-sm btn-success m-1" 
-                @if($hasActiveContingency) disabled @endif
-            >
-                <div wire:loading wire:target="createEvent">
-                    <i class="fa-solid fa-cog fa-spin"></i>
-                </div>
-                <!-- Texto Dinámico -->
-                <span wire:loading.remove wire:target="createEvent">
-                    SIAT EN LÍNEA <i class="fa-regular fa-square-caret-down"></i>
-                </span>
-                
-                <span wire:loading wire:target="createEvent">
-                    Procesando...
-                </span>
-                
-            </div>
-            <ul tabindex="-1" class="dropdown-content menu bg-base-200 rounded-box z-1 w-70 p-2 shadow-sm">
-                @foreach ($this->eventosSiat as $key => $event)
-                    <li class="text-sm">
-                        <a 
-                            onclick="document.activeElement.blur()"
-                            wire:click="createEvent({{$key}})"
-                            wire:target="createEvent"
-                        >
-                            {{ $key }}.- {{ $event }}        
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-
-    {{-- CASO 3: SIN CONEXIÓN (OFFLINE) --}}
     @else
-        <div class="flex items-center gap-2">
-            <button wire:click="openContingencyModal" 
-                    class="btn btn-error btn-sm btn-outline gap-2 animate-bounce">
-                <i class="fa-solid fa-wifi-slash"></i>
-                SIAT OFFLINE
-                <span class="badge badge-error text-white text-xs">Crear Evento</span>
-            </button>
-        </div>
+        {{-- CASO 2: CONEXIÓN EXITOSA (ONLINE) --}}
+        @if($isOnline)
+            <!-- <div class="badge badge-success gap-2 p-3 font-semibold text-white shadow-sm" title="Conexión con SIAT estable">
+                <i class="fa-solid fa-wifi text-xs"></i>
+                SIAT EN LÍNEA
+            </div> -->
+            <div class="dropdown dropdown-bottom dropdown-end">
+                <div tabindex="0" 
+                    role="button" 
+                    class="btn btn-sm btn-success m-1" 
+                    @if($hasActiveContingency) disabled @endif
+                >
+                    <div wire:loading wire:target="createEvent">
+                        <i class="fa-solid fa-cog fa-spin"></i>
+                    </div>
+                    <!-- Texto Dinámico -->
+                    <span wire:loading.remove wire:target="createEvent">
+                        SIAT EN LÍNEA <i class="fa-regular fa-square-caret-down"></i>
+                    </span>
+                    
+                    <span wire:loading wire:target="createEvent">
+                        Procesando...
+                    </span>
+                    
+                </div>
+                <ul tabindex="-1" class="dropdown-content menu bg-base-200 rounded-box z-1 w-70 p-2 shadow-sm">
+                    @foreach ($this->eventosSiat as $key => $event)
+                        <li class="text-sm">
+                            <a 
+                                onclick="document.activeElement.blur()"
+                                wire:click="createEvent({{$key}})"
+                                wire:target="createEvent"
+                            >
+                                {{ $key }}.- {{ $event }}        
+                            </a>
+                        </li>
+                    @endforeach
+                    @foreach ($this->eventosSiatCafc as $key => $event)
+                        <li class="text-sm">
+                            <a 
+                                {{-- onclick="document.activeElement.blur()" --}}
+                                @click="$dispatch('toggleSiatEvent', {codeEvent: '{{$key}}'}); document.activeElement.blur(); return false;"
+                                wire:target="createEvent"
+                            >
+                                {{ $key }}.- {{ $event }}        
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+        {{-- CASO 3: SIN CONEXIÓN (OFFLINE) --}}
+        @else
+            <div class="flex items-center gap-2">
+                <button wire:click="openContingencyModal" 
+                        class="btn btn-error btn-sm btn-outline gap-2 animate-bounce">
+                    <i class="fa-solid fa-wifi-slash"></i>
+                    SIAT OFFLINE
+                    <span class="badge badge-error text-white text-xs">Crear Evento</span>
+                </button>
+            </div>
+        @endif
     @endif
+    
 
     {{-- MODAL DE CREACIÓN DE EVENTO --}}
     @if($showModal)

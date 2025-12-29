@@ -26,7 +26,11 @@
                 </fieldset>
                 
                 <div class="modal-action">
-                    <button wire:click="voidSale" class="btn btn-error btn-outline">Eliminar</button>
+                    @if($this->deleteSale)
+                    <button wire:click="voidSale" class="btn btn-error btn-outline">Eliminar venta / Anular factura</button>
+                    @else
+                    <button wire:click="voidSale" class="btn btn-error btn-outline">Anular factura</button>
+                    @endif
                     <button wire:click="closeModal" class="btn">Cerrar</button>
                 </div>
             </div>

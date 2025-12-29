@@ -1,13 +1,13 @@
 <div>
     <div class="grid w-full grid-cols-1 lg:grid-cols-3 gap-4">
         <!-- Columna Izquierda: Productos y Servicios -->
-        <div class="lg:col-span-2 flex flex-col gap-4">
+        <div class="lg:col-span-1 flex flex-col gap-1">
             <!-- Header de Búsqueda y Filtros -->
-            <div class="bg-base-100 p-4 rounded-box shadow-sm flex flex-col md:flex-row gap-4 items-center">
+            <div class="bg-base-100 p-2 rounded-box shadow-sm flex flex-col md:flex-row gap-1 items-center">
 
                 <!-- COMPONENTE DE BÚSQUEDA TIPO SELECT SEARCHABLE -->
-                <div class="dropdown w-full md:w-auto flex-grow">
-                    <label class="input input-bordered flex items-center gap-2 focus-within:outline-none w-full">
+                <div class="dropdown w-full flex-grow">
+                    <label class="input input-sm input-bordered flex items-center gap-2 focus-within:outline-none w-full">
                         <i class="fa-solid fa-magnifying-glass opacity-70"></i>
                         <input
                             wire:model.live.debounce.800ms="searchTerm"
@@ -20,7 +20,7 @@
                     </label>
                 </div>
 
-                <select wire:model.live.debounce.300ms="selectedCategory" class="select select-bordered w-full md:w-auto focus:outline-none">
+                <select wire:model.live.debounce.300ms="selectedCategory" class="select select-sm select-bordered w-full focus:outline-none">
                     <option value="">Categorías</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -116,7 +116,7 @@
 
         <!-- Columna Derecha: Carrito y Pago -->
         {{-- Se eliminó h-full para que la altura se ajuste al contenido --}}
-        <div class="lg:col-span-1 flex flex-col bg-base-100 rounded-box shadow-lg p-4 gap-4">
+        <div class="lg:col-span-2 flex flex-col bg-base-100 rounded-box shadow-lg p-4 gap-4">
             <!-- Sección Cliente -->
             <livewire:customer.search-customer />
             <livewire:customer.create-customer />
@@ -125,6 +125,18 @@
                 <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
                     {{ $customer? $customer->name . "(" . $customer->document_type_show . ")" : "Sin Cliente seleccionado" }}
                 </h1>
+                @if($this->eventSiatDto != null)
+                <div class="grid grid-cols-2 gap-2">
+                    <fieldset class="fieldset">
+                        <label class="label">Nro. factura</label>
+                        <input wire:model.defer="invoice_nro" type="number" class="input input-sm w-full">
+                    </fieldset>
+                    <fieldset class="fieldset">
+                        <label class="label">Fecha / Hora</label>
+                        <input wire:model.defer="invoice_date" type="datetime-local" class="input input-sm w-full">
+                    </fieldset>
+                </div>
+                @endif
                 <!-- Tipo de Venta -->
                 <div role="tablist" class="tabs tabs-boxed tabs-sm">
                     <a role="tab" class="tab @if($saleType === \App\Models\Price::TYPE_NORMAL) tab-active text-indigo-700 @endif" wire:click="$set('saleType', '{{ \App\Models\Price::TYPE_NORMAL }}')">Normal</a>
@@ -382,12 +394,16 @@
                 <div class="stat-title">Monto a Pagar</div>
                 <div class="stat-value text-primary">{{ number_format($total, 2) }} BOB</div>
             </div>
-
+            @if(!empty($qrModalMessage))
+            <div class="stat p-0 mb-1">
+                <div class="stat-value text-error">{{ $qrModalMessage }}</div>
+            </div>
+            @endif
             <!-- Acciones del Modal -->
             <div class="grid grid-cols-1 gap-3">
                 <!-- Botón de Confirmación Manual -->
-                <button wire:click="confirmQrPayment" class="btn btn-primary w-full">
-                    <i class="fa-solid fa-check-circle"></i> Confirmar Pago Recibido
+                <button wire:click="verifyQrPayment" class="btn btn-primary w-full">
+                    <i class="fa-solid fa-glasses"></i> Verificar pago
                 </button>
                 
                 <!-- Botón Cancelar -->

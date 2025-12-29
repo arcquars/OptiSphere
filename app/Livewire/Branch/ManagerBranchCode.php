@@ -3,6 +3,7 @@
 namespace App\Livewire\Branch;
 
 use App\DTOs\CustomerSiatDto;
+use App\DTOs\EventSiatDto;
 use App\DTOs\InvoiceCreationDto;
 use App\DTOs\PaymentQr;
 use App\Helpers\ValidateSiatHelper;
@@ -17,6 +18,8 @@ use App\Models\Sale;
 use App\Models\SaleItemService;
 use App\Models\SalePayment;
 use App\Models\Service;
+use App\Services\AmyrEventsApiService;
+use App\Services\CreditService;
 use App\Services\EconomicoApiService;
 use App\Services\MonoInvoiceApiService;
 use App\Services\SaleService;
@@ -71,7 +74,11 @@ class ManagerBranchCode extends Component
     public $payment_method = 'Efectivo'; // Valor por defecto
     public $showQrModal = false;
     public $qrImage = null;
+    public $qrId = null;
     public $isInvoicePending = false;
+
+    public $eventSiatDto;
+    public $qrModalMessage = "";
 
     public function mount($branchId): void
     {
@@ -85,6 +92,27 @@ class ManagerBranchCode extends Component
 
         $this->isOpenCashBoxClosing = CashBoxClosing::isOpenCashBoxByBranchAndUser($branchId, Auth::id());
         $this->calculateTotals();
+        $this->setEventActive();
+    }
+
+    #[On('set-event-active')]
+    public function setEventActive(){
+        /**Obtener Evento activo si hay */
+        $serviceEvent = new AmyrEventsApiService($this->branch->amyrConnectionBranch->token);
+        $activeEvent = $serviceEvent->getEventActive($this->branch->amyrConnectionBranch->point_sale);
+        if ($activeEvent && in_array($activeEvent['evento_id'], [5,6,7])) {
+            $this->eventSiatDto = [
+                "sucursal_id" => $activeEvent['sucursal_id'],
+                "puntoventa_id" => $activeEvent['puntoventa_id'],
+                "evento_id" => $activeEvent['evento_id'],
+                "fecha_inicio" => $activeEvent['fecha_inicio'],
+                "fecha_fin" => $activeEvent['fecha_fin'],
+                "cafc" => $activeEvent['cafc'],
+                "cufd_evento" => $activeEvent['cufd_evento']
+            ];
+        } else {
+            $this->eventSiatDto = null;
+        }
     }
 
     public function render()
@@ -104,8 +132,8 @@ class ManagerBranchCode extends Component
                 $q->where('id', $this->selectedCategory);
             });
         }
-        $products1 = $query->orderBy('name')->paginate(5);
-        $services1 = $queryService->orderBy('name')->paginate(5);
+        $products1 = $query->orderBy('name')->simplePaginate(5);
+        $services1 = $queryService->orderBy('name')->simplePaginate(5);
 
         $services = Service::where("is_active", true)->orderBy('name')->get();
 
@@ -421,8 +449,10 @@ class ManagerBranchCode extends Component
     }
 
     // Lógica para finalizar la venta
-    public function completePayment(SaleService $saleService, $isFacturable = false)
+    public function completePayment($isFacturable = false)
     {
+        $creditService = new CreditService();
+        $saleService = new SaleService($creditService);
         $siatData = [];
         if($isFacturable && ValidateSiatHelper::isValidSiatCode($this->cart) == false){
             $this->message_error = 'No se puede facturar, algunos productos o servicios no tienen datos SIAT completos.';
@@ -793,9 +823,9 @@ class ManagerBranchCode extends Component
             return;
         }
 
-        dd("sssssss");
+        // dd("sssssss");
         // Flujo normal para Efectivo/Tarjeta
-        $this->finalizeSale($generateInvoice);
+        $this->completePayment($generateInvoice);
     }
 
     /**
@@ -830,17 +860,17 @@ class ManagerBranchCode extends Component
 
             // Verificamos si obtuvimos la imagen (el DTO sugiere que puede venir como qrImage o qrBase64)
             // Asumimos que el servicio devuelve un array o el mismo DTO poblado.
-            $qrImage = $response['qrImage'] ?? $response['qrBase64'] ?? null;
+            $qrImage = $response->qrImage ?? $response->qrBase64 ?? null;
 
             if ($qrImage) {
                 $this->qrImage = $qrImage;
+                $this->qrId = $response->qrId;
                 $this->showQrModal = true;
             } else {
                 throw new Exception("La respuesta del banco no contiene la imagen QR.");
             }
 
         } catch (Exception $e) {
-            Log::error("Error generando QR: " . $e->getMessage());
             Notification::make()
                 ->title('Error al generar QR')
                 ->body($e->getMessage())
@@ -856,6 +886,7 @@ class ManagerBranchCode extends Component
     {
         $this->showQrModal = false;
         $this->qrImage = null;
+        $this->qrId = null;
     }
 
     /**
@@ -865,7 +896,29 @@ class ManagerBranchCode extends Component
     {
         $this->closeQrModal();
         // Procedemos a guardar la venta como pagada
-        $this->finalizeSale($this->isInvoicePending);
+        $this->completePayment($this->isInvoicePending);
+    }
+
+    public function verifyQrPayment(){
+        $this->qrModalMessage = "";
+        try{
+            $apiService = new EconomicoApiService($this->branch->id);
+            $result = $apiService->checkQrStatus($this->qrId);
+            Log::info("Resultado verificar pago qr:: " . json_encode($result));
+            if($result['success'] && $result['estado']){
+                // $this->closeQrModal();
+                $this->qrModalMessage = "EXITO";
+                $this->confirmQrPayment();
+            } else {
+                $this->qrModalMessage = !empty($result['message'])? $result['message'] : "No Se realizo el pago.";
+            }
+        } catch (Exception $e){
+            Notification::make()
+                ->title('Error al comprobar ESTADO QR')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
     
     private function validateCart()

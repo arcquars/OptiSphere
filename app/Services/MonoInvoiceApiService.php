@@ -159,7 +159,7 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
             $response = Http::baseUrl($this->baseUrl)
                             ->withToken($this->token) // Adjunta el Bearer Token
                             ->acceptJson()
-                            ->timeout(120) // Tiempo de espera de 120 segundos
+                            ->timeout(3)
                             ->get($endpoint); // Usa el DTO convertido a array
 
             Log::info("Enviando Verificar online MonoInvoices 2: " . __METHOD__, [
@@ -183,5 +183,36 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
             ]);
             return false;
         }
+    }
+
+    public function getCufds(): ?array
+    {
+        $endpoint = DIRECTORY_SEPARATOR.'invoices' . DIRECTORY_SEPARATOR . 'siat' . DIRECTORY_SEPARATOR . 
+            'v2' . DIRECTORY_SEPARATOR . 'cufds';
+        $fullUrl = $this->baseUrl . $endpoint;
+
+        Log::info("Enviando para obtener cufds", [
+            'endpoint' => $fullUrl,
+        ]);
+
+        $response = Http::baseUrl($this->baseUrl)
+                        ->withToken($this->token) // Adjunta el Bearer Token
+                        ->acceptJson()
+                        ->timeout(120) // Tiempo de espera de 120 segundos
+                        ->get($endpoint, ['sucursal_id' => $this->branch->amyrConnectionBranch->sucursal, 'puntoventa_id' => $this->branch->amyrConnectionBranch->point_sale]); // Usa el DTO convertido a array
+
+        // 1. Manejo de Respuesta Exitosa (2xx)
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        $errorJson = $response->json();
+        // 2. Manejo de Errores del Servidor o del Cliente (4xx, 5xx)
+        Log::error("MonoInvoice API Error al obtener Cufds.", [
+            'status' => $response->status(),
+            'response_body' => $errorJson,
+        ]);
+        
+        throw new \Exception(__METHOD__ ." MonoInvoice API devolvió un error (Mensaje: " . $errorJson['error'] . ")", $response->status());
     }
 }
