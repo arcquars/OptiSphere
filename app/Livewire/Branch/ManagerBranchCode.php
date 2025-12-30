@@ -311,6 +311,34 @@ class ManagerBranchCode extends Component
         }
     }
 
+    public function incrementCartQuantity($cartKey, $add = true)
+    {
+        if (isset($this->cart[$cartKey])) {
+            $quantity = $this->cart[$cartKey]['quantity'] - 1;
+            if($add){
+                $quantity = $this->cart[$cartKey]['quantity'] + 1;
+            }
+
+            if($quantity <= 0){
+                $this->cart[$cartKey]['quantity'] = 1;
+                $this->calculateTotals();
+            }
+
+            if($quantity < $this->cart[$cartKey]['limit']){
+                $this->cart[$cartKey]['quantity'] = max(1, (int)$quantity);
+                $this->calculateTotals();
+            }
+
+            if(isset($this->cart[$cartKey]['services']) && count($this->cart[$cartKey]['services']) > 0){
+                foreach ($this->cart[$cartKey]['services'] as $key => $sub){
+                    $this->cart[$cartKey]['services'][$key]['quantity'] = $this->cart[$cartKey]['quantity'];
+                    $this->cart[$cartKey]['services'][$key]['limit'] = $this->cart[$cartKey]['limit'];
+                }
+                $this->calculateTotals();
+            }
+        }
+    }
+
     public function updatedSaleType(){
         if(count($this->cart) > 0){
             foreach ($this->cart as $key => $cart){

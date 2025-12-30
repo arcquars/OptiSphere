@@ -3,30 +3,31 @@
         <!-- Columna Izquierda: Productos y Servicios -->
         <div class="lg:col-span-1 flex flex-col gap-1">
             <!-- Header de Búsqueda y Filtros -->
-            <div class="bg-base-100 p-2 rounded-box shadow-sm flex flex-col md:flex-row gap-1 items-center">
-
-                <!-- COMPONENTE DE BÚSQUEDA TIPO SELECT SEARCHABLE -->
-                <div class="dropdown w-full flex-grow">
-                    <label class="input input-sm input-bordered flex items-center gap-2 focus-within:outline-none w-full">
+            <div class="bg-base-100 p-1 rounded-box shadow-sm join w-full flex">
+                <div class="w-3/4">
+                    <label class="input join-item flex items-center gap-2 w-full focus-within:outline-none">
                         <i class="fa-solid fa-magnifying-glass opacity-70"></i>
                         <input
                             wire:model.live.debounce.800ms="searchTerm"
                             wire:keydown.enter.prevent="scanCode($el.value); $el.value = ''"
                             type="text"
-                            class="grow focus:outline-none"
                             placeholder="Buscar producto o escanear código..."
                             autofocus
+                            class="grow focus:outline-none"
                         />
                     </label>
                 </div>
-
-                <select wire:model.live.debounce.300ms="selectedCategory" class="select select-sm select-bordered w-full focus:outline-none">
+                <select
+                    wire:model.live.debounce.300ms="selectedCategory" 
+                    class="select select-bordered join-item w-1/4 focus:outline-none"
+                >
                     <option value="">Categorías</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                     @endforeach
                 </select>
             </div>
+
 
             <!-- Pestañas y Contenedor de Grids -->
             <div class="flex-grow flex flex-col">
@@ -121,7 +122,7 @@
             <livewire:customer.search-customer />
             <livewire:customer.create-customer />
 
-            <form wire:submit.prevent="completePayment">
+            <form wire:submit.prevent="completePayment1">
                 <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
                     {{ $customer? $customer->name . "(" . $customer->document_type_show . ")" : "Sin Cliente seleccionado" }}
                 </h1>
@@ -153,10 +154,10 @@
                 </div>
 
                 <!-- Lista de Productos en Carrito -->
-                <div id="cart-items" class="flex-grow overflow-y-auto border-t border-b border-base-200 py-2 min-h-[200px]">
+                <div id="cart-items" class="flex-grow overflow-y-auto border-t border-b border-neutral-200 py-1 min-h-[200px]">
                     <div class="space-y-2">
                         @forelse($cart as $key => $item)
-                            <div class="gap-2 p-2 rounded-lg bg-base-200">
+                            <div class="gap-2 p-2 rounded-lg bg-neutral-100">
                             <div class="flex items-center">
                                 <div class="flex-grow">
                                     <p class="font-bold">{{ $item['name'] }}
@@ -168,60 +169,89 @@
                                             {{ ($item['promotion'])? "-" .$item['promotion'] . "%" : "" }}
                                         </span>
                                         @endif
+                                        <span class="text-sm text-gray-500">
+                                            @if($item['promotion'] == null)
+                                                {{ config('cerisier.currency_symbol') }}{{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($item['price'] * $item['quantity'], 2) }}
+                                            @else
+                                                {{ config('cerisier.currency_symbol') }}({{ number_format($item['price'], 2) }} - {{ number_format(($item['price'] *  ($item['promotion']/100)), 2) }}) x {{ $item['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($item['price'] - $item['price'] *  ($item['promotion']/100) )* $item['quantity'], 2) }}
+                                            @endif
+                                        </span>
                                     </p>
-                                    <p class="text-sm text-gray-500">
+                                    {{-- <p class="text-sm text-gray-500">
                                         @if($item['promotion'] == null)
                                             {{ config('cerisier.currency_symbol') }}{{ number_format($item['price'], 2) }} x {{ $item['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($item['price'] * $item['quantity'], 2) }}
                                         @else
                                             {{ config('cerisier.currency_symbol') }}({{ number_format($item['price'], 2) }} - {{ number_format(($item['price'] *  ($item['promotion']/100)), 2) }}) x {{ $item['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($item['price'] - $item['price'] *  ($item['promotion']/100) )* $item['quantity'], 2) }}
                                         @endif
-                                    </p>
+                                    </p> --}}
                                 </div>
-                                <input type="number" value="{{ $item['quantity'] }}"
-                                       wire:change="updateCartQuantity('{{ $key }}', $event.target.value)"
-                                       class="input input-bordered input-sm w-16 text-center"
-                                       min="1" max="{{ $item['limit'] }}"
-                                />
+                                <button
+                                    type="button"    
+                                    wire:click="incrementCartQuantity('{{ $key }}',false)"  
+                                    class="btn btn-square btn-sm btn-outline btn-accent">
+                                    <i class="fa-solid fa-minus"></i>
+                                </button>
+                                <p class="badge badge-lg mx-1">{{ $item['quantity'] }}</p>
+                                <button
+                                    type="button"
+                                    wire:click="incrementCartQuantity('{{ $key }}', true)" 
+                                    class="btn btn-square btn-sm btn-outline btn-accent">
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
                                 @if($item['type'] !== 'service')
-                                    <div class="dropdown dropdown-left">
-                                        <div tabindex="0" role="button" class="btn btn-sm btn-ghost text-primary"><i class="fa-solid fa-cart-plus"></i></div>
+                                    <div class="dropdown dropdown-left mx-1 drodown">
+                                        <div 
+                                            tabindex="0" 
+                                            role="button" 
+                                            class="btn btn-sm btn-outline btn-accent"
+                                        >
+                                            <i class="fa-solid fa-cart-plus"></i>
+                                        </div>
                                         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                                             @foreach($services as $service)
-                                                <li><a wire:click.stop.prevent="addServiceToProduct('{{ $key }}', {{$item['id']}}, {{ $service->id }})">{{ $service->name }}</a></li>
+                                                <li><a wire:click.stop.prevent="addServiceToProduct('{{ $key }}', {{$item['id']}}, {{ $service->id }}); document.activeElement.blur()">{{ $service->name }}</a></li>
                                             @endforeach
                                         </ul>
                                     </div>
                                 @endif
-                                <button wire:click.stop.prevent="removeFromCart('{{ $key }}')" class="btn btn-sm btn-ghost text-error" title="Quitar">
+                                <button wire:click.stop.prevent="removeFromCart('{{ $key }}')" 
+                                    class="btn btn-sm btn-outline btn-error" title="Quitar"
+                                >
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
 
 
-
-                                <hr class="my-2">
                             @if(isset($item['services']))
+                                <hr class="my-1">
                                 @foreach($item['services'] as $subKey => $sub)
                                         <div class="pl-4 flex items-center pb-1">
                                             <div class="flex-grow">
-                                                <p class="font-bold">{{ $sub['name'] }}
+                                                <p class="font-bold text-sm">
+                                                    <i class="fa-solid fa-check"></i>
+                                                    {{ $sub['name'] }}
                                                     <span class="badge badge-info badge-xs ml-2">Servicio</span>
                                                     @if($sub['promotion'])
                                                         <span class="badge badge-info badge-xs ml-2">
-                                            {{ ($sub['promotion'])? "-" .$sub['promotion'] . "%" : "" }}
-                                        </span>
+                                                            {{ ($sub['promotion'])? "-" .$sub['promotion'] . "%" : "" }}
+                                                        </span>
                                                     @endif
+                                                    <span class="text-sm text-base text-gray-500 pl-2">
+                                                        {{ $sub['promotion'] }}
+                                                        @if($sub['promotion'] == null)
+                                                            {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'] * $sub['quantity'], 2) }}
+                                                        @else
+                                                            {{ config('cerisier.currency_symbol') }}({{ number_format($sub['price'], 2) }} - {{ number_format(($sub['price'] *  ($sub['promotion']/100)), 2) }}) x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($sub['price'] - $sub['price'] *  ($sub['promotion']/100) )* $sub['quantity'], 2) }}
+                                                        @endif
+                                                    </span>
                                                 </p>
-                                                <p class="text-sm text-gray-500">
-                                                    {{ $sub['promotion'] }}...
-                                                    @if($sub['promotion'] == null)
-                                                        {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'] * $sub['quantity'], 2) }}
-                                                    @else
-                                                        {{ config('cerisier.currency_symbol') }}({{ number_format($sub['price'], 2) }} - {{ number_format(($sub['price'] *  ($sub['promotion']/100)), 2) }}) x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($sub['price'] - $sub['price'] *  ($sub['promotion']/100) )* $sub['quantity'], 2) }}
-                                                    @endif
-                                                </p>
+                                                
                                             </div>
-                                            <button type="button" wire:click.stop.prevent="removeSubFromCart('{{ $key }}', '{{ $subKey }}')" class="btn btn-sm btn-ghost text-error" title="Quitar">
+                                            <button 
+                                                type="button" 
+                                                wire:click.stop.prevent="removeSubFromCart('{{ $key }}', '{{ $subKey }}')" 
+                                                class="btn btn-xs btn-outline btn-error" title="Quitar"
+                                            >
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </div>
@@ -234,14 +264,14 @@
                     </div>
                 </div>
 
-                <div class="card bg-base-100 shadow-md rounded-xl border-gray-200">
-                    <div class="flex items-center justify-between">
+                <div class="card mt-2 border p-1">
+                    <div class="flex items-center justify-between m-2">
                         <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                             <i class="fa-solid fa-tags text-pink-500"></i> Promociones
                         </h3>
                         <label class="flex items-center cursor-pointer">
                             <input type="checkbox"
-                                   class="toggle toggle-accent"
+                                   class="toggle toggle-accent focus-within:outline-none"
                                    wire:model.live="promoActive" />
                         </label>
                     </div>
@@ -273,7 +303,12 @@
                 <!-- Sección de Totales y Descuento -->
                 <div class="mt-1">
                     <div class="join w-full mb-2">
-                        <input type="number" placeholder="Descuento %" wire:model.lazy="discountPercentage" class="input input-bordered join-item w-full focus:outline-none"/>
+                        <input 
+                            type="number" 
+                            placeholder="Descuento %" 
+                            wire:model.lazy="discountPercentage" 
+                            class="input input-bordered join-item w-full focus:outline-none"
+                        />
                         <button wire:click.stop.prevent="applyDiscount" class="btn join-item btn-secondary">Aplicar Desc %</button>
                     </div>
                     <div class="space-y-1 text-md">
