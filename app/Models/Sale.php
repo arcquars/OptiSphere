@@ -36,6 +36,7 @@ class Sale extends Model
         'date_sale',
         'siat_invoice_id',
         'siat_status',
+        'qrid'
     ];
 
     protected $casts = [

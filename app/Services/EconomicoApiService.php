@@ -62,7 +62,7 @@ class EconomicoApiService
         $this->companyCode = $configBanco->codigo_empresa;
         
         // Si en el futuro agregas sucursal al modelo, mapealo aquí.
-        // $this->branchCode = $configBanco->branch_code ?? null;
+        $this->branchCode = "SUCURSAL-" . $branchId;
     }
 
     /**
@@ -73,17 +73,19 @@ class EconomicoApiService
      * @param string $currency Moneda (BOB por defecto).
      * @param string|null $dueDate Fecha de vencimiento (Y-m-d). Si es null, usa hoy.
      * @param bool $singleUse Si el QR es de un solo uso.
+     * @param array $dataExtra Datos extra
      * @return PaymentQr Objeto con los datos del QR generado (ID, Imagen Base64, etc).
      * @throws Exception
      */
-    public function generateQr(float $amount, string $description, string $currency = 'BOB', ?string $dueDate = null, bool $singleUse = true): PaymentQr
+    public function generateQr(
+        float $amount, string $description, 
+        string $currency = 'BOB', ?string $dueDate = null, 
+        bool $singleUse = true, array $dataExtra): PaymentQr
     {
         $authEcosnomico = $this->authenticate();
-
         if (!$authEcosnomico['success']) {
             throw new Exception('Error al generar el QR auth: ' . ($authEcosnomico['message']) ?? 'Error desconocido');
         }
-        
         $token = $authEcosnomico['token'];
         $enc = $this->encryptData($this->accountNumber);
         if (!$enc['success']){
@@ -109,11 +111,6 @@ class EconomicoApiService
         }
 
         try {
-            // $response = Http::withToken($token)
-            //     ->timeout(30)
-            //     ->post($this->baseUrl . self::ENDPOINT_GENERATE_QR, $payload);
-
-            Log::info("www pppooo::::: " . json_encode($payload));
             $response = Http::timeout(30)
             ->withHeaders([
                 'Authorization' => 'Bearer ' . $token,
@@ -134,19 +131,22 @@ class EconomicoApiService
                     'amount' => $payload['amount'],
                     'currency' => $payload['currency'],
                     'description' => $payload['description'],
-                    'branch_code' => null,
-                    'status' => 1,
+                    'branch_code' => $this->branchCode,
+                    'status' => 0,
                     'payment_date' => $payload['dueDate'],
                     'qr_image' => $paymentQr->qrImage,
-                    'extra_data' => null
+                    'extra_data' => json_encode($dataExtra)
                 ]);
                 return $paymentQr;
             }
 
             Log::error('Baneco API Error (GenerateQR): ' . json_encode($response));
+            Log::error('Baneco API Error (GenerateQR): ' . $response->successful());
+            Log::error('Baneco API Error (GenerateQR): ' . $response->serverError());
             throw new Exception('Error al generar el QR Qr: ' . ($response->json('message') ?? 'Error desconocido'));
 
         } catch (Exception $e) {
+            // Log::error($e->getTraceAsString());
             Log::error('Baneco Service Exception: ' . $e->getMessage());
             throw $e;
         }
@@ -162,6 +162,7 @@ class EconomicoApiService
     {
         $token = $this->authenticate();
 
+        Log::info("Pdm 30:: ");
         try{
         $response = Http::timeout(30)
             ->withHeaders([
@@ -169,8 +170,10 @@ class EconomicoApiService
             ])
             ->get($this->baseUrl . self::ENDPOINT_CHECK_QR . DIRECTORY_SEPARATOR . urlencode($qrId));
 
+        Log::info("Pdm 31:: " . json_encode($response->body()));
         $data = $response->json();
         if (!$response->successful() || !isset($data['statusQrCode'])) {
+            Log::info("Pdm 32:: Error: " . json_encode($data));
             return ['success' => false, 'error' => $data['message'] ?? 'Error al verificar QR'];
         }
 
@@ -178,21 +181,26 @@ class EconomicoApiService
         $fechaPago = $estado === 1 && !empty($data['payment'][0]['paymentDate'])
             ? substr($data['payment'][0]['paymentDate'], 0, 10)
             : null;
+        $horaPago = $estado === 1 && !empty($data['payment'][0]['paymentTime'])
+            ? $data['payment'][0]['paymentTime']
+            : null;
 
         if ($estado == 1) {
             PagoQr::updateOrCreate(
                 ['qr_id' => $qrId],
                 [
-                    'transaction_id' => $data['transactionId'] ?? $qrId,
-                    'qr_id' => $qrId,
+                    'transaction_id' => $data['payment'][0]['transactionId'] ?? $qrId,
+                    'qr_id' => $data['payment'][0]['qrId'],
                     'amount' => $data['payment'][0]['amount'] ?? 0,
                     'currency' => $data['payment'][0]['currency'] ?? 'BOB',
-                    'description' => $data['description'] ?? null,
-                    'branch_code' => $data['branchCode'] ?? null,
-                    'status' => 1,
+                    'description' => $data['payment'][0]['description'] ?? null,
+                    'status' => $data['statusQrCode'],
                     'payment_date' => $fechaPago,
-                    'qr_image' => null,
-                    'extra_data' => $data,
+                    'payment_time' => $horaPago,
+                    'sender_bank_code' => $data['payment'][0]['senderBankCode']?? null,
+                    'sender_name' => $data['payment'][0]['senderName']?? null,
+                    'sender_document_id' => $data['payment'][0]['senderDocumentId']?? null,
+                    'sender_account' => $data['payment'][0]['senderAccount']?? null,
                 ]
             );
         }
@@ -219,13 +227,11 @@ class EconomicoApiService
     private function authenticate(): array
     {
         // Cacheamos el token usando el ID de la empresa para evitar colisiones si hay múltiples
-        $cacheKey = 'baneco_token_' . $this->companyCode;
+        $cacheKey = 'baneco_token_2_' . $this->companyCode;
 
         // Encriptar el número de cuenta (Requisito de la API)
         $encryptedAccount = $this->encryptData($this->password);
-
-        return Cache::remember($cacheKey, 3000, function () use ($encryptedAccount) {
-            
+        return Cache::remember($cacheKey, 5, function () use ($encryptedAccount) {
             $payload = [
                 'userName' => $this->userName,
                 'password' => $encryptedAccount['data'],
@@ -246,39 +252,16 @@ class EconomicoApiService
      */
     private function encryptData($text): array
     {
-        // $response = Http::withToken($token)
-        //     ->post($this->baseUrl . self::ENDPOINT_ENCRYPT, [
-        //         'data' => $data
-        //     ]);
-
-        // if ($response->successful() && ($response->json('responseCode') === 0)) {
-        //     return $response->json('result');
-        // }
-
-        // throw new Exception('Error al encriptar datos sensibles.');
-
         $response = Http::timeout(30)
             ->get($this->baseUrl . self::ENDPOINT_ENCRYPT, [
                 'text' => $text,
                 'aesKey' => $this->apiKey
             ]);
 
-        Log::info("WWW pppp bbbb:: " . $response->body());
         if ($response->successful()) {
             return ['success' => true, 'data' => preg_replace('/[^A-Za-z0-9\+\/\=]/', '', trim($response->body()))];
         }
 
         throw new Exception('Error al encriptar datos sensibles.');
     }
-
-    // private function encriptar($texto)
-    // {
-    //     $res = Http::timeout(30)
-    //         ->get($this->baseUrl . self::ENDPOINT_ENCRYPT . '?text=' . urlencode($texto) . '&aesKey=' . $this->apiKey);
-
-    //     if ($res->successful()) {
-    //         return ['success' => true, 'data' => preg_replace('/[^A-Za-z0-9\+\/\=]/', '', trim($res->body()))];
-    //     }
-    //     return ['success' => false, 'message' => $res->body()];
-    // }
 }

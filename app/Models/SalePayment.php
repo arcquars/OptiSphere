@@ -22,7 +22,8 @@ class SalePayment extends Model
         'deleted',
         'amount',           // Monto del abono o pago
         'payment_method',   // Método de pago (ej: EFECTIVO, TARJETA)
-        'notes',            // Notas adicionales sobre el pago
+        'notes', 
+        'qrid'           // Notas adicionales sobre el pago
     ];
 
     // ----------------------------------------------------

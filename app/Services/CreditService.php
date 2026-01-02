@@ -55,6 +55,7 @@ class CreditService
                 'sale_id' => $sale->id,
                 'branch_id' => $sale->branch_id,
                 'user_id' => $userId,
+                'qrid' => $sale->qrid,
                 'cash_box_closing_id' => $cashBc?->id,
                 'amount' => $amount,
                 'payment_method' => $paymentMethod,

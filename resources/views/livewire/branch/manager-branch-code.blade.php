@@ -122,7 +122,7 @@
             <livewire:customer.search-customer />
             <livewire:customer.create-customer />
 
-            <form wire:submit.prevent="completePayment1">
+            <form wire:submit.prevent="">
                 <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
                     {{ $customer? $customer->name . "(" . $customer->document_type_show . ")" : "Sin Cliente seleccionado" }}
                 </h1>
@@ -308,9 +308,11 @@
                             placeholder="Descuento %" 
                             wire:model.lazy="discountPercentage" 
                             class="input input-bordered join-item w-full focus:outline-none"
+                            min="0" max="90"
                         />
                         <button wire:click.stop.prevent="applyDiscount" class="btn join-item btn-secondary">Aplicar Desc %</button>
                     </div>
+                    <div class="text-error">@error('discountPercentage') {{ $message }} @enderror</div>
                     <div class="space-y-1 text-md">
                         <div class="flex justify-between"><span>Subtotal:</span> <span>${{ number_format($subtotal, 2) }}</span></div>
                         <div class="flex justify-between"><span>Descuento ({{ $discountPercentage }}%):</span> <span class="text-error">-${{ number_format($discountAmount, 2) }}</span></div>
@@ -335,8 +337,9 @@
                             <div class="mt-4">
                                 <label class="font-semibold">Pago parcial:</label>
                                 <input type="number" wire:model="partial_payment" min="0" max="{{ $total }}" class="input input-bordered w-full mt-2 focus:outline-none">
+                                <div class="text-error">@error('partial_payment') {{ $message }} @enderror</div>
                                 <p class="text-sm text-gray-500 mt-1">
-                                    Restante a crédito: <strong>${{ $total - $partial_payment }}</strong>
+                                    Restante a crédito: <strong>{{ config('cerisier.currency_symbol') }} {{ $total - (is_numeric($partial_payment))? $partial_payment: 0 }}</strong>
                                 </p>
                             </div>
                         @endif
@@ -379,7 +382,8 @@
                 <!-- Botones de Acción -->
                 <div class="grid grid-cols-2 gap-2">
                     <button 
-                        type="submit" 
+                        type="button" 
+                        wire:click="completePayment1(false)" 
                         class="btn btn-success btn-block"
                         wire:loading.target="completePayment1"
                         wire:loading.attr="disabled"
@@ -424,10 +428,20 @@
                 @endif
             </div>
 
+            <livewire:branch.qr-payment-processor 
+                :qrId="$qrId"
+                {{-- wire:key="qr-modal-{{ $qrTransactionId }}" --}}
+            />
             <!-- Monto -->
             <div class="stat p-0 mb-6">
                 <div class="stat-title">Monto a Pagar</div>
-                <div class="stat-value text-primary">{{ number_format($total, 2) }} BOB</div>
+                <div class="stat-value text-primary">
+                    @if($this->isSaleCredit)
+                        {{ number_format($partial_payment ?? 0, 2) }} BOB
+                    @else
+                        {{ number_format($total, 2) }} BOB
+                    @endif
+                </div>
             </div>
             @if(!empty($qrModalMessage))
             <div class="stat p-0 mb-1">

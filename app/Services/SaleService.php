@@ -57,6 +57,7 @@ class SaleService
         $isCredit = $data['status'] === Sale::SALE_STATUS_PARTIAL_PAYMENT;
 
         if ($isCredit) {
+            Log::info("Registro de update ProductStock:::: a14 ");
             // Redirigir la lógica a createCreditSale si es a crédito
             return $this->createCreditSale($data, $processedItems, $totals);
         }
@@ -83,6 +84,7 @@ class SaleService
                 'paid_amount' => $paidAmount,
                 'due_amount' => $dueAmount,
                 'notes' => $data['notes'] ?? '',
+                'qrid' => $data['qrid'],
                 'siat_invoice_id' => $data['siat_invoice_id'] ?? null,
                 'siat_status' => $data['siat_status'] ?? null,
             ];
@@ -103,6 +105,7 @@ class SaleService
                 'sale_id' => $sale->id,
                 'user_id' => $data['user_id'],
                 'branch_id' => $data['branch_id'],
+                'qrid' => $data['qrid'],
                 'amount' => $data['final_total'],
                 'payment_method' => $data['payment_method'], // EFECTIVO, TARJETA, etc.
                 'notes' => 'Pago completo al contado registrado en la venta',
@@ -154,9 +157,13 @@ class SaleService
                 'status' => $status,
                 'payment_method' => $data['payment_method'],
                 'sale_type' => $data['sale_type'],
+                'date_sale' => $data['date_sale'] ?? now(),
                 'paid_amount' => 0,
                 'due_amount' => 0,
                 'notes' => $data['notes'] ?? null,
+                'qrid' => $data['qrid'],
+                'siat_invoice_id' => $data['siat_invoice_id'] ?? null,
+                'siat_status' => $data['siat_status'] ?? null,
             ]);
 
             // b) Adjuntar ítems de la venta

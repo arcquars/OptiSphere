@@ -11,6 +11,7 @@ use App\Models\Branch;
 use App\Models\CashBoxClosing;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\PagoQr;
 use App\Models\Price;
 use App\Models\Product;
 use App\Models\Promotion;
@@ -31,6 +32,8 @@ use League\Config\Exception\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+
+use function PHPUnit\Framework\isEmpty;
 use function PHPUnit\Framework\isNull;
 
 class ManagerBranchCode extends Component
@@ -482,36 +485,7 @@ class ManagerBranchCode extends Component
         $creditService = new CreditService();
         $saleService = new SaleService($creditService);
         $siatData = [];
-        if($isFacturable && ValidateSiatHelper::isValidSiatCode($this->cart) == false){
-            $this->message_error = 'No se puede facturar, algunos productos o servicios no tienen datos SIAT completos.';
-            return;
-        }   
-        $this->message_error = "";
-        if(count($this->cart) == 0){
-            $this->message_error = 'Debe seleccionar productos / servicios a vender';
-            return;
-        }
-        if($this->total < 0){
-            $this->message_error = 'El Total de venta no puede ser un numero negativo';
-            return;
-        }
-        if(!isset($this->customer)){
-            $this->message_error = 'Debe elegir un cliente para la venta';
-            return;
-        }
-
-        if($this->isSaleCredit){
-            $saldoTemp = number_format($this->customer->credit_limit - ($this->customer->saldo_credito + ($this->total - $this->partial_payment)), 2);
-            Log::info("www ppp1:: " . $this->customer->credit_limit . " || " . $this->customer->saldo_credito . " || " . $this->total . " || " . $this->partial_payment);
-            Log::info("www ppp2:: " . $saldoTemp);
-
-            if($saldoTemp < 0){
-                $this->message_error = 'El Cliente ' . $this->customer->name . " Sobre pasa su CREDITO :: " . $saldoTemp;
-                return;
-            }
-            
-        }
-
+        
         if($isFacturable){
             $this->getCustomerSiatByNit();
             $resultSiat = $this->createSiatInvoice();
@@ -574,6 +548,7 @@ class ManagerBranchCode extends Component
             'sale_type' => $this->saleType,
             'paid_amount' => ($this->isSaleCredit)? $this->partial_payment : null,
             'due_amount' => ($this->isSaleCredit)? $this->total - $this->partial_payment : null,
+            'qrid' => $this->qrId,
             'items' => $itemsData,
         ]);
 
@@ -599,6 +574,13 @@ class ManagerBranchCode extends Component
             } else {
                 $pdfUrl = route('sales.receipt_pdf', $sale->id);
             }
+
+            // Marcamos el  qr pagado como asignado.
+            if($this->qrId){
+                $pagoQr = PagoQr::where("qr_id", $this->qrId)->first();
+                $pagoQr->is_assigned = true;
+                $pagoQr->save();
+            }
             $this->dispatch('open-pdf', url: $pdfUrl);
             $this->dispatch('customer-clear-search');
             $this->searchTerm = "";
@@ -621,6 +603,14 @@ class ManagerBranchCode extends Component
                 ->body("Error al procesar la venta: " . $e->getMessage())
                 ->danger()
                 ->send();
+            if($this->qrId){
+                Notification::make()
+                    ->title('Error')
+                    ->body("El pago qr no se asigno")
+                    ->danger()
+                    ->send();
+            }
+            
         }
     }
 
@@ -776,7 +766,7 @@ class ManagerBranchCode extends Component
     private function voidSiatInvoice($siatInvoiceId)
     {
         $invoiceApiService = new MonoInvoiceApiService($this->branch);
-        $result = $invoiceApiService->voidInvoice($siatInvoiceId);
+        $result = $invoiceApiService->voidInvoice($siatInvoiceId, "3");
         if($result != null && $result['response'] == 'ok' && $result['code'] == 200){
             Notification::make()
                 ->title('Se anulo la factura SIAT')
@@ -838,7 +828,7 @@ class ManagerBranchCode extends Component
 
     public function completePayment1($generateInvoice = false)
     {
-        $this->validateCart();
+        $this->validateCart($generateInvoice);
 
         if ($this->message_error) {
             return;
@@ -865,26 +855,21 @@ class ManagerBranchCode extends Component
             // Instanciamos tu servicio
             $apiService = new EconomicoApiService($this->branch->id);
 
-            // Preparamos el DTO PaymentQr usando el constructor con argumentos nombrados
-            // para respetar la estructura definida en PaymentQr.php
-            $paymentQr = new PaymentQr(
-                amount: (float) $this->total, // El DTO espera float, no string formateado
-                currency: 'BOB',
-                gloss: "Compra en " . $this->branch->name,
-                singleUse: 'true', // El DTO espera string 'true' o 'false', no boolean
-                expirationDate: now()->addHours(24)->format('Y-m-d'),
-                additionalData: [
-                    'cajero' => Auth::user()->name ?? 'Sistema',
-                    'sucursal' => $this->branch->name,
-                    'cliente' => $this->customer->name ?? 'SN'
-                ]
-            );
+            $dataExtra = [
+                'cajero' => Auth::user()->name ?? 'Sistema',
+                'sucursal' => $this->branch->name,
+                'cliente' => $this->customer->name ?? 'SN'
+            ];
 
             // Llamada al servicio
-            $response = $apiService->generateQr($paymentQr->amount, $paymentQr->gloss,
-                $paymentQr->currency, 
+            $response = $apiService->generateQr(
+                ($this->isSaleCredit)? (float) $this->partial_payment : (float) $this->total, 
+                "Compra en " . $this->branch->name,
+                config('cerisier.currency_symbol', "BOB"), 
                 null, 
-                (strcmp($paymentQr->singleUse, "true") == 0));
+                true,
+                $dataExtra
+            );
 
             // Verificamos si obtuvimos la imagen (el DTO sugiere que puede venir como qrImage o qrBase64)
             // Asumimos que el servicio devuelve un array o el mismo DTO poblado.
@@ -922,9 +907,10 @@ class ManagerBranchCode extends Component
      */
     public function confirmQrPayment()
     {
-        $this->closeQrModal();
         // Procedemos a guardar la venta como pagada
-        $this->completePayment($this->isInvoicePending);
+        $this->completePayment(isFacturable: $this->isInvoicePending);
+        
+        $this->closeQrModal();
     }
 
     public function verifyQrPayment(){
@@ -948,12 +934,53 @@ class ManagerBranchCode extends Component
                 ->send();
         }
     }
-    
-    private function validateCart()
+
+    #[On('payment-confirmed')]
+    public function handlePaymentSuccess() {
+        $this->completePayment(isFacturable: $this->isInvoicePending);
+        $this->closeQrModal();
+    }
+
+    private function validateCart($isFacturable)
     {
+        $validated = $this->validate([ 
+            'discountPercentage' => 'required|numeric|min:0|max:90',
+            'partial_payment' => 'required|numeric|min:0',
+        ]);
+
         $this->message_error = '';
         if (empty($this->cart)) {
             $this->message_error = "El carrito está vacío.";
+        }
+
+        if($isFacturable && ValidateSiatHelper::isValidSiatCode($this->cart) == false){
+            $this->message_error = 'No se puede facturar, algunos productos o servicios no tienen datos SIAT completos.';
+            return;
+        }   
+        $this->message_error = "";
+        if(count($this->cart) == 0){
+            $this->message_error = 'Debe seleccionar productos / servicios a vender';
+            return;
+        }
+        if($this->total < 0){
+            $this->message_error = 'El Total de venta no puede ser un numero negativo';
+            return;
+        }
+        if(!isset($this->customer)){
+            $this->message_error = 'Debe elegir un cliente para la venta';
+            return;
+        }
+
+        if($this->isSaleCredit){
+            $saldoTemp = number_format($this->customer->credit_limit - ($this->customer->saldo_credito + ($this->total - $this->partial_payment)), 2);
+            Log::info("www ppp1:: " . $this->customer->credit_limit . " || " . $this->customer->saldo_credito . " || " . $this->total . " || " . $this->partial_payment);
+            Log::info("www ppp2:: " . $saldoTemp);
+
+            if($saldoTemp < 0){
+                $this->message_error = 'El Cliente ' . $this->customer->name . " Sobre pasa su CREDITO :: " . $saldoTemp;
+                return;
+            }
+            
         }
     }
 
