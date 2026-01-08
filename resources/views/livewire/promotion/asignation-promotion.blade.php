@@ -34,20 +34,20 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
 
                     <!-- Tipo de Búsqueda (Select) -->
-                    <div class="form-control md:col-span-1">
+                    <filedset class="md:col-span-1">
                         <label class="label"><span class="label-text">Buscar por Tipo:</span></label>
                         <select
-                            wire:model.live="searchType"
-                            wire:change="performSearch"
-                            class="select select-bordered w-full"
+                            wire:model="searchType"
+                            class="select select-sm w-full focus-within:outline-none"
                         >
                             <option value="product">Productos</option>
                             <option value="service">Servicios</option>
+                            <option value="base_code">Código Base</option>
                         </select>
-                    </div>
+                    </filedset>
 
                     <!-- Input de Búsqueda -->
-                    <div class="form-control md:col-span-3">
+                    <filedset class="md:col-span-3">
                         <label for="search" class="label"><span class="label-text">Nombre o Código (mínimo 3 caracteres)</span></label>
                         <div class="relative">
                             <input
@@ -55,37 +55,54 @@
                                 type="text"
                                 id="search"
                                 placeholder="Ej: Camisa Slim o CS001"
-                                class="input input-bordered w-full pr-10"
+                                class="input input-sm w-full pr-10 focus-within:outline-none"
                             />
                             <div wire:loading.delay wire:target="searchQuery" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                 <span class="loading loading-spinner loading-sm text-primary"></span>
                             </div>
                         </div>
                         @error('searchQuery') <div class="label-text-alt text-error">{{ $message }}</div> @enderror
-                    </div>
+                    </filedset>
                 </div>
 
                 <!-- Resultados de Búsqueda -->
                 @if ($searchResults->isNotEmpty())
                     <div class="bg-base-200 p-4 rounded-lg border border-primary/50">
                         <h4 class="text-md font-semibold text-primary mb-2">
-                            Resultados de {{ $searchType === 'product' ? 'Productos' : 'Servicios' }}:
+                            Resultados de {{ $searchType === 'product' ? 'Productos' : ($searchType === 'service'? 'Servicios' : 'Codigo Base') }}:
                         </h4>
-                        <div class="space-y-2">
-                            @foreach ($searchResults as $item)
-                                <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-base-300">
-                                    <span class="font-medium text-base-content">
-                                        {{ $item->name }} <span class="text-sm opacity-70">({{ $item->code }})</span>
-                                    </span>
-                                    <button
-                                        wire:click="addItem({{ $item->id }})"
-                                        type="button"
-                                        class="btn btn-success btn-sm"
-                                    >
-                                        Añadir
-                                    </button>
-                                </div>
-                            @endforeach
+                        <div class="space-y-1">
+                            @if(strcmp($searchType, 'code') == 0)
+                                @foreach ($searchResults as $item)
+                                    <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-base-300">
+                                        <p class="font-medium text-base">
+                                            {{ $item->base_code }} <span class="font-normal text-sm opacity-70">({{ $item->base_code }})</span>
+                                        </p>
+                                        <button
+                                            wire:click="addItem('{{ $item->base_code }}')"
+                                            type="button"
+                                            class="btn btn-success btn-xs"
+                                        >
+                                            Añadir Codigo Base
+                                        </button>
+                                    </div>
+                                @endforeach
+                            @else
+                                @foreach ($searchResults as $item)
+                                    <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-base-300">
+                                        <p class="font-medium text-base">
+                                            {{ $item->name }} <span class="font-normal text-sm opacity-70">({{ $item->code }})</span>
+                                        </p>
+                                        <button
+                                            wire:click="addItem('{{ $item->id }}')"
+                                            type="button"
+                                            class="btn btn-success btn-xs"
+                                        >
+                                            Añadir
+                                        </button>
+                                    </div>
+                                @endforeach
+                            @endif
                         </div>
                     </div>
                 @elseif (strlen($searchQuery) >= 3 && $searchResults->isEmpty())
@@ -130,21 +147,37 @@
                             @foreach ($attachedItems as $item)
                                 <tr wire:key="item-{{ $item['key'] }}">
                                     <td>
-                                        <div class="badge @if ($item['type'] === 'product') badge-primary @else badge-secondary @endif badge-outline">
-                                            {{ $item['type'] === 'product' ? 'Producto' : 'Servicio' }}
-                                        </div>
+                                        @switch($item['type'])
+                                            @case('service')
+                                                <div class="badge badge-secondary badge-outline">
+                                                    Servicio
+                                                </div>
+                                                @break
+                                            @case('base_code')
+                                                <div class="badge badge-info badge-outline">
+                                                    Codigo base
+                                                </div>
+                                                @break
+                                            @default
+                                                <div class="badge badge-primary badge-outline">
+                                                    Producto
+                                                </div>
+                                                
+                                        @endswitch
                                     </td>
                                     <td><span class="font-mono">{{ $item['code'] }}</span></td>
                                     <td>{{ $item['name'] }}</td>
                                     <td class="text-right">
+                                        @if(strcmp($item['type'], 'base_code') != 0)
                                         <button
                                             wire:click="removeItem('{{ $item['key'] }}')"
                                             type="button"
                                             class="btn btn-ghost btn-xs text-error"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            <i class="fa-regular fa-trash-can"></i>
                                             Eliminar
                                         </button>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

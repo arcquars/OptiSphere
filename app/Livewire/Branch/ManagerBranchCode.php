@@ -83,6 +83,9 @@ class ManagerBranchCode extends Component
     public $eventSiatDto;
     public $qrModalMessage = "";
 
+    public $showNitModal = false;
+    public $excepcionNit = false;
+
     public function mount($branchId): void
     {
         $this->branch = Branch::find($branchId);
@@ -610,7 +613,21 @@ class ManagerBranchCode extends Component
                     ->danger()
                     ->send();
             }
-            
+
+            if($this->qrId){
+                $pagoQrAux = PagoQr::where('qr_id', $this->qrId)
+                    ->where('status', '=', 0)
+                    ->where('is_assigned', '=', 0)
+                    ->whereNotNull('sender_name')
+                    ->first();
+                if($pagoQrAux){
+                    Notification::make()
+                        ->title('Error')
+                        ->body("El pago por QR se realizo pero no se asigno a la Venta por un error previo. QRid: " . $this->qrId)
+                        ->danger()
+                        ->send();
+                }
+            }
         }
     }
 
@@ -682,6 +699,10 @@ class ManagerBranchCode extends Component
             
         }
 
+        $data = [];
+        if($this->excepcionNit){
+            $data['excepcion'] = 1;
+        }
         // 3. Prepara los datos (típicamente desde una solicitud o base de datos)
         $invoiceDataArray = [
             'customerId' => $this->customer->amyr_customer_id,
@@ -705,7 +726,7 @@ class ManagerBranchCode extends Component
             'numeroTarjeta' => null,
             'tipoCambio' => 1,
             'tipoFacturaDocumento' => 1,
-            'data' => '{}',
+            'data' => json_encode($data),
             'items' => $itemsData,
         ];
         try {
@@ -744,12 +765,17 @@ class ManagerBranchCode extends Component
         } catch (Exception $e) {
             // Los datos de entrada no cumplen con la estructura del DTO
             // echo "Error de validación del payload: " . $e->getMessage();
-            Notification::make()
-                ->title('Error en validacion')
-                ->body("Error de validación de la venta: " . $e->getMessage())
-                ->danger()
-                ->send();
-            return null;
+            if($e->getCode() == 522){
+                $this->showNitModal = true;
+            } else {
+                Notification::make()
+                    ->title('Error en validacion')
+                    ->body("Error de validación de la venta: " . $e->getMessage())
+                    ->danger()
+                    ->send();
+                return null;
+            }
+            
         }
          catch (ValidationException $e) {
             // Los datos de entrada no cumplen con la estructura del DTO
@@ -798,7 +824,7 @@ class ManagerBranchCode extends Component
                 'storeId' => $this->branch->id,
                 'firstname' => "",
                 'lastname' => $this->customer->name,
-                'identityDocument' => $this->customer->identity_document,
+                'identityDocument' => $this->customer->document_type,
                 'company' => $this->customer->name,
                 'phone' => $this->customer->phone,
                 'email' => $this->customer->email,
@@ -812,12 +838,31 @@ class ManagerBranchCode extends Component
         } else {
             $customerUpdate = [
                 "customer_id" => $response['customer_id'],
+                "extern_id" => $response['extern_id'],
+                "user_id" => $response['user_id'],
+                "code" => $response['code'],
+                "group_id" => $response['group_id'],
+                "store_id" => $response['store_id'],
+                "first_name" => $response['first_name'],
                 'last_name' => $this->customer->name,
-                'identity_document' => $this->customer->identity_document,
+                'identity_document' => $this->customer->document_type,
                 'company' => $this->customer->name,
+                'company_address' => $this->customer->address,
+                "date_of_birth" => $response['date_of_birth'],
+                "gender" => $response['gender'],
                 'phone' => $this->customer->phone,
+                "mobile" => $response['mobile'],
+                "fax" => $response['fax'],
                 'email' => $this->customer->email,
-                'address1' => $this->customer->address,
+                "website" => $response['website'],
+                "address_1" => $this->customer->address,
+                "address_2" => $response['address_2'],
+                "zip_code" => $response['zip_code'],
+                "city" => $response['city'],
+                "country" => $response['country'],
+                "country_code" => $response['country_code'],
+                "status" => (isset($response['status']))? $response['status'] : null,
+                "credito" => $this->customer->can_buy_on_credit,
                 'meta' => ['_nit_ruc_nif' => $this->customer->nit, '_billing_name' => null],
             ];
             $response = $amyrCustomerApiService->update($customerUpdate);
@@ -902,6 +947,12 @@ class ManagerBranchCode extends Component
         $this->qrId = null;
     }
 
+    public function closeNitValidarModal()
+    {
+        $this->showNitModal = false;
+        $this->excepcionNit = false;
+    }
+
     /**
      * Acción para confirmar que el pago QR fue exitoso (botón manual en el modal).
      */
@@ -984,4 +1035,9 @@ class ManagerBranchCode extends Component
         }
     }
 
+    public function skipValdiateNit(){
+        $this->excepcionNit = true;
+        $this->completePayment(true);
+        $this->closeNitValidarModal();
+    }
 }

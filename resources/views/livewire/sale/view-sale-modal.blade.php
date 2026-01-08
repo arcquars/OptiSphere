@@ -178,20 +178,22 @@
 
                     <div class="modal-action">
                         {{-- Opcional: menú para elegir tamaño --}}
-                        <div class="dropdown dropdown-top ml-2">
-                            <div tabindex="0" role="button" class="btn btn-sm btn-primary"><i class="fa-solid fa-print"></i> Recibo <i class="fa-solid fa-sort-down"></i></div>
-                            <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40">
-                                <li><a href="{{ route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" target="_blank">Carta</a></li>
-                                <li><a href="{{ route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'roll']) }}" target="_blank">Rollo</a></li>
-                            </ul>
-                        </div>
+                        <a
+                            class="btn btn-sm btn-primary"
+                            href="{{ route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}"
+                            target="_blank"
+                        >
+                            <i class="fa-solid fa-print"></i> Recibo
+                        </a>
+                        @if($sale->is_siat)
                         <div class="dropdown dropdown-top ml-2">
                             <div tabindex="0" role="button" class="btn btn-sm btn-primary"><i class="fa-solid fa-print"></i> Factura <i class="fa-solid fa-sort-down"></i></div>
                             <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40">
-                                <li><a href="{{ route('sales.invoice_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" target="_blank">Carta</a></li>
-                                <li><a href="{{ route('sales.invoice_pdf', ['sale' => $sale->id, 'size' => 'roll']) }}" target="_blank">Rollo</a></li>
+                                <li><a href="{{ route('sales.invoice_pdf', ['sale' => $sale->id]) }}" target="_blank">Carta</a></li>
+                                <li><a href="{{ route('sales.invoice_pdf', ['sale' => $sale->id, 'size' => 'rollo']) }}" target="_blank">Rollo</a></li>
                             </ul>
                         </div>
+                        @endif
                         <button wire:click="toggleForm" class="btn btn-sm">Cerrar</button>
                     </div>
                 </div>

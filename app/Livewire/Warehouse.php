@@ -43,6 +43,8 @@ class Warehouse extends Component implements HasSchemas
 
     public $branches;
 
+    public $sendBranch = false;
+
     public function mount($warehouseId): void
     {
         $this->warehouseId = $warehouseId;
@@ -152,6 +154,8 @@ class Warehouse extends Component implements HasSchemas
         switch ($this->action){
             case "ingreso":
                 $this->saveIncome($celdas);
+                if($branchId != null)
+                    $this->saveDelivery($celdas, $branchId);    
                 break;
             case "entregas":
                 $this->saveDelivery($celdas, $branchId);
@@ -317,6 +321,15 @@ class Warehouse extends Component implements HasSchemas
 
             }
         });
+    }
+
+    public function updatedSendBranch($value)
+    {
+        if ($value) {
+            // Lógica si se activa
+        } else {
+            // Lógica si se desactiva
+        }
     }
 
     public function render()

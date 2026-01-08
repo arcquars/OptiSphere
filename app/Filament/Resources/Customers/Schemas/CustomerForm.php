@@ -21,6 +21,10 @@ class CustomerForm
                 TextInput::make('email')
                     ->label('Correo electrónico')
                     ->email(),
+                Select::make('document_type')
+                    ->label('Tipo de documento')->options(
+                        config('amyr.tipo_documento_identidad')
+                    )->required(),
                 TextInput::make('phone')
                     ->label('Teléfono')
                     ->tel(),

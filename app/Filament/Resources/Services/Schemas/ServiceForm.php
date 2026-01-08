@@ -29,6 +29,7 @@ class ServiceForm
                     ->schema([
                         TextInput::make('name')
                             ->required()
+                            ->unique(column: 'name')
                             ->maxLength(255)
                             ->label('Nombre del Servicio'),
 

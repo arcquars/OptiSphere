@@ -13,4 +13,6 @@ interface MonoInvoiceApiInterface
      * @return array|null La respuesta exitosa de la API, o null en caso de fallo.
      */
     public function createInvoice(InvoiceCreationDto $invoiceData): ?array;
+
+    public function pdfInvoice($invoiceData, $tpl): ?array;
 }

@@ -7,7 +7,7 @@
                 @if($isSiat)
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Motivo anulacion <span class="text-error">*</span></legend>
-                    <select class="select w-full" wire:model.defer="motivo">
+                    <select class="select w-full focus:outline-none" wire:model.defer="motivo">
                         <option value="" selected>-- Motivo anulacion --</option>
                         @foreach ($motivosAnulacion as $motivo)
                             <option value="{{ $motivo['codigoClasificador'] }}">{{ $motivo['descripcion'] }}</option>
@@ -21,7 +21,7 @@
 
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Nota</legend>
-                    <textarea class="textarea textarea-bordered w-full" wire:model="voidReason" placeholder="Motivo (opcional)"></textarea>
+                    <textarea class="textarea textarea-bordered w-full focus:outline-none" wire:model="voidReason" placeholder="Motivo (opcional)"></textarea>
                     <!-- <div class="label">Optional</div> -->
                 </fieldset>
                 

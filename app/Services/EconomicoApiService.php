@@ -252,7 +252,9 @@ class EconomicoApiService
      */
     private function encryptData($text): array
     {
-        $response = Http::timeout(30)
+        Log::info("Texto a encryptar::::::::::::::::: " . $text);
+        Log::info("Texto a encryptar::::::::::::::::: " . $this->baseUrl . self::ENDPOINT_ENCRYPT);
+        $response = Http::timeout(60)
             ->get($this->baseUrl . self::ENDPOINT_ENCRYPT, [
                 'text' => $text,
                 'aesKey' => $this->apiKey
@@ -261,7 +263,6 @@ class EconomicoApiService
         if ($response->successful()) {
             return ['success' => true, 'data' => preg_replace('/[^A-Za-z0-9\+\/\=]/', '', trim($response->body()))];
         }
-
-        throw new Exception('Error al encriptar datos sensibles.');
+        throw new Exception('Error al encriptar datos sensibles: ' . json_encode($response));
     }
 }

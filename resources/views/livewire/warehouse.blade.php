@@ -12,6 +12,7 @@
                     priceType: null,
                     messageError: "",
                     disableSavePrices: false,
+                    sendBranch: false,
                     init() {
                         console.log(`ccc2`, this.cells);
                     },
@@ -366,12 +367,38 @@
             <div class="modal-box">
                 <h3 class="text-lg font-bold">Registrar ingreso de productos</h3>
                 <p class="py-4">Confirme que se va a registrar las cantidades de los productos</p>
+                <label class="label">
+                    <input x-model="sendBranch" type="checkbox" class="toggle toggle-accent" />
+                    Enviar a Sucursal
+                </label>
+                <template x-if="sendBranch">
+                    <fieldset class="fieldset">
+                        <label class="label label-azteris">Sucursal</label>
+                        <select class="select select-sm join-item focus-within:outline-none" x-model="branchId">
+                            <option value="" selected>Sucursal ...</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </fieldset>
+                </template>
                 <div class="modal-action">
                     <form method="dialog">
-                        <!-- if there is a button in form, it will close the modal -->
-                        <button class="btn btn-sm btn-secondary">Cerrar</button>
-                        <button class="btn btn-sm btn-primary" @click="$wire.call('save', markedAmountCells)" >Confirmar</button>
+                        <button 
+                            class="btn btn-sm btn-secondary"
+                            wire:loading.attr="disabled"
+                            wire:target="save"
+                        >
+                            Cerrar
+                        </button>
                     </form>
+                    <button 
+                        class="btn btn-sm btn-primary" 
+                        @click="$wire.call('save', markedAmountCells, branchId)"
+                        wire:loading.attr="disabled"
+                    >
+                    Confirmar
+                    </button>
                 </div>
             </div>
         </dialog>

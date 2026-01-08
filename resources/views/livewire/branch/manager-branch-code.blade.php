@@ -49,9 +49,7 @@
                             <table class="table table-zebra w-full">
                                 <thead>
                                     <tr>
-                                        <th class="w-10">#</th>
                                         <th>Producto</th>
-                                        <th>Código</th>
                                         <th>Stock</th>
                                         <th class="text-right">Precio</th>
                                     </tr>
@@ -63,17 +61,15 @@
                                             wire:click="addToCart({{ $product->id }}, 'product', '{{ $product->name }}', {{ $product->getPriceByType($branch->id, $saleType) }}, {{ $product->stockByBranch($branch->id) }})"
                                             wire:key="prod-row-{{ $product->id }}"
                                         >
-                                            <th class="font-normal opacity-50">
-                                                {{ ($products1->currentPage() - 1) * $products1->perPage() + $loop->iteration }}
-                                            </th>
-                                            <td class="font-bold">{{ $product->name }}</td>
-                                            <td class="text-xs opacity-70">{{ $product->code }}</td>
-                                            <td>
+                                            <td class="font-bold w-3/5">
+                                                {{ $product->name }} <small>({{ $product->code }})</small>
+                                            </td>
+                                            <td class="w-1/5">
                                                 <span class="badge badge-sm {{ $product->stockByBranch($branch->id) > 0 ? 'badge-ghost' : 'badge-error' }}">
                                                     {{ $product->stockByBranch($branch->id) }}
                                                 </span>
                                             </td>
-                                            <td class="text-right font-mono font-bold">
+                                            <td class="text-right font-mono font-bold w-1/5">
                                                 ${{ number_format($product->getPriceByType($branch->id, $saleType), 2) }}
                                             </td>
                                         </tr>
@@ -458,6 +454,43 @@
                 <!-- Botón Cancelar -->
                 <button wire:click="closeQrModal" class="btn btn-outline w-full text-gray-500">
                     Cancelar Operación
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- MODAL DE PAGO QR -->
+    @if($showNitModal)
+    <div class="modal modal-open bg-black/50 backdrop-blur-sm z-50">
+        <div class="modal-box w-11/12 max-w-md text-center shadow-2xl relative">
+            
+            <!-- Botón cerrar (X) -->
+            <button wire:click="closeNitValidarModal" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            
+            <h3 class="font-bold text-2xl text-primary mb-2">Saltar Validacion del NIT</h3>
+            <p class="text-gray-500 text-sm mb-4">Saltara la validacion del nit en SIAT</p>
+            
+            
+            
+            <!-- Acciones del Modal -->
+            <div class="grid grid-cols-1 gap-3">
+                <!-- Botón de Confirmación Manual -->
+                <button 
+                    wire:click="skipValdiateNit" 
+                    wire:loading.target="skipValdiateNit"
+                    wire:loading.attr="disabled"
+                    class="btn btn-primary w-full">
+                    <i class="fa-solid fa-glasses"></i> Saltar validacion
+                </button>
+                
+                <!-- Botón Cancelar -->
+                <button 
+                    wire:click="closeNitValidarModal" 
+                    wire:loading.target="skipValdiateNit"
+                    wire:loading.attr="disabled"
+                    class="btn btn-outline w-full text-gray-500">
+                    Cancelar
                 </button>
             </div>
         </div>

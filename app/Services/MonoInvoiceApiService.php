@@ -61,8 +61,10 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
                 'response_body' => $errorJson,
                 'request_payload' => $invoiceData->toArray(),
             ]);
-            
-            throw new \Exception("MonoInvoice API devolvió un error (Mensaje: " . $errorJson['error'] . ")", $response->status());
+            if(strcmp($errorJson['response'], "error_nit") == 0){
+                throw new \Exception("MonoInvoice API CREAR FACTURA devolvió un error (Mensaje: " . $errorJson['error'] . ")", 522);    
+            }
+            throw new \Exception("MonoInvoice API CREAR FACTURA devolvió un error (Mensaje: " . $errorJson['error'] . ")", $response->status());
     }
 
     /**
@@ -101,7 +103,40 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
     /**
      * @inheritDoc
      */
-    public function pdfInvoice($invoiceId): ?array
+    public function revertInvoice($invoiceId): ?array
+    {
+        $endpoint = DIRECTORY_SEPARATOR.'invoices' . DIRECTORY_SEPARATOR . $invoiceId . DIRECTORY_SEPARATOR . 'revalidar';
+        $fullUrl = $this->baseUrl . $endpoint;
+
+        Log::info("Enviando factura a anular MonoInvoices", [
+            'endpoint' => $fullUrl,
+        ]);
+
+        $response = Http::baseUrl($this->baseUrl)
+                        ->withToken($this->token) // Adjunta el Bearer Token
+                        ->acceptJson()
+                        ->timeout(120) // Tiempo de espera de 120 segundos
+                        ->post($endpoint, ['id' => $invoiceId]); // Usa el DTO convertido a array
+
+        // 1. Manejo de Respuesta Exitosa (2xx)
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        $errorJson = $response->json();
+        // 2. Manejo de Errores del Servidor o del Cliente (4xx, 5xx)
+        Log::error("MonoInvoice API Error al Revertir factura.", [
+            'status' => $response->status(),
+            'response_body' => $errorJson,
+        ]);
+        
+        throw new \Exception("MonoInvoice API Revertir devolvió un error (Mensaje: " . $errorJson['error'] . ")", $response->status());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function pdfInvoice($invoiceId, $tpl = null): ?array
     {
         $endpoint = DIRECTORY_SEPARATOR.'invoices' . DIRECTORY_SEPARATOR . $invoiceId . DIRECTORY_SEPARATOR . 'pdf';
         $fullUrl = $this->baseUrl . $endpoint;
@@ -111,11 +146,16 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
                 'endpoint' => $fullUrl,
             ]);
 
+            $param = [];
+            if($tpl != null){
+                $param['tpl'] = $tpl;
+            }
+
             $response = Http::baseUrl($this->baseUrl)
                             ->withToken($this->token) // Adjunta el Bearer Token
                             ->acceptJson()
                             ->timeout(120) // Tiempo de espera de 120 segundos
-                            ->get($endpoint, ['invoice_id' => $invoiceId, 'motivo_id' =>1]); // Usa el DTO convertido a array
+                            ->get($endpoint, $param);
 
             // 1. Manejo de Respuesta Exitosa (2xx)
             if ($response->successful()) {
@@ -128,7 +168,7 @@ class MonoInvoiceApiService implements MonoInvoiceApiInterface
             Log::error("MonoInvoice API Error al pdf factura.", [
                 'status' => $response->status(),
                 'response_body' => $response->body(),
-                'request_payload' => ['invoice_id' => $invoiceId, 'motivo_id' =>1],
+                'request_payload' => ['invoice_id' => $invoiceId],
             ]);
             
             // Lanza una excepción específica si es necesario, o devuelve null

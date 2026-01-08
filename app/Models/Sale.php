@@ -163,6 +163,13 @@ class Sale extends Model
         )->shouldCache();
     }
 
+    protected function isSiat(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool => (isset($this->siat_invoice_id))? true : false
+        );
+    }
+
     protected function amountProducts(): Attribute
     {
         return Attribute::make(

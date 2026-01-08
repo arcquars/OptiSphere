@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
 
 class CustomersTable
 {
@@ -52,7 +53,10 @@ class CustomersTable
                 //
             ])
             ->recordActions([
-                // EditAction::make(),
+                EditAction::make()
+                    ->label('')
+                    ->tooltip('Editar')
+                    ->icon('fas-pen-to-square')
             ])
             ->toolbarActions([
                 // BulkActionGroup::make([

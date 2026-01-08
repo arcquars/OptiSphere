@@ -55,6 +55,8 @@ class SalePdfController
 
     public function invoice(Request $request, Sale $sale)
     {
+        $pSize = $pSize = $request->get('size', null);
+        
         // 1. Verificar si el ID de la factura SIAT existe
         if (empty($sale->siat_invoice_id)) {
             return back()->with('error', 'Esta venta no tiene un ID de factura SIAT asociado.');
@@ -64,7 +66,7 @@ class SalePdfController
         $monoInvoiceService = new MonoInvoiceApiService($sale->branch);
         
         // 3. Llamar al servicio para obtener el PDF en Base64
-        $base64Pdf = $monoInvoiceService->pdfInvoice(invoiceId: $sale->siat_invoice_id);
+        $base64Pdf = $monoInvoiceService->pdfInvoice(invoiceId: $sale->siat_invoice_id, tpl: $pSize);
 
         if (empty($base64Pdf)) {
             Log::error("API MonoInvoice no devolvió el PDF para la factura ID: {$sale->siat_invoice_id}");

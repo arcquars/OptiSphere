@@ -125,13 +125,13 @@
                         <td>
                             @switch($sale->sale_type)
                                 @case(\App\Models\Price::TYPE_ESPECIAL)
-                                <div class="badge badge-info">{{ strtoupper($sale->sale_type) }}</div>
+                                <div class="badge badge-outline badge-info">{{ strtoupper($sale->sale_type) }}</div>
                                 @break
                                 @case(\App\Models\Price::TYPE_MAYORISTA)
-                                <div class="badge badge-primary">{{ strtoupper($sale->sale_type) }}</div>
+                                <div class="badge badge-outline badge-primary">{{ strtoupper($sale->sale_type) }}</div>
                                 @break
                                 @default
-                                <div class="badge badge-neutral">{{ strtoupper($sale->sale_type) }}</div>
+                                <div class="badge badge-outline badge-neutral">{{ strtoupper($sale->sale_type) }}</div>
                             @endswitch
                         </td>
                         <td>
@@ -168,15 +168,15 @@
                         </td>
                         <td>
                             @if($sale->use_promotion)
-                                <div class="badge badge-accent">Sí</div>
+                                <div class="badge badge-soft badge-success">Sí</div>
                             @else
-                                <div class="badge badge-ghost">No</div>
+                                <div class="badge badge-soft badge-error">No</div>
                             @endif
                         </td>
                         <td class="text-right font-mono font-bold">{{ config('cerisier.currency_symbol') }} {{ $sale->final_total }}</td>
                         <td>
                             <div class="dropdown dropdown-bottom dropdown-end">
-                                <div tabindex="0" role="button" class="btn m-1">Acciones <i class="fa-solid fa-sort-down"></i></div>
+                                <div tabindex="0" role="button" class="btn btn-sm btn-primary m-1">Acciones <i class="fa-solid fa-sort-down"></i></div>
                                 <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                                     <li><a @click="$dispatch('toggleViewSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;" class="text-primary">
                                             <i class="fa-solid fa-eye"></i> Ver
@@ -208,7 +208,7 @@
                                                 @click="$dispatch('toggleRevertirAnularSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;"
                                                 class="text-emerald-500" title="Deshacer anulación factura"
                                             >
-                                                <i class="fa-solid fa-link"></i> DesAnular factura
+                                                <i class="fa-solid fa-link"></i> Revertir anulación factura
                                             </a>
                                         </li>
                                         @elseif(strcmp($sale->siat_status, "issued") == 0)

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Promotion;
 
+use App\Models\OpticalProperty;
 use App\Models\Promotion;
 use App\Models\Product;
 use App\Models\Service;
@@ -39,6 +40,9 @@ class AsignationPromotion extends Component
 
         // 1. Cargar ítems ya asociados y colocarlos en $attachedItems
         $items = $promotion->products->map(function ($item) {
+            if($item->opticalProperties){
+                return $this->formatAttachedItem($item, 'base_code');
+            }
             return $this->formatAttachedItem($item, 'product');
         });
 
@@ -70,13 +74,21 @@ class AsignationPromotion extends Component
             return;
         }
 
-        $model = $this->searchType === 'product' ? Product::class : Service::class;
         $query = trim($this->searchQuery);
+        if(strcmp($this->searchType, 'base_code') == 0){
+            $this->searchResults = OpticalProperty::where('base_code', 'like', "%{$query}%")
+                ->groupBy('base_code')
+                ->limit(10)
+                ->get(['base_code']);
+        } else {
+            $model = $this->searchType === 'product' ? Product::class : Service::class;
+            
 
-        $this->searchResults = $model::where('name', 'LIKE', "%{$query}%")
-            ->orWhere('code', 'LIKE', "%{$query}%")
-            ->limit(10) // Limitar resultados para mantener el rendimiento
-            ->get(['id', 'name', 'code']);
+            $this->searchResults = $model::where('name', 'LIKE', "%{$query}%")
+                ->orWhere('code', 'LIKE', "%{$query}%")
+                ->limit(10) // Limitar resultados para mantener el rendimiento
+                ->get(['id', 'name', 'code']);
+        }
     }
 
     /**
@@ -96,25 +108,45 @@ class AsignationPromotion extends Component
     /**
      * Agrega un ítem de los resultados a la tabla de ítems adjuntos.
      */
-    public function addItem(int $id): void
+    public function addItem(string $id): void
     {
-        $model = $this->searchType === 'product' ? Product::class : Service::class;
-        $type = $this->searchType;
-        $key = "{$type}_{$id}";
+        if(strcmp($this->searchType, 'base_code') == 0){
+            $products = Product::whereHas('opticalProperties', function($query) use ($id) {
+                $query->where('base_code', 'like', $id);
+            })->get(['id', 'name', 'code']);
+            $type = "product";
+            foreach($products as $pro){
+                $key = "{$type}_{$pro->id}";
 
-        if (array_key_exists($key, $this->attachedItems)) {
-            session()->flash('warning', 'Este artículo ya está en la lista.');
-            return;
+                if (array_key_exists($key, $this->attachedItems)) {
+                    continue;
+                }
+
+                $this->attachedItems[$key] = $this->formatAttachedItem($pro, $type);
+                // Opcional: limpiar la búsqueda después de añadir un elemento
+                $this->searchQuery = '';
+                $this->searchResults = Collection::make();
+            }
+        } else {
+            $model = $this->searchType === 'product' ? Product::class : Service::class;
+            $type = $this->searchType;
+            $key = "{$type}_{$id}";
+
+            if (array_key_exists($key, $this->attachedItems)) {
+                session()->flash('warning', 'Este artículo ya está en la lista.');
+                return;
+            }
+
+            $item = $model::find($id, ['id', 'name', 'code']);
+
+            if ($item) {
+                $this->attachedItems[$key] = $this->formatAttachedItem($item, $type);
+                // Opcional: limpiar la búsqueda después de añadir un elemento
+                $this->searchQuery = '';
+                $this->searchResults = Collection::make();
+            }
         }
-
-        $item = $model::find($id, ['id', 'name', 'code']);
-
-        if ($item) {
-            $this->attachedItems[$key] = $this->formatAttachedItem($item, $type);
-            // Opcional: limpiar la búsqueda después de añadir un elemento
-            $this->searchQuery = '';
-            $this->searchResults = Collection::make();
-        }
+        
     }
 
     /**

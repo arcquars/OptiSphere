@@ -50,7 +50,7 @@ class CashClosing extends Component
 //        $closing = $svc->getOpenClosingForUser($this->userId, $this->branchId, createIfMissing: true);
         $this->closingId = $this->cashBoxClosing->id;
         $this->from = $this->cashBoxClosing?->opening_time?->format('Y-m-d H:i');
-        $this->until = now()->format('Y-m-d H:i');
+        $this->until = now()->addMinute()->format('Y-m-d H:i');
     }
 
     #[Computed]
@@ -85,7 +85,7 @@ class CashClosing extends Component
     public function refreshTotals(): void
     {
         // Solo para forzar recomputado
-        $this->until = now()->format('Y-m-d H:i');
+        $this->until = now()->addMinute()->format('Y-m-d H:i');
         $this->closingAmount = null;
     }
 
