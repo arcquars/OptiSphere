@@ -21,6 +21,7 @@ class SalePayment extends Model
         'cash_box_closing_id',
         'deleted',
         'amount',           // Monto del abono o pago
+        'residue',
         'payment_method',   // Método de pago (ej: EFECTIVO, TARJETA)
         'notes', 
         'qrid'           // Notas adicionales sobre el pago

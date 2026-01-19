@@ -86,6 +86,9 @@ class ManagerBranchCode extends Component
     public $showNitModal = false;
     public $excepcionNit = false;
 
+    public $invoice_nro;
+    public $invoice_date;
+
     public function mount($branchId): void
     {
         $this->branch = Branch::find($branchId);
@@ -700,6 +703,10 @@ class ManagerBranchCode extends Component
         }
 
         $data = [];
+        if($this->eventSiatDto != null && in_array($this->eventSiatDto['evento_id'], [5,6,7])){
+            $data['nro_factura'] = $this->invoice_nro;
+        }
+        
         if($this->excepcionNit){
             $data['excepcion'] = 1;
         }
@@ -714,7 +721,7 @@ class ManagerBranchCode extends Component
             'montoGiftcard' => '0.00',
             'total' => $this->total,
             // 'invoiceDateTime' => now()->toIso8601String(),
-            'invoiceDateTime' => "",
+            'invoiceDateTime' => ($this->eventSiatDto != null)? $this->invoice_date : "",
             'currencyCode' => 'BOB',
             'codigoSucursal' => $this->branch->amyrConnectionBranch->sucursal,
             'puntoVenta' => $this->branch->amyrConnectionBranch->point_sale,

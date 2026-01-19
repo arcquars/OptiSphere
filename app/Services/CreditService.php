@@ -49,7 +49,6 @@ class CreditService
 
             $branch = Branch::find($sale->branch_id);
             $cashBc = $branch->getCashBoxClosingByUser($userId);
-
             // a) Crear el registro del abono (SalePayment)
             $payment = SalePayment::create([
                 'sale_id' => $sale->id,
@@ -58,6 +57,7 @@ class CreditService
                 'qrid' => $sale->qrid,
                 'cash_box_closing_id' => $cashBc?->id,
                 'amount' => $amount,
+                'residue' => $sale->total_amount - ($sale->paid_amount + $amount),
                 'payment_method' => $paymentMethod,
                 'notes' => $notes,
             ]);

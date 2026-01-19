@@ -7,7 +7,7 @@
         <div class="border-b border-base-300 pb-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end mb-1">
                 <!-- Filtro Fecha Inicio -->
-                <label class="form-control w-full">
+                <label class="w-full">
                     <div class="label"><span class="label-text">Fecha de Inicio</span></div>
                     <input type="date" wire:model.defer="dateStart" class="input @error('dateStart') input-error @enderror input-bordered w-full focus:outline-none" value="2025-09-01"/>
                     @error('dateStart')
@@ -15,7 +15,7 @@
                     @enderror
                 </label>
                 <!-- Filtro Fecha Fin -->
-                <label class="form-control w-full">
+                <label class="w-full">
                     <div class="label"><span class="label-text">Fecha de Fin</span></div>
                     <input type="date" wire:model.defer="dateEnd" class="input @error('dateEnd') input-error @enderror input-bordered w-full focus:outline-none"/>
                     @error('dateEnd')
@@ -23,7 +23,7 @@
                     @enderror
                 </label>
                 <!-- Filtro Sucursal -->
-                <label class="form-control w-full">
+                <label class="w-full">
                     <div class="label"><span class="label-text">Sucursal</span></div>
                     <select wire:model.defer="branchSelect" class="select select-bordered w-full focus:outline-none">
                         <option value="">Todas las sucursales</option>
@@ -33,7 +33,7 @@
                     </select>
                 </label>
                 <!-- Filtro Tipo de Venta -->
-                <label class="form-control w-full">
+                <label class="w-full">
                     <div class="label"><span class="label-text">Condición de Venta</span></div>
                     <select wire:model.defer="statusSelect" class="select select-bordered w-full focus:outline-none">
                         <option value="all">Todas</option>
@@ -45,7 +45,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                 @can('report sale admin')
                 <!-- Filtro Tipo venta -->
-                <label class="form-control w-full">
+                <label class="w-full">
                     <div class="label"><span class="label-text">Tipo venta</span></div>
                     <select wire:model.defer="typeSale" class="select select-bordered w-full focus:outline-none">
                         <option value="">Todas</option>
@@ -55,9 +55,19 @@
                     </select>
                 </label>
                 <!-- Filtro Tipo venta -->
-                <label class="form-control w-full">
+                <label class="w-full">
                     <div class="label"><span class="label-text">Cliente</span></div>
-                    <input wire:model.defer="clientSearch" type="text" class="input">
+                    <input wire:model.defer="clientSearch" type="text" class="input focus:outline-none">
+                </label>
+                <!-- Filtro Usuario -->
+                <label class="w-full">
+                    <div class="label"><span class="label-text">Usuarios</span></div>
+                    <select wire:model.defer="userFilter" class="select select-bordered w-full focus:outline-none">
+                        <option value="">Todos</option>
+                        @foreach($users as $u)
+                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                        @endforeach
+                    </select>
                 </label>
                 @endcan
 

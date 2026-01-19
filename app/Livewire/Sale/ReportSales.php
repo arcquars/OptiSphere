@@ -25,7 +25,9 @@ class ReportSales extends Component
     public $saleTypeSelect = 'all';
     public $statusSelect = 'all';
     public $typeSales;
+    public $users;
     public $typeSale;
+    public $userFilter;
     public $clientSearch;
 
     public $branches;
@@ -35,6 +37,7 @@ class ReportSales extends Component
         $this->dateStart = now()->startOfMonth()->format('Y-m-d');
         $this->dateEnd = now()->endOfMonth()->format('Y-m-d');
         $this->typeSales = Sale::SALE_TYPE_SALES;
+        $this->users = User::role('branch-manager')->get();
         if(auth()->user()->hasRole('admin')){
             $this->branches = Branch::where('is_active', true)->get();
         } elseif (auth()->user()->hasRole('branch-manager')) {
@@ -91,6 +94,11 @@ class ReportSales extends Component
         if($this->typeSale){
             $query->where('sale_type', '=', $this->typeSale);
         }
+
+        if($this->userFilter){
+            $query->where('user_id', '=', $this->userFilter);
+        }
+        
 
         if($this->clientSearch && !empty($this->clientSearch)){
             $search = $this->clientSearch;
