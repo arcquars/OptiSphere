@@ -46,6 +46,7 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->id('admin')
             ->path('admin')
+            ->favicon(asset('favicon.ico'))
             ->globalSearch(false)
             ->login()
             ->colors([

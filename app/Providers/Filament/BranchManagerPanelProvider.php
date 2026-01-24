@@ -51,6 +51,7 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
         return $panel
             ->id('branch-manager')
             ->path('branch-manager')
+            ->favicon(asset('favicon.ico'))
             ->login()
             ->colors([
                 'primary' => Color::Amber,
