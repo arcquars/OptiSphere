@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CashClosingService
 {
@@ -55,7 +56,7 @@ class CashClosingService
      */
     public function computeTotals(CashBoxClosing $closing, ?string $from = null, ?string $until = null, ?int $userIdFilter = null): array
     {
-        $from  = $from  ? Carbon::parse($from)  : Carbon::parse($closing->opened_at);
+        $from  = $from  ? Carbon::parse($from)  : Carbon::parse($closing->opening_time);
         $until = $until ? Carbon::parse($until) : now();
 
         // Base de filtros por rango/usuario

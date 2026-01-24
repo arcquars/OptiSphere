@@ -31,6 +31,18 @@ class SalePayment extends Model
     // RELACIONES
     // ----------------------------------------------------
 
+    public function customer()
+    {
+        return $this->hasOneThrough(
+            Customer::class,
+            Sale::class,
+            'id',        // FK en sales
+            'id',        // FK en customers
+            'sale_id',   // FK en sale_payments
+            'customer_id'
+        );
+    }
+
     /**
      * Un abono pertenece a una única venta (Sale).
      */

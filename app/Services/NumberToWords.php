@@ -8,7 +8,7 @@ class NumberToWords
 {
     /**
      * Convierte un número a letras en español (entero).
-     * Soporta hasta billones (ajusta si necesitas más).
+     * Soporta hasta billones.
      */
     public function toSpanish(int $number): string
     {
@@ -27,7 +27,11 @@ class NumberToWords
             'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'
         ];
 
-        $tens = ['', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+        // CORRECCIÓN: Se añaden índices para que el 9 corresponda a 'noventa'
+        $tens = [
+            '', '', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'
+        ];
+        
         $hundreds = [
             '', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos',
             'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'
@@ -47,8 +51,8 @@ class NumberToWords
         $remainder = $number;
 
         if ($billions > 0) {
-            $words .= $this->chunkToSpanish($billions, $units, $tens, $hundreds) . ' ' . ($billions === 1 ? 'mil millones' : 'mil millones'); // opción: “un millardo”
-            $words .= $millions + $thousands + $remainder > 0 ? ' ' : '';
+            $words .= $this->chunkToSpanish($billions, $units, $tens, $hundreds) . ' ' . ($billions === 1 ? 'mil millones' : 'mil millones');
+            $words .= ($millions + $thousands + $remainder > 0) ? ' ' : '';
         }
 
         if ($millions > 0) {
@@ -57,7 +61,7 @@ class NumberToWords
             } else {
                 $words .= $this->chunkToSpanish($millions, $units, $tens, $hundreds) . ' millones';
             }
-            $words .= $thousands + $remainder > 0 ? ' ' : '';
+            $words .= ($thousands + $remainder > 0) ? ' ' : '';
         }
 
         if ($thousands > 0) {
@@ -66,7 +70,7 @@ class NumberToWords
             } else {
                 $words .= $this->chunkToSpanish($thousands, $units, $tens, $hundreds) . ' mil';
             }
-            $words .= $remainder > 0 ? ' ' : '';
+            $words .= ($remainder > 0) ? ' ' : '';
         }
 
         if ($remainder > 0) {
@@ -77,13 +81,11 @@ class NumberToWords
             }
         }
 
-        // Limpieza: “uno” → “un” cuando va seguido de sustantivo masculino (lo haremos en moneda)
         return trim($words);
     }
 
     /**
      * Convierte montos decimales a letras + moneda.
-     * Ej: 123.45 -> "CIENTO VEINTITRÉS  BOLIVIANOS CON 45/100"
      */
     public function toSpanishWithCurrency(float|string $amount, string $currency = 'BOLIVIANOS'): string
     {
@@ -98,24 +100,20 @@ class NumberToWords
 
         $enteroEnLetras = $this->toSpanish($integer);
 
-        // “uno” -> “un” para concordar con masculino “bolivianos”
+        // CORRECCIÓN LINGÜÍSTICA: Manejo de apócope para moneda masculina
+        // Convierte "uno" -> "un" y "veintiuno" -> "veintiún"
+        $enteroEnLetras = preg_replace('/\bveintiuno\b/u', 'veintiún', $enteroEnLetras);
         $enteroEnLetras = preg_replace('/\buno\b/u', 'un', $enteroEnLetras);
 
-        // Mayúsculas (estilo típico en factura)
         $enteroEnLetras = mb_strtoupper($enteroEnLetras, 'UTF-8');
-
         $centavos = str_pad((string) $cents, 2, '0', STR_PAD_LEFT) . '/100';
 
-        // Singular/plural moneda
         $currency = mb_strtoupper($currency, 'UTF-8');
-        $currencyWord = ($integer === 1) ? rtrim($currency, 'S') : $currency; // “BOLIVIANO” vs “BOLIVIANOS”
+        $currencyWord = ($integer === 1) ? rtrim($currency, 'S') : $currency;
 
         return sprintf('%s %s CON %s', $enteroEnLetras, $currencyWord, $centavos);
     }
 
-    /**
-     * Convierte números 1..999 a letras usando tablas.
-     */
     private function chunkToSpanish(int $n, array $units, array $tens, array $hundreds): string
     {
         $out = '';

@@ -124,9 +124,9 @@ class CreditPaymentResource extends Page implements HasTable
                     ->searchable()
                     ->preload(),
 
-                SelectFilter::make('customer')
+                SelectFilter::make('customer_id')
                     ->label('Cliente')
-                    ->relationship('sale.customer', 'name')
+                    ->relationship('customer', 'name')
                     ->searchable()
                     ->preload(),
 

@@ -72,4 +72,8 @@ class CashBoxClosing extends Model
 
         return $branch->isOpenCashBoxClosingByUser($userId);
     }
+
+    public function test(){
+        dd("dddd");
+    }
 }
