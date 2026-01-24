@@ -186,6 +186,13 @@ class ManagerBranchCode extends Component
                     $this->cart[$cartKey]['quantity'] = (is_numeric($this->cart[$cartKey]['quantity']))? $this->cart[$cartKey]['quantity']+1 : 1;
                     $this->cart[$cartKey]['limit'] = $quantity;
                     $this->cart[$cartKey]['promotion'] = null;
+
+                    if(isset($this->cart[$cartKey]['services']) && count($this->cart[$cartKey]['services']) > 0){
+                        foreach ($this->cart[$cartKey]['services'] as $key => $sub){
+                            $this->cart[$cartKey]['services'][$key]['quantity'] = $this->cart[$cartKey]['quantity'];
+                            $this->cart[$cartKey]['services'][$key]['limit'] = $this->cart[$cartKey]['limit'];
+                        }
+                    }
                 } else {
                     Notification::make()
                         ->title('Cuidado')
@@ -1001,7 +1008,7 @@ class ManagerBranchCode extends Component
 
     private function validateCart($isFacturable)
     {
-        $validated = $this->validate([ 
+        $this->validate([ 
             'discountPercentage' => 'required|numeric|min:0|max:90',
             'partial_payment' => 'required|numeric|min:0',
         ]);
@@ -1024,7 +1031,7 @@ class ManagerBranchCode extends Component
             $this->message_error = 'El Total de venta no puede ser un numero negativo';
             return;
         }
-        if(!isset($this->customer)){
+        if(!isset($this->customer->id)){
             $this->message_error = 'Debe elegir un cliente para la venta';
             return;
         }

@@ -58,7 +58,12 @@
                                     @foreach($products1 as $product)
                                         <tr 
                                             class="cursor-pointer hover:bg-orange-300 transition-colors"
-                                            wire:click="addToCart({{ $product->id }}, 'product', '{{ $product->name }}', {{ $product->getPriceByType($branch->id, $saleType) }}, {{ $product->stockByBranch($branch->id) }})"
+                                            wire:click="addToCart(
+                                                {{ $product->id }}, 
+                                                'product', 
+                                                '{{ $product->name }}', 
+                                                {{ $product->getPriceByType($branch->id, $saleType) }}, 
+                                                 {{ $product->stockByBranch($branch->id) }})"
                                             wire:key="prod-row-{{ $product->id }}"
                                         >
                                             <td class="font-bold w-3/5">
@@ -184,18 +189,31 @@
                                 <button
                                     type="button"    
                                     wire:click="incrementCartQuantity('{{ $key }}',false)"  
-                                    class="btn btn-square btn-sm btn-outline btn-accent">
+                                    class="btn btn-square btn-sm btn-outline btn-accent"
+                                    title="Quitar cantidad"
+                                >
                                     <i class="fa-solid fa-minus"></i>
                                 </button>
                                 <p class="badge badge-lg mx-1">{{ $item['quantity'] }}</p>
                                 <button
                                     type="button"
                                     wire:click="incrementCartQuantity('{{ $key }}', true)" 
-                                    class="btn btn-square btn-sm btn-outline btn-accent">
+                                    class="btn btn-square btn-sm btn-outline btn-accent"
+                                    title="Incrementar cantidad"
+                                >
                                     <i class="fa-solid fa-plus"></i>
                                 </button>
                                 @if($item['type'] !== 'service')
-                                    <div class="dropdown dropdown-left mx-1 drodown">
+                                    <button
+                                        type="button"
+                                        {{-- wire:click="incrementCartQuantity('{{ $key }}', true)"  --}}
+                                        @click="$dispatch('toggleOpenHistoryModal', { product: '{{ $key }}' })"
+                                        class="btn btn-square btn-sm btn-outline btn-primary ml-1"
+                                        title="Historial de producto"
+                                    >
+                                        <i class="fa-solid fa-rectangle-list"></i>
+                                    </button>
+                                    <div class="dropdown dropdown-left mx-1 drodown" title="Agregar Servicio">
                                         <div 
                                             tabindex="0" 
                                             role="button" 
@@ -233,11 +251,10 @@
                                                         </span>
                                                     @endif
                                                     <span class="text-sm text-base text-gray-500 pl-2">
-                                                        {{ $sub['promotion'] }}
                                                         @if($sub['promotion'] == null)
-                                                            {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format($sub['price'] * $sub['quantity'], 2) }}
+                                                            {{ config('cerisier.currency_symbol') }} {{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }} {{ number_format($sub['price'] * $sub['quantity'], 2) }}
                                                         @else
-                                                            {{ config('cerisier.currency_symbol') }}({{ number_format($sub['price'], 2) }} - {{ number_format(($sub['price'] *  ($sub['promotion']/100)), 2) }}) x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }}{{ number_format(($sub['price'] - $sub['price'] *  ($sub['promotion']/100) )* $sub['quantity'], 2) }}
+                                                            {{ config('cerisier.currency_symbol') }} ({{ number_format($sub['price'], 2) }} - {{ number_format(($sub['price'] *  ($sub['promotion']/100)), 2) }}) x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }} {{ number_format(($sub['price'] - $sub['price'] *  ($sub['promotion']/100) )* $sub['quantity'], 2) }}
                                                         @endif
                                                     </span>
                                                 </p>
