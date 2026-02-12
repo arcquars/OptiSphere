@@ -4,22 +4,18 @@
     function m($n) { return number_format((float)($n ?? 0), 2, '.', ','); }
 
     // Monto total (ajusta a tu campo real si es diferente)
-    $total = $sale->total
-        ?? $sale->total_amount
-        ?? ($sale->items?->sum(fn($i) => ($i->final_price_per_unit ?? $i->price ?? 0) * ($i->quantity ?? 1) - ($i->discount ?? 0)) ?? 0);
-
-    // Descuento total (si tu modelo lo tiene, úsalo; si no, suma por ítem)
-    $discountTotal = $sale->discount_total
-        ?? $sale->discount
-        ?? ($sale->items?->sum('discount') ?? 0);
+    $total = $sale->final_total;
 
     // Pagos y saldo (opcional, para mostrar si lo usas)
     $paid = $sale->payments?->sum('amount') ?? 0;
     $balance = $total - $paid;
 
     // Subtotal (antes de descuento). Ajusta si tienes campo propio.
-    $subtotal = ($sale->subtotal ?? ($total + 0));
+    $subtotal = $sale->total_amount;
 
+    // Descuento total (si tu modelo lo tiene, úsalo; si no, suma por ítem)
+    $discountTotal = ($sale->final_discount > 0)? $subtotal * $sale->final_discount / 100 : 0;
+    
     // Cliente
     $customerName = $sale->customer->name ?? '—';
     $customerDoc  = $sale->customer->document ?? $sale->customer->nit ?? $sale->customer->ci ?? '—';
@@ -185,7 +181,12 @@
         <div class="">
             <div class="row">
                 <div class="col">
-                    <div class="subtitle center" style="font-size: 32px">RECIBO</div>
+                    <div class="subtitle center" style="font-size: 30px">
+                        <p>
+                            RECIBO 
+                            @if(strcmp($sale->status, App\Models\Sale::SALE_STATUS_CREDIT) == 0)<small>(Credito)</small> @endif
+                        </p>
+                    </div>
                     <div class="right" style="margin-top:6px; font-size: 12px">
                         <span class="label">VENTA NRO.</span> <strong>{{ $invoiceNo }}</strong>
                     </div>
@@ -311,16 +312,24 @@
                 <td class="value">{{ m($subtotal) }}</td>
             </tr>
             <tr>
-                <td class="label"><strong>DESCUENTO</strong></td>
+                <td class="label"><strong>DESCUENTO ({{ m($sale->final_discount) }} %)</strong></td>
                 <td class="value">{{ m($discountTotal) }}</td>
             </tr>
             <tr>
                 <td class="label"><strong>TOTAL</strong></td>
                 <td class="value">{{ m($total) }}</td>
             </tr>
+            @if(strcmp($sale->status, App\Models\Sale::SALE_STATUS_CREDIT) == 0)
+            <tr>
+                <td class="label"><strong>A CUENTA</strong></td>
+                <td class="value"><strong>{{ m($sale->paid_amount) }}</strong></td>
+            </tr>
+            @endif
             <tr>
                 <td class="label"><strong>MONTO A PAGAR</strong></td>
-                <td class="value"><strong>{{ m($total) }}</strong></td>
+                <td class="value"><strong>
+                    {{ (strcmp($sale->status, App\Models\Sale::SALE_STATUS_CREDIT) == 0)? m($sale->due_amount) : m($total) }}
+                </strong></td>
             </tr>
         </table>
     </div>

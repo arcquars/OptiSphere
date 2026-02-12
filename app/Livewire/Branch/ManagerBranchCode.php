@@ -107,21 +107,26 @@ class ManagerBranchCode extends Component
     #[On('set-event-active')]
     public function setEventActive(){
         /**Obtener Evento activo si hay */
-        $serviceEvent = new AmyrEventsApiService($this->branch->amyrConnectionBranch->token);
-        $activeEvent = $serviceEvent->getEventActive($this->branch->amyrConnectionBranch->point_sale);
-        if ($activeEvent && in_array($activeEvent['evento_id'], [5,6,7])) {
-            $this->eventSiatDto = [
-                "sucursal_id" => $activeEvent['sucursal_id'],
-                "puntoventa_id" => $activeEvent['puntoventa_id'],
-                "evento_id" => $activeEvent['evento_id'],
-                "fecha_inicio" => $activeEvent['fecha_inicio'],
-                "fecha_fin" => $activeEvent['fecha_fin'],
-                "cafc" => $activeEvent['cafc'],
-                "cufd_evento" => $activeEvent['cufd_evento']
-            ];
+        if($this->branch->is_facturable){
+            $serviceEvent = new AmyrEventsApiService($this->branch->amyrConnectionBranch->token);
+            $activeEvent = $serviceEvent->getEventActive($this->branch->amyrConnectionBranch->point_sale);
+            if ($activeEvent && in_array($activeEvent['evento_id'], [5,6,7])) {
+                $this->eventSiatDto = [
+                    "sucursal_id" => $activeEvent['sucursal_id'],
+                    "puntoventa_id" => $activeEvent['puntoventa_id'],
+                    "evento_id" => $activeEvent['evento_id'],
+                    "fecha_inicio" => $activeEvent['fecha_inicio'],
+                    "fecha_fin" => $activeEvent['fecha_fin'],
+                    "cafc" => $activeEvent['cafc'],
+                    "cufd_evento" => $activeEvent['cufd_evento']
+                ];
+            } else {
+                $this->eventSiatDto = null;
+            }    
         } else {
             $this->eventSiatDto = null;
         }
+        
     }
 
     public function render()

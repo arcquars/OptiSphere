@@ -57,14 +57,14 @@ class CreditService
                 'qrid' => $sale->qrid,
                 'cash_box_closing_id' => $cashBc?->id,
                 'amount' => $amount,
-                'residue' => $sale->total_amount - ($sale->paid_amount + $amount),
+                'residue' => $sale->final_total - ($sale->paid_amount + $amount),
                 'payment_method' => $paymentMethod,
                 'notes' => $notes,
             ]);
 
             // b) Actualizar la venta (Sale)
             $newPaidAmount = $sale->paid_amount + $amount;
-            $newDueAmount = $sale->total_amount - $newPaidAmount;
+            $newDueAmount = $sale->final_total - $newPaidAmount;
 
             $updateData = [
                 'paid_amount' => $newPaidAmount,
@@ -107,7 +107,7 @@ class CreditService
 
             // 2. Revertir los montos en la venta
             $newPaidAmount = $sale->paid_amount - $amount;
-            $newDueAmount = $sale->total_amount - $newPaidAmount;
+            $newDueAmount = $sale->final_total - $newPaidAmount;
 
             $updateData = [
                 'paid_amount' => $newPaidAmount,

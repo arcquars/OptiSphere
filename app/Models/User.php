@@ -98,7 +98,8 @@ class User extends Authenticatable implements FilamentUser
             return true;
         } else if($this->hasRole('branch-coordinator') && $panel->getId() === 'branch-coordinator' && $this->is_active) {
             // return $this->hasVerifiedEmail();
-            return true;
+            // return true;
+            return $this->hasRole('branch-coordinator');
         }
 
 //        if ($panel->getId() === 'admin') {

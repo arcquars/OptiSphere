@@ -24,8 +24,12 @@
 				"devsense.intelli-php-vscode",
 				"devsense.phptools-vscode",
 				"devsense.profiler-php-vscode",
+				"bmewburn.vscode-intelephense-client",
 				"neilbrayfield.php-docblocker",
-				"bradlc.vscode-tailwindcss"
+				"bradlc.vscode-tailwindcss",
+				"humao.rest-client",
+				"onecentlin.laravel-blade",
+				"laravel.vscode-laravel"
 			]
 		}
 	},

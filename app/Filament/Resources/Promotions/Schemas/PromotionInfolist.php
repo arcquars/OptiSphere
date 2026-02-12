@@ -12,19 +12,20 @@ class PromotionInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('name'),
+                TextEntry::make('name')
+                    ->label('Nombre'),
+                TextEntry::make('discount_percentage')
+                    ->label('Descuento %')
+                    ->numeric(),
                 TextEntry::make('start_date')
+                    ->label('Fecha inicio')
                     ->dateTime(),
                 TextEntry::make('end_date')
+                    ->label('Fecha Fin')
                     ->dateTime(),
-                TextEntry::make('discount_percentage')
-                    ->numeric(),
                 IconEntry::make('is_active')
-                    ->boolean(),
-                TextEntry::make('created_at')
-                    ->dateTime(),
-                TextEntry::make('updated_at')
-                    ->dateTime(),
+                    ->label('Activo')
+                    ->boolean()
             ]);
     }
 }

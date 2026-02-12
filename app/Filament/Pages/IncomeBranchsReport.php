@@ -40,11 +40,11 @@ class IncomeBranchsReport extends Page implements HasTable
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $title = 'Reporte de Ingresos por sucursal';
+    protected static ?string $title = 'Reporte de Ingresos - Cajas';
 
     public static function getNavigationLabel(): string
     {
-        return __('Reporte de Ingresos');
+        return __('Reporte de Ingresos Cajas');
     }
 
     public function table(Table $table): Table

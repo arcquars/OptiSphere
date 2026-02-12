@@ -23,10 +23,14 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->firstOrFail();
         
         // Creamos el token usando Sanctum
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken(
+            'auth_token',
+            ['*'], 
+            now()->addMinutes(10)
+            );
 
         return response()->json([
-            'access_token' => $token,
+            'access_token' => $token->plainTextToken,
             'token_type' => 'Bearer',
         ]);
     }
