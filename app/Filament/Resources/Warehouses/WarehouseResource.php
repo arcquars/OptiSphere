@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Warehouses;
 
+use App\Filament\Resources\Warehouses\Pages\HistoryMovement;
+use App\Filament\Resources\Warehouses\Pages\HistoryShow;
 use App\Filament\Resources\Warehouses\Pages\InventoryWarehouse;
 use App\Filament\Resources\Warehouses\Pages\ManageWarehouses;
 use App\Filament\Resources\Warehouses\Pages\ViewWarehouse;
@@ -97,7 +99,9 @@ class WarehouseResource extends Resource
         return [
             'index' => ManageWarehouses::route('/'),
             'matrix' => ViewWarehouse::route('/{warehouse_id}/matrix'),
-            'inventory' => InventoryWarehouse::route('/{warehouse_id}/inventory')
+            'inventory' => InventoryWarehouse::route('/{warehouse_id}/inventory'),
+            'history' => HistoryMovement::route('/{wharehouse_id}/{type}/{code}/history'),
+            'history.show' => HistoryShow::route('/{history_id}/{type}/history/show'),
         ];
     }
 }

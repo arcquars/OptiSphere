@@ -101,7 +101,7 @@
                     let h = Math.abs(this.startY - this.currentY)
                     return `display: block; left:${x}px; top:${y}px; width:${w}px; height:${h}px;`
                 },
-                uploadText(id, text) {
+                uploadText(id, text, description) {
                     return this.cells[id]? this.cells[id] : text;
                 },
                 clearCells(){
@@ -200,12 +200,12 @@
     <h4>
         <b>Codigo base:</b> {{ $baseCode }} 
         | @if($type) <span class="text-primary">POSITIVO</span> @else <span class="text-red-500">NEGATIVO</span> @endif
-        | <button class="btn btn-xs btn-primary">
+        | <a href="{{ route('filament.admin.resources.warehouses.history', ['wharehouse_id' => $warehouseId, 'type' => $type? '1': '0', 'code' => $baseCode]) }}" class="btn btn-xs btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="size-[1.2em]">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
             </svg>
         Historial    
-        </button>
+        </a>
     </h4>
 
     @switch($action)
@@ -359,11 +359,18 @@
                             @if($j == 21 && $i == 21) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
                                 "
                         >
+                            @if(strcmp($action, "precios") !== 0)
+                            <div
+                                x-text="uploadText({{ $opticalProperty['id'] }}, '{{ $opticalProperty['amount'] }}', '{{ $opticalProperty['description'] }}')"
+                            >
+                            </div>
+                            @else
                             <div class="tooltip" data-tip="{{ $opticalProperty['description'] }}">
                                 <div class="badge badge-neutral">
                                     <i class="fa-solid fa-dollar-sign"></i>
                                 </div>
                             </div>
+                            @endif
                         </td>
                     @endforeach
                 </tr>

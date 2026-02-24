@@ -186,6 +186,7 @@ class ManageBranch extends Component implements HasSchemas
                 'warehouse_id' => $warehouseId,
                 'branch_id' => $this->branchId,
                 'user_id' => Auth::id(),
+                'base_code' => $this->baseCode,
                 'refund_date' => Carbon::now()
             ]);
 

@@ -16,6 +16,7 @@ class WarehouseRefund extends Model
         'warehouse_id',
         'branch_id',
         'user_id',
+        'base_code',
         'refund_date'
     ];
 }

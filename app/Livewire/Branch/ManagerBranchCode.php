@@ -131,8 +131,8 @@ class ManagerBranchCode extends Component
 
     public function render()
     {
-        $query = Product::where("is_active", true)->where('name', 'like', '%'.$this->searchTerm.'%');
-        $queryService = Service::where("is_active", true)->where('name', 'like', '%'.$this->searchTerm.'%');
+        $query = Product::where("is_active", true)->where('name', 'like', $this->searchTerm.'%');
+        $queryService = Service::where("is_active", true)->where('name', 'like', $this->searchTerm.'%');
 
         if(!empty($this->selectedCategory)){
             $query->whereHas('categories', function ($q) {
@@ -146,8 +146,8 @@ class ManagerBranchCode extends Component
                 $q->where('id', $this->selectedCategory);
             });
         }
-        $products1 = $query->orderBy('name')->simplePaginate(5);
-        $services1 = $queryService->orderBy('name')->simplePaginate(5);
+        $products1 = $query->orderBy('name')->simplePaginate(3);
+        $services1 = $queryService->orderBy('name')->simplePaginate(3);
 
         $services = Service::where("is_active", true)->orderBy('name')->get();
 
@@ -725,7 +725,7 @@ class ManagerBranchCode extends Component
         // 3. Prepara los datos (típicamente desde una solicitud o base de datos)
         $invoiceDataArray = [
             'customerId' => $this->customer->amyr_customer_id,
-            'customer' => $this->customer->name,
+            'customer' => $this->customer->razon_social,
             'nitRucNif' => $this->customer->nit,
             'subTotal' => $this->subtotal,
             'totalTax' => number_format($this->total * 0.13, 2),
@@ -842,9 +842,9 @@ class ManagerBranchCode extends Component
                 'code' => "",
                 'storeId' => $this->branch->id,
                 'firstname' => "",
-                'lastname' => $this->customer->name,
+                'lastname' => $this->customer->razon_social,
                 'identityDocument' => $this->customer->document_type,
-                'company' => $this->customer->name,
+                'company' => $this->customer->razon_social,
                 'phone' => $this->customer->phone,
                 'email' => $this->customer->email,
                 'address1' => $this->customer->address,
@@ -865,7 +865,7 @@ class ManagerBranchCode extends Component
                 "first_name" => $response['first_name'],
                 'last_name' => $this->customer->name,
                 'identity_document' => $this->customer->document_type,
-                'company' => $this->customer->name,
+                'company' => $this->customer->razon_social,
                 'company_address' => $this->customer->address,
                 "date_of_birth" => $response['date_of_birth'],
                 "gender" => $response['gender'],
@@ -922,7 +922,7 @@ class ManagerBranchCode extends Component
             $dataExtra = [
                 'cajero' => Auth::user()->name ?? 'Sistema',
                 'sucursal' => $this->branch->name,
-                'cliente' => $this->customer->name ?? 'SN'
+                'cliente' => $this->customer->razon_social ?? 'SN'
             ];
 
             // Llamada al servicio
@@ -1043,11 +1043,9 @@ class ManagerBranchCode extends Component
 
         if($this->isSaleCredit){
             $saldoTemp = number_format($this->customer->credit_limit - ($this->customer->saldo_credito + ($this->total - $this->partial_payment)), 2);
-            Log::info("www ppp1:: " . $this->customer->credit_limit . " || " . $this->customer->saldo_credito . " || " . $this->total . " || " . $this->partial_payment);
-            Log::info("www ppp2:: " . $saldoTemp);
 
             if($saldoTemp < 0){
-                $this->message_error = 'El Cliente ' . $this->customer->name . " Sobre pasa su CREDITO :: " . $saldoTemp;
+                $this->message_error = 'El Cliente ' . $this->customer->razon_social . " Sobre pasa su CREDITO :: " . $saldoTemp;
                 return;
             }
             

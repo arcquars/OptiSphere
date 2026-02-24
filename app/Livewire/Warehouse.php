@@ -179,6 +179,7 @@ class Warehouse extends Component implements HasSchemas
             $warehouseIncome = WarehouseIncome::create([
                 'warehouse_id' => $this->warehouseId,
                 'user_id' => Auth::id(),
+                'base_code' => $this->baseCode,
                 'income_date' => Carbon::now()
             ]);
 
@@ -222,6 +223,7 @@ class Warehouse extends Component implements HasSchemas
                 'warehouse_id' => $this->warehouseId,
                 'branch_id' => $branchId,
                 'user_id' => Auth::id(),
+                'base_code' => $this->baseCode,
                 'delivery_date' => Carbon::now()
             ]);
 

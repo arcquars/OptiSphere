@@ -21,13 +21,13 @@ class BanecoNotificationController extends Controller
     public function notify(Request $request)
     {
         // 1. Log inicial para depuración (crítico en integraciones bancarias)
-        Log::info('Baneco QR Notification Received:', $request->all());
+        Log::info('Baneco QR Notification Received Request all:', $request->all());
 
         try {
             // 2. Validar la estructura básica
             // Generalmente el banco envía el objeto dentro de "Payment" o "object"
-            $data = $request->input('Payment') ?? $request->input('object') ?? $request->all();
-
+            $data = $request->input('payment') ?? $request->input('object') ?? $request->all();
+            Log::info('Baneco QR Notification Received Request Payment:', $request->input('payment'));
             if (empty($data)) {
                 return response()->json([
                     'responseCode' => 1,

@@ -3,6 +3,7 @@
 /public/build
 /public/hot
 /public/storage
+/public/js/*
 /storage/*.key
 /storage/pail
 /storage/logs/*
@@ -30,3 +31,4 @@ composer.lock
 /public/*
 /filament/*
 package-lock.json
+siat-user.http

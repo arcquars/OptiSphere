@@ -41,11 +41,11 @@
             @forelse($searchResults as $result)
                 <li>
                     <a
-                        @click.prevent="changeUploadCustomerCart({{ $result->id }}, '{{ $result->name }}', '{{ $result->document_type_show }}')"
+                        @click.prevent="changeUploadCustomerCart({{ $result->id }}, '{{ $result->razon_social }}', '{{ $result->document_type_show }}')"
                     >
                         <div class="flex items-center gap-3">
                             <div>
-                                <div class="font-bold">{{ $result->name }} <small>({{ $result->document_type_show }})</small></div>
+                                <div class="font-bold">{{ $result->razon_social }} <small>({{ $result->document_type_show }})</small></div>
                             </div>
                         </div>
                     </a>

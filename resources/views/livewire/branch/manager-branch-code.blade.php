@@ -1,11 +1,16 @@
-<div>
-    <div class="grid w-full grid-cols-1 lg:grid-cols-3 gap-4">
+<div
+    x-data='{
+        showSearch: false
+    }'
+>
+    <div class="grid w-full grid-cols-1 gap-1">
         <!-- Columna Izquierda: Productos y Servicios -->
         <div class="lg:col-span-1 flex flex-col gap-1">
             <!-- Header de Búsqueda y Filtros -->
-            <div class="bg-base-100 p-1 rounded-box shadow-sm join w-full flex">
-                <div class="w-3/4">
-                    <label class="input join-item flex items-center gap-2 w-full focus-within:outline-none">
+            <div class="bg-amber-600 p-1 rounded-box shadow-sm border border-base-200 join w-full flex items-stretch">
+                <!-- Sección de Búsqueda (60%) -->
+                <div class="flex-[3] join-item border-r border-base-200 bg-neutral-50">
+                    <label class="input flex items-center gap-2 w-full h-full border-none focus-within:outline-none bg-transparent">
                         <i class="fa-solid fa-magnifying-glass opacity-70"></i>
                         <input
                             wire:model.live.debounce.800ms="searchTerm"
@@ -13,24 +18,41 @@
                             type="text"
                             placeholder="Buscar producto o escanear código..."
                             autofocus
-                            class="grow focus:outline-none"
+                            class="grow focus:outline-none "
                         />
                     </label>
                 </div>
-                <select
-                    wire:model.live.debounce.300ms="selectedCategory" 
-                    class="select select-bordered join-item w-1/4 focus:outline-none"
-                >
-                    <option value="">Categorías</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                    @endforeach
-                </select>
+
+                <!-- Sección Checkbox (Ajustada al Join) -->
+                <div class="flex-none join-item border-r border-base-200 flex items-center px-4">
+                    <label class="cursor-pointer flex items-center gap-2">
+                        <input 
+                            type="checkbox" 
+                            checked="checked" 
+                            x-model="showSearch"
+                            class="checkbox checkbox-primary checkbox-sm" 
+                        />
+                        <span class="label-text text-xs hidden md:inline">Ver</span>
+                    </label>
+                </div>
+
+                <!-- Sección Categorías (Resto del espacio) -->
+                <div class="flex-[1] join-item bg-neutral-50">
+                    <select
+                        wire:model.live.debounce.300ms="selectedCategory" 
+                        class="select select-ghost w-full h-full focus:outline-none border-none"
+                    >
+                        <option value="">Categorías</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
 
             <!-- Pestañas y Contenedor de Grids -->
-            <div class="flex-grow flex flex-col">
+            <div x-show="showSearch" class="flex-grow flex flex-col">
                 <div role="tablist" class="tabs tabs-lifted">
                     <a role="tab" class="tab @if($activeTab === 'products') tab-active @endif" wire:click="changeTab('products')">
                         <i class="fa-solid fa-box-archive mr-2"></i>
@@ -120,12 +142,12 @@
         {{-- Se eliminó h-full para que la altura se ajuste al contenido --}}
         <div class="lg:col-span-2 flex flex-col bg-base-100 rounded-box shadow-lg p-4 gap-4">
             <!-- Sección Cliente -->
-            <livewire:customer.search-customer />
-            <livewire:customer.create-customer />
+            <livewire:customer.search-customer :branchId="$branch->id" />
+            <livewire:customer.create-customer :branchId="$branch->id" />
 
             <form wire:submit.prevent="">
                 <h1 class="text-xl font-semibold  {{ $customer? "text-indigo-700" : "text-red-700" }}">
-                    {{ $customer? $customer->name . "(" . $customer->document_type_show . ")" : "Sin Cliente seleccionado" }}
+                    {{ $customer? $customer->razon_social . "(" . $customer->document_type_show . ")" : "Sin Cliente seleccionado" }}
                 </h1>
                 @if($this->eventSiatDto != null)
                 <div class="grid grid-cols-2 gap-2">

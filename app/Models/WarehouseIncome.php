@@ -15,6 +15,7 @@ class WarehouseIncome extends Model
     protected $fillable = [
         'warehouse_id',
         'user_id',
+        'base_code',
         'income_date'
     ];
 }

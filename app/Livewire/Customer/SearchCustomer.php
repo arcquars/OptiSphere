@@ -8,6 +8,7 @@ use Livewire\Component;
 
 class SearchCustomer extends Component
 {
+    public $branchId;
     // Estado para la gestión de clientes
     public $customerSearch = '';
     public $searchResults = [];
@@ -18,6 +19,9 @@ class SearchCustomer extends Component
     public $newCustomerNit = '';
     public $newCustomerEmail = '';
 
+    public function mount($branchId){
+        $this->branchId = $branchId;
+    }
 
     public function updatedCustomerSearch($value)
     {
@@ -28,7 +32,9 @@ class SearchCustomer extends Component
 
         $this->searchResults = Customer::where(function ($query) use ($value) {
             // Todas las condiciones dentro de esta función se agruparán entre paréntesis en el SQL final
-            $query->where('name', 'like', '%' . $value . '%')
+            $query->where('branch_id', '=', $this->branchId)
+                ->where('name', 'like', '%' . $value . '%')
+                ->orWhere('razon_social', 'like', '%' . $value . '%')
                 ->orWhere('nit', 'like', '%' . $value . '%');
         })
             ->take(5)

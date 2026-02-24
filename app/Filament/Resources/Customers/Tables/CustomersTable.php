@@ -9,6 +9,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use Filament\Tables\Filters\SelectFilter;
 
 class CustomersTable
 {
@@ -36,22 +37,20 @@ class CustomersTable
                 TextColumn::make('contact_info')
                     ->label('Información de contacto')
                     ->searchable(),
+                TextColumn::make('branch.name')
+                    ->label('Sucursal')
+                    ->searchable(),
                 IconColumn::make('can_buy_on_credit')
                     ->label('Crédito')
                     ->boolean(),
                 TextColumn::make('type')->label('Tipo'),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                
             ])
             ->filters([
-                //
-            ])
+                SelectFilter::make('branch_id')
+                ->label('Sucursal')
+                ->relationship('branch', 'name')
+                        ])
             ->recordActions([
                 EditAction::make()
                     ->label('')

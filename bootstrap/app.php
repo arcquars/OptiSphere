@@ -12,7 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->validateCsrfTokens(except: [
+        $middleware->alias([
+        'block.api.users' => Middleware::class,
+    ])->validateCsrfTokens(except: [
             'api/v1/baneco/notify-payment'
         ]);
     })
