@@ -20,4 +20,8 @@ class WarehouseStockHistory extends Model
         'movement_type',
         'type_id'
     ];
+
+    public function warehouseStock(){
+        return $this->belongsTo(WarehouseStock::class);
+    }
 }

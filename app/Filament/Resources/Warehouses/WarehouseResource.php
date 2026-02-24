@@ -101,7 +101,7 @@ class WarehouseResource extends Resource
             'matrix' => ViewWarehouse::route('/{warehouse_id}/matrix'),
             'inventory' => InventoryWarehouse::route('/{warehouse_id}/inventory'),
             'history' => HistoryMovement::route('/{wharehouse_id}/{type}/{code}/history'),
-            'history.show' => HistoryShow::route('/{history_id}/{type}/history/show'),
+            'history.show' => HistoryShow::route('/{history_id}/{action}/{type}/history/show'),
         ];
     }
 }

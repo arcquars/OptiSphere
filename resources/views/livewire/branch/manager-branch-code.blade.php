@@ -7,7 +7,7 @@
         <!-- Columna Izquierda: Productos y Servicios -->
         <div class="lg:col-span-1 flex flex-col gap-1">
             <!-- Header de Búsqueda y Filtros -->
-            <div class="bg-amber-600 p-1 rounded-box shadow-sm border border-base-200 join w-full flex items-stretch">
+            <div class="bg-amber-600 p-1 rounded-box shadow-sm border border-base-200 join w-full flex items-stretch h-12">
                 <!-- Sección de Búsqueda (60%) -->
                 <div class="flex-[3] join-item border-r border-base-200 bg-neutral-50">
                     <label class="input flex items-center gap-2 w-full h-full border-none focus-within:outline-none bg-transparent">

@@ -148,7 +148,7 @@ class HistoryMovement extends Page implements HasTable
                 ->url(fn (WarehouseIncome $record): 
                     string => route(
                         'filament.admin.resources.warehouses.history.show', 
-                        ["history_id" => $record->id, "type" => $record->movement_label])
+                        ["history_id" => $record->id, "action" => $record->movement_label, "type" => $this->type])
                     )
                 ->openUrlInNewTab()
             ])
