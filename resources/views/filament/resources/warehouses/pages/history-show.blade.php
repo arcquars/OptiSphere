@@ -1,4 +1,34 @@
 <x-filament-panels::page>
+    {{-- Cabecera con los parámetros actuales --}}
+    <div class="p-4 bg-white shadow rounded-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+        <h2 class="text-lg font-bold text-gray-400 uppercase tracking-wider">Detalles de la Consulta</h2>
+        <h4><b>Registrado por:</b> {{ $userM->name }}</h4>
+        <div class="flex flex-wrap gap-3 mt-3">
+            <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                <i class="fa-solid fa-warehouse"></i>
+                <span>Almacén: {{ $warehouse_name }}</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                <i class="fa-solid fa-tags"></i>
+                <span>Tipo: {{ $type }}</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
+                <i class="fa-solid fa-barcode"></i>
+                <span>Código: {{ $baseCode }}</span>
+            </div>
+            
+            <div class="flex items-center gap-2 px-3 py-1 {{ $bgAction }} rounded-full text-sm font-medium">
+                <i class="fa-regular fa-chess-pawn"></i>
+                <span>Acción : {{ $action }}</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1 bg-accent rounded-full text-sm font-medium">
+                <i class="fa-regular fa-clock"></i>
+                <span>Fecha : {{ $dateMovement }}</span>
+            </div>
+        </div>
+    </div>
+
+
     <div class="table-container border border-gray-200 rounded-lg relative select-none overflow-x-auto">
         <table id="t-matrix" x-ref="table" class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50 sticky-header">

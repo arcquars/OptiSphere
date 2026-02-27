@@ -6,11 +6,11 @@
             <div class="flex flex-wrap gap-3 mt-3">
                 <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                     <i class="fa-solid fa-warehouse"></i>
-                    <span>ID Almacén: {{ $wharehouse_id }}</span>
+                    <span>Almacén: {{ $wharehouse->name }}</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
                     <i class="fa-solid fa-tags"></i>
-                    <span>Tipo: {{ $type }}</span>
+                    <span>Tipo: {{ (strcmp($type, "1") == 0)? "+" : "-" }}</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
                     <i class="fa-solid fa-barcode"></i>

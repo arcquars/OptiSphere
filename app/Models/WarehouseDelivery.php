@@ -19,4 +19,8 @@ class WarehouseDelivery extends Model
         'base_code',
         'delivery_date'
     ];
+
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
+    }
 }

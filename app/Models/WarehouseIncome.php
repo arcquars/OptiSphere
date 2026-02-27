@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Livewire\Warehouse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -18,4 +19,8 @@ class WarehouseIncome extends Model
         'base_code',
         'income_date'
     ];
+
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
+    }
 }

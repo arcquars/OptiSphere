@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Warehouses\Pages;
 
 use App\Filament\Resources\Warehouses\WarehouseResource;
-use App\Models\InventoryMovement;
+use App\Models\Warehouse;
 use App\Models\WarehouseIncome;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -24,16 +24,15 @@ class HistoryMovement extends Page implements HasTable
     public string $view = 'filament.resources.warehouses.pages.history-movement';
 
     // Parámetros recibidos por la URL
+    public $wharehouse;
     public $wharehouse_id;
     public $type;
     public $code;
 
-    /**
-     * Captura los parámetros de la URL al inicializar la página.
-     */
     public function mount($wharehouse_id, $type, $code): void
     {
         $this->wharehouse_id = $wharehouse_id;
+        $this->wharehouse = Warehouse::find($wharehouse_id);
         $this->type = $type;
         $this->code = $code;
     }
@@ -62,7 +61,19 @@ class HistoryMovement extends Page implements HasTable
                 'user_id',
                 'base_code', 
                 'warehouse_id', 
-                DB::raw("NULL as branch_id")
+                DB::raw("NULL as branch_id"),
+                DB::raw("CASE 
+                    WHEN base_code IS NOT NULL THEN (
+                        SELECT op.type 
+                        FROM optical_properties op 
+                        INNER JOIN products p ON p.id = op.product_id
+                        INNER JOIN warehouse_stocks ws ON  ws.product_id = p.id 
+                        INNER JOIN warehouse_stock_histories wsh ON wsh.warehouse_stock_id = ws.id
+                        WHERE wsh.movement_type='INGRESO' AND wsh.type_id = warehouse_incomes.id 
+                        LIMIT 1
+                    ) 
+                    ELSE NULL 
+                END as op_type")
             )
             ->where('warehouse_id', $wh_id);
 
@@ -74,7 +85,19 @@ class HistoryMovement extends Page implements HasTable
                 'user_id', 
                 'base_code',
                 'warehouse_id', 
-                'branch_id'
+                'branch_id',
+                DB::raw("CASE 
+                    WHEN base_code IS NOT NULL THEN (
+                        SELECT op.type 
+                        FROM optical_properties op 
+                        INNER JOIN products p ON p.id = op.product_id
+                        INNER JOIN warehouse_stocks ws ON  ws.product_id = p.id 
+                        INNER JOIN warehouse_stock_histories wsh ON wsh.warehouse_stock_id = ws.id
+                        WHERE wsh.movement_type='ENTREGA_SUCURSAL' AND wsh.type_id = warehouse_deliveries.id 
+                        LIMIT 1
+                    ) 
+                    ELSE NULL 
+                END as op_type")
             )
             ->where('warehouse_id', $wh_id);
 
@@ -86,7 +109,19 @@ class HistoryMovement extends Page implements HasTable
                 'user_id', 
                 'base_code',
                 'warehouse_id', 
-                'branch_id'
+                'branch_id',
+                DB::raw("CASE 
+                    WHEN base_code IS NOT NULL THEN (
+                        SELECT op.type 
+                        FROM optical_properties op 
+                        INNER JOIN products p ON p.id = op.product_id
+                        INNER JOIN warehouse_stocks ws ON  ws.product_id = p.id 
+                        INNER JOIN warehouse_stock_histories wsh ON wsh.warehouse_stock_id = ws.id
+                        WHERE wsh.movement_type='DEVOLUCION' AND wsh.type_id = warehouse_refunds.id 
+                        LIMIT 1
+                    ) 
+                    ELSE NULL 
+                END as op_type")
             )
             ->where('warehouse_id', $wh_id);
 
@@ -126,6 +161,9 @@ class HistoryMovement extends Page implements HasTable
                     }),
                 Tables\Columns\TextColumn::make('base_code')
                     ->label('Codigo Base'),
+                Tables\Columns\TextColumn::make('op_type')
+                    ->label('Tipo')
+                    ->alignCenter(),
                 Tables\Columns\TextColumn::make('user_name')
                     ->label('Registrado por'),
                 Tables\Columns\TextColumn::make('branch_name')
@@ -145,10 +183,11 @@ class HistoryMovement extends Page implements HasTable
             ->recordActions([
                 Action::make('view')
                 ->label("Ver")
+                ->visible(fn ($record) => $record->op_type !== null)
                 ->url(fn (WarehouseIncome $record): 
                     string => route(
                         'filament.admin.resources.warehouses.history.show', 
-                        ["history_id" => $record->id, "action" => $record->movement_label, "type" => $this->type])
+                        ["history_id" => $record->id, "action" => $record->movement_label, "type" => $record->op_type])
                     )
                 ->openUrlInNewTab()
             ])

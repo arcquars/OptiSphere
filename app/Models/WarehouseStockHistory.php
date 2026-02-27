@@ -24,4 +24,16 @@ class WarehouseStockHistory extends Model
     public function warehouseStock(){
         return $this->belongsTo(WarehouseStock::class);
     }
+
+    public function warehouse_m(){
+        switch($this->movement_type){
+            case "INGRESO":
+                return $this->belongsTo(WarehouseIncome::class, 'type_id');
+            case "DEVOLUCION":
+                return $this->belongsTo(WarehouseRefund::class, 'type_id');
+            case "ENTREGA_SUCURSAL":
+                return $this->belongsTo(WarehouseDelivery::class, 'type_id');
+
+        }
+    }
 }

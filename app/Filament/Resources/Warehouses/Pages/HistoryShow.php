@@ -4,16 +4,24 @@ namespace App\Filament\Resources\Warehouses\Pages;
 
 use App\Filament\Resources\Warehouses\WarehouseResource;
 use App\Models\OpticalProperty;
+use App\Models\User;
+use App\Models\WarehouseDelivery;
 use App\Models\WarehouseIncome;
 use App\Models\WarehouseRefund;
 use App\Models\WarehouseStockHistory;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Log;
 
 class HistoryShow extends Page
 {
     public $baseCode;
+    public $userM;
     public $action = "";
     public $type;
+    public $warehouse_name;
+    public $dateMovement;
+
+    public $bgAction;
     public $matrix = [];
     public $uniqueSpheres = [];
     public $uniqueCylinders = [];
@@ -25,22 +33,31 @@ class HistoryShow extends Page
     public function mount($history_id, $action, $type): void
     {
         $warehouseM = null;
-        $this->warehouseStockHistories = WarehouseStockHistory::where('movement_type', $action)
+        $this->warehouseStockHistories = WarehouseStockHistory::where('movement_type', 'like', "%".$action."%")
                     ->where('type_id', $history_id)->get();
 
         switch($action){
             case "INGRESO":
                 $warehouseM = WarehouseIncome::find($history_id);
+                $this->bgAction = "bg-success";
+                break;
+            case "ENTREGA":
+                $warehouseM = WarehouseDelivery::find($history_id);
+                $this->bgAction = "bg-info";
                 break;
             default:
                 $warehouseM = WarehouseRefund::find($history_id);
+                $this->bgAction = "bg-warning";
                 break;
 
         }
 
+        $this->userM = User::find($warehouseM->user_id);
+        $this->warehouse_name = $warehouseM->warehouse->name;
+        $this->dateMovement = $warehouseM->created_at;
         $this->baseCode = $warehouseM->base_code;
         $this->action = $action;
-        $this->type = strcmp($type, "1") == 0? "+" : "-";
+        $this->type = $type;
         $this->loadCylinders();
     }
 
@@ -48,7 +65,7 @@ class HistoryShow extends Page
         if($this->baseCode){
             $this->matrix = [];
             $opticalProperties = OpticalProperty::where('base_code', $this->baseCode)
-                ->where('type', $this->type? "+" : "-")
+                ->where('type', $this->type)
                 ->whereHas('product', function ($query){
                     $query->where('is_active', true);
                 })
@@ -60,10 +77,9 @@ class HistoryShow extends Page
             foreach ($this->uniqueSpheres as $sphere){
                 $row = [];
                 foreach ($this->uniqueCylinders as $cylinder){
-                    $type = $this->type? '+' : '-';
                     /** @var OpticalProperty $op */
                     $op = OpticalProperty::where('base_code', $this->baseCode)
-                        ->where('type', $type)
+                        ->where('type', $this->type)
                         ->where('sphere', $sphere)
                         ->where('cylinder', $cylinder)
                         ->first();
@@ -71,8 +87,7 @@ class HistoryShow extends Page
                     $amount = null;
                     $description = "";
                     foreach($this->warehouseStockHistories as $whsh){
-                        if($whsh->warehouseStock->product->id == $op->product_id){
-                            
+                        if($whsh->warehouseStock->product->id == $op->product_id){                            
                             $amount = $whsh->warehouseStock->quantity;
                         }
                     }

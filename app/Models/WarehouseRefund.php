@@ -19,4 +19,8 @@ class WarehouseRefund extends Model
         'base_code',
         'refund_date'
     ];
+
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
+    }
 }
