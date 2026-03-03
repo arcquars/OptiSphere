@@ -52,10 +52,13 @@
                             }
 
                         } else {
+                            console.log("ELSE 0: accion: " + action + " | " + this.cells[id] + " | " + this.amount);
                             this.cells[id] = this.amount
                             if (this.markedAmountCells.some(item => item.id === id)) {
+                                console.log("ELSE 1");
                                 this.markedAmountCells = this.markedAmountCells.filter(item => item.id !== id)
                             }
+                            console.log("ELSE 2");
                             this.markedAmountCells.push({id, amount: this.amount, state: "success"});
                         }
                     })
@@ -365,11 +368,26 @@
                             >
                             </div>
                             @else
-                            <div class="tooltip" data-tip="{{ $opticalProperty['description'] }}">
-                                <div class="badge badge-neutral">
-                                    <i class="fa-solid fa-dollar-sign"></i>
-                                </div>
-                            </div>
+                                <template x-if="uploadText({{ $opticalProperty['id'] }}, '{{ $opticalProperty['amount'] }}', '{{ $opticalProperty['description'] }}') === ''">
+                                    {{-- <div class="tooltip" data-tip="{{ $opticalProperty['description'] }}">
+                                        <div class="badge badge-neutral">
+                                            <i class="fa-solid fa-dollar-sign"></i>
+                                        </div>
+                                    </div> --}}
+                                    <button 
+                                        {{-- x-on:click="alert('xxxx')"  --}}
+                                        @click="$dispatch('open-product-prices-modal', { productId: {{ $opticalProperty['id'] }} })"
+                                        class="btn btn-outline btn-accent btn-sm btn-circle">
+                                      <i class="fa-solid fa-dollar-sign"></i>
+                                    </button>
+                                    
+                                </template>
+                                <template x-if="uploadText({{ $opticalProperty['id'] }}, '{{ $opticalProperty['amount'] }}', '{{ $opticalProperty['description'] }}') !== ''">
+                                    <div
+                                        x-text="uploadText({{ $opticalProperty['id'] }}, '{{ $opticalProperty['amount'] }}', '{{ $opticalProperty['description'] }}')"
+                                    >
+                                    </div>
+                                </template>
                             @endif
                         </td>
                     @endforeach

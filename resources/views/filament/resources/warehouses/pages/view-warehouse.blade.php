@@ -10,5 +10,6 @@
 
     <livewire:warehouse :warehouse-id="$warehouse->id" />
 
+    @livewire('warehouse.product-prices-modal')
 </x-filament-panels::page>
 

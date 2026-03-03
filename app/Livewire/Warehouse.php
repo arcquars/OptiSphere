@@ -80,8 +80,9 @@ class Warehouse extends Component implements HasSchemas
                     $description = "";
                     if(strcmp($this->action, "precios") == 0){
                         $textPrices = $op->product->textPrices();
-                        $description =implode(",", $textPrices);
-                        $amount = (count($textPrices) > 0)? count($textPrices) : null;
+                        $description = "Precios almacen: " . implode(",", $textPrices);
+                        // $amount = (count($textPrices) > 0)? count($textPrices) : null;
+                        $amount = null;
                     } else if(strcmp($this->action, "saldo") == 0 || strcmp($this->action, "entregas") == 0) {
                         $amount = $op->product->stockByWarehouse($this->warehouseId);
                         $description = $amount;

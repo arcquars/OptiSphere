@@ -88,7 +88,8 @@ class HistoryShow extends Page
                     $description = "";
                     foreach($this->warehouseStockHistories as $whsh){
                         if($whsh->warehouseStock->product->id == $op->product_id){                            
-                            $amount = $whsh->warehouseStock->quantity;
+                            //$amount = $whsh->warehouseStock->quantity . "xx";
+                            $amount = $whsh->difference;
                         }
                     }
                     
