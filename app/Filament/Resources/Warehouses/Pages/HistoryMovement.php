@@ -75,7 +75,8 @@ class HistoryMovement extends Page implements HasTable
                     ELSE NULL 
                 END as op_type")
             )
-            ->where('warehouse_id', $wh_id);
+            ->where('warehouse_id', $wh_id)
+            ->where('base_code', 'like', $this->code);
 
         $deliveries = DB::table('warehouse_deliveries')
             ->select(
@@ -99,7 +100,8 @@ class HistoryMovement extends Page implements HasTable
                     ELSE NULL 
                 END as op_type")
             )
-            ->where('warehouse_id', $wh_id);
+            ->where('warehouse_id', $wh_id)
+            ->where('base_code', 'like', $this->code);
 
         $refunds = DB::table('warehouse_refunds')
             ->select(
@@ -123,7 +125,8 @@ class HistoryMovement extends Page implements HasTable
                     ELSE NULL 
                 END as op_type")
             )
-            ->where('warehouse_id', $wh_id);
+            ->where('warehouse_id', $wh_id)
+            ->where('base_code', 'like', $this->code);
 
         // 2. Unimos las consultas mediante UNION ALL
         $unionQuery = $incomes->unionAll($deliveries)->unionAll($refunds);
