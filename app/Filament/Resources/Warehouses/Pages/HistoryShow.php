@@ -3,13 +3,21 @@
 namespace App\Filament\Resources\Warehouses\Pages;
 
 use App\Filament\Resources\Warehouses\WarehouseResource;
+use App\Http\Requests\SendProductsRequest;
+use App\Models\InventoryMovement;
 use App\Models\OpticalProperty;
+use App\Models\ProductStock;
 use App\Models\User;
 use App\Models\WarehouseDelivery;
 use App\Models\WarehouseIncome;
 use App\Models\WarehouseRefund;
+use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
+use App\Rules\CheckSendProducts;
+use Carbon\Carbon;
 use Filament\Resources\Pages\Page;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class HistoryShow extends Page
@@ -19,6 +27,9 @@ class HistoryShow extends Page
     public $action = "";
     public $type;
     public $warehouse_name;
+    public $warehouse_m_id;
+    public $warehouse_id;
+
     public $dateMovement;
 
     public $bgAction;
@@ -26,9 +37,20 @@ class HistoryShow extends Page
     public $uniqueSpheres = [];
     public $uniqueCylinders = [];
 
+    // Propiedades para el modal
+    public $selectedBranchId;
+
+
     public $warehouseStockHistories;
     protected static ?string $title = 'Ver Historial de Movimiento';
     protected static string $resource = WarehouseResource::class;
+
+    protected function rules()
+    {
+        return [
+            'selectedBranchId' => ['required', 'exists:branches,id', new CheckSendProducts($this->warehouse_m_id, $this->action)],
+        ];
+    }
 
     public function mount($history_id, $action, $type): void
     {
@@ -39,21 +61,23 @@ class HistoryShow extends Page
         switch($action){
             case "INGRESO":
                 $warehouseM = WarehouseIncome::find($history_id);
-                $this->bgAction = "bg-success";
+                $this->bgAction = "success";
                 break;
             case "ENTREGA":
                 $warehouseM = WarehouseDelivery::find($history_id);
-                $this->bgAction = "bg-info";
+                $this->bgAction = "info";
                 break;
             default:
                 $warehouseM = WarehouseRefund::find($history_id);
-                $this->bgAction = "bg-warning";
+                $this->bgAction = "warning";
                 break;
 
         }
 
         $this->userM = User::find($warehouseM->user_id);
         $this->warehouse_name = $warehouseM->warehouse->name;
+        $this->warehouse_m_id = $warehouseM->id;
+        $this->warehouse_id = $warehouseM->warehouse_id;
         $this->dateMovement = $warehouseM->created_at;
         $this->baseCode = $warehouseM->base_code;
         $this->action = $action;
@@ -105,6 +129,102 @@ class HistoryShow extends Page
                 $this->matrix[] = $row;
             }
         }
+    }
+
+    public function sendToBranch()
+    {
+        $this->validate();
+
+        $branchId = $this->selectedBranchId;
+        $warehouseStockHistories = WarehouseStockHistory::where('movement_type', $this->action)
+            ->where('type_id', $this->warehouse_m_id)->get();
+        $warehouseMid = $this->warehouse_id;
+
+        DB::transaction(function () use ($warehouseStockHistories, $branchId, $warehouseMid) {
+            $warehouseDelivery = WarehouseDelivery::create([
+                'warehouse_id' => $warehouseMid,
+                'branch_id' => $branchId,
+                'user_id' => Auth::id(),
+                'base_code' => $this->baseCode,
+                'delivery_date' => Carbon::now()
+            ]);
+
+            foreach ($warehouseStockHistories as $data) {
+                // 'id' es el ID de la tabla 'product_stocks'.
+                $stockId = $data->warehouseStock->product_id;
+                // 'amount' es la nueva cantidad que viene del input.
+                $amount = (int) $data->difference;
+
+                Log::info("xxxx:: ", [
+                    "warehouse_stock_id" => $data->warehouse_stock_id,
+                    "amount" => $amount
+                ]);
+
+                $attributes = [
+                    'product_id' => $stockId,
+                    'warehouse_id' => $warehouseMid, // Ejemplo: asume que es el almacén 1
+                ];
+                // Buscar el registro de stock por su ID.
+                $warehouseStock = WarehouseStock::firstOrCreate($attributes, [
+                    'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
+                ]);;
+
+                $oldQuantity = $warehouseStock->quantity;
+                $newQuantity = $oldQuantity - $amount;
+
+                $warehouseStock->increment('quantity', ($amount*(-1)));
+
+                if ($amount != 0) {
+                    WarehouseStockHistory::create([
+                        'warehouse_stock_id' => $warehouseStock->id,
+                        'old_quantity' => $oldQuantity,
+                        'new_quantity' => $newQuantity,
+                        'difference' => $amount,
+                        'movement_type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        'type_id' => $warehouseDelivery->id
+                    ]);
+                }
+
+                // Buscar registro de stock en sucursal
+                $attrProd = [
+                    'product_id' => $stockId,
+                    'branch_id' => $branchId, // Ejemplo: asume que es el almacén 1
+                ];
+                $productStock = ProductStock::firstOrCreate($attrProd, [
+                    'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
+                ]);;
+
+                $oldQuantity = $productStock->quantity;
+                $newQuantity = $oldQuantity + $amount;
+
+                $productStock->increment('quantity', $amount);
+
+                if ($amount != 0) {
+                    InventoryMovement::create([
+                        'product_id' => $stockId,
+                        'from_location_type' => InventoryMovement::LOCATION_TYPE_warehouse,
+                        'from_location_id' => $warehouseMid,
+                        'to_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
+                        'to_location_id' => $branchId,
+                        'old_quantity' => $oldQuantity,
+                        'new_quantity' => $newQuantity,
+                        'difference' => $amount,
+                        'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        'user_id' => Auth::id(),
+                    ]);
+                }
+            }
+        });
+        // Aquí iría tu lógica de negocio para registrar el envío
+        // p.ej. WarehouseDelivery::create([...]);
+
+        $this->selectedBranchId = null;
+        $this->dispatch('close-modal', id: 'send-to-branch-modal');
+        
+        \Filament\Notifications\Notification::make()
+            ->title('Envío registrado con éxito')
+            ->success()
+            ->send();
     }
 
     protected string $view = 'filament.resources.warehouses.pages.history-show';

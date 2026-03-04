@@ -428,7 +428,7 @@
                     </form>
                     <button 
                         class="btn btn-sm btn-primary" 
-                        @click="$wire.call('save', markedAmountCells, branchId); modal_confirm_income.close()"
+                        @click="$wire.call('save', markedAmountCells, branchId, null, sendBranch); modal_confirm_income.close()"
                         wire:loading.attr="disabled"
                     >
                     Confirmar

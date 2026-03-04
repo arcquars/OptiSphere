@@ -151,11 +151,11 @@ class Warehouse extends Component implements HasSchemas
         $this->dispatch('clear-markedcells');
     }
 
-    public function save($celdas, $branchId = null, $priceType= null){
+    public function save($celdas, $branchId = null, $priceType= null, $sendBranch=null){
         switch ($this->action){
             case "ingreso":
                 $this->saveIncome($celdas);
-                if($branchId != null)
+                if($sendBranch && $branchId != null)
                     $this->saveDelivery($celdas, $branchId);    
                 break;
             case "entregas":
@@ -229,7 +229,7 @@ class Warehouse extends Component implements HasSchemas
             ]);
 
             foreach ($celdas as $data) {
-                // 'id' es el ID de la tabla 'product_stocks'.
+                // 'id' es el ID de la tabla 'product_stocks' OJO estel product_id.
                 $stockId = $data['id'];
                 // 'amount' es la nueva cantidad que viene del input.
                 $amount = (int) $data['amount'];

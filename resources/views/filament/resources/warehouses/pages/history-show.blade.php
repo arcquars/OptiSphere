@@ -1,29 +1,46 @@
 <x-filament-panels::page>
     {{-- Cabecera con los parámetros actuales --}}
     <div class="p-4 bg-white shadow rounded-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-        <h2 class="text-lg font-bold text-gray-400 uppercase tracking-wider">Detalles de la Consulta</h2>
+        <div class="flex justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-gray-400 uppercase tracking-wider">Detalles de la Consulta</h2>
+            </div>
+            <div>
+                @if(strcmp($action, "INGRESO") == 0)
+                    <x-filament::button 
+                        color="primary" 
+                        size="xs"
+                        icon="heroicon-m-paper-airplane"
+                        tag="button"
+                        x-on:click="$dispatch('open-modal', { id: 'send-to-branch-modal' })"
+                    >
+                        Enviar a Sucursal
+                    </x-filament::button>
+                @endif
+            </div>
+        </div>
+        
         <h4><b>Registrado por:</b> {{ $userM->name }}</h4>
         <div class="flex flex-wrap gap-3 mt-3">
-            <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+            <div class="flex items-center gap-2 badge badge-soft badge-primary">
                 <i class="fa-solid fa-warehouse"></i>
                 <span>Almacén: {{ $warehouse_name }}</span>
             </div>
-            <div class="flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+            <div class="flex items-center gap-2 badge badge-soft badge-info">
                 <i class="fa-solid fa-tags"></i>
                 <span>Tipo: {{ $type }}</span>
             </div>
-            <div class="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
+            <div class="flex items-center gap-2 badge badge-soft badge-info">
                 <i class="fa-solid fa-barcode"></i>
                 <span>Código: {{ $baseCode }}</span>
             </div>
-            
-            <div class="flex items-center gap-2 px-3 py-1 {{ $bgAction }} rounded-full text-sm font-medium">
+            <div class="flex items-center gap-2 badge badge-soft badge-info">
+                <i class="fa-regular fa-clock"></i>
+                <span>Fecha : {{ $dateMovement }}</span>    
+            </div>
+            <div class="flex items-center gap-2 badge badge-{{ $bgAction }}">
                 <i class="fa-regular fa-chess-pawn"></i>
                 <span>Acción : {{ $action }}</span>
-            </div>
-            <div class="flex items-center gap-2 px-3 py-1 bg-accent rounded-full text-sm font-medium">
-                <i class="fa-regular fa-clock"></i>
-                <span>Fecha : {{ $dateMovement }}</span>
             </div>
         </div>
     </div>
@@ -65,11 +82,7 @@
                             data-cell-id="{{ $opticalProperty['id'] }}"
                             data-cell-amount="{{ $opticalProperty['amount'] }}"
                             @click="toggleCell({{ (int) $opticalProperty['id'] }})"
-                            :class="markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }})
-                                ? (markedAmountCells.some(item => item.id === {{ (int) $opticalProperty['id'] }} && item.state=== 'success')
-                                ? 'bg-green-400' : 'bg-red-400') : (markedCells.includes({{ (int) $opticalProperty['id'] }})
-                                ? 'bg-green-200'
-                                : 'bg-white')"
+                            
                             class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border-t border-r
                             border-l
                             @if($j == 4 || $j == 8 || $j == 16) border-b-2 border-b-zinc-600 @else border-b @endif
@@ -106,4 +119,51 @@
             </tbody>
         </table>
     </div>
+
+
+    {{-- Definición del Modal --}}
+    <x-filament::modal id="send-to-branch-modal" width="md">
+        <x-slot name="heading">
+            Enviar a Sucursal
+        </x-slot>
+
+        <x-slot name="description">
+            Selecciona la sucursal de destino para el código <b>{{ $baseCode }}</b>.
+        </x-slot>
+
+        {{-- Contenido del Modal (Formulario) --}}
+        <div class="space-y-4 py-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Sucursal Destino</label>
+                <x-filament::input.wrapper size="xs">
+                    <x-filament::input.select wire:model="selectedBranchId" size="xs">
+                        <option value="">Seleccione una sucursal...</option>
+                        @foreach(\App\Models\Branch::where('is_active', 1)->pluck('name', 'id') as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+                
+                @error('selectedBranchId') <span class="text-danger-600 text-xs">{{ $message }}</span> @enderror
+            </div>
+        </div>
+
+        <x-slot name="footerActions">
+            <x-filament::button 
+                    color="gray" 
+                    size="sm"
+                    x-on:click="close"
+                >
+                    Cancelar
+                </x-filament::button>
+
+                <x-filament::button 
+                    color="primary" 
+                    size="sm"
+                    wire:click="sendToBranch"
+                >
+                    Confirmar Envío
+                </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
 </x-filament-panels::page>
