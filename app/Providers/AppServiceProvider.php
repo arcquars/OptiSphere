@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\WarehouseStockHistory;
+use App\Observers\WarehouseStockHistoryObserver;
 use Illuminate\Support\ServiceProvider;
 use App\Services\NumberToWords;
 
@@ -22,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        WarehouseStockHistory::observe(WarehouseStockHistoryObserver::class);
         if (class_exists(\Laravel\Sanctum\Sanctum::class)) {
             \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(\Laravel\Sanctum\PersonalAccessToken::class);
         }

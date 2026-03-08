@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    @livewire('warehouse.edit-warehouse-stock-item-modal')
     {{-- Cabecera con los parámetros actuales --}}
     <div class="p-4 bg-white shadow rounded-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
         <div class="flex justify-between">
@@ -83,7 +84,7 @@
                             data-cell-amount="{{ $opticalProperty['amount'] }}"
                             @click="toggleCell({{ (int) $opticalProperty['id'] }})"
                             
-                            class="cursor-pointer px-1 py-1 whitespace-nowrap text-xs font-medium text-center border-t border-r
+                            class="px-1 py-1 whitespace-nowrap text-xs font-medium text-center border-t border-r
                             border-l
                             @if($j == 4 || $j == 8 || $j == 16) border-b-2 border-b-zinc-600 @else border-b @endif
                             @if($i == 8 || $i == 16) border-r-2 border-r-zinc-600 @endif
@@ -107,11 +108,20 @@
                             @if($j == 21 && $i == 21) border-l-2 border-l-zinc-600 border-t-2 border-t-zinc-600 @endif
                                 "
                         >
-                        {{ $opticalProperty['amount'] }}
-                            {{-- <div
-                                x-text="uploadText({{ $opticalProperty['id'] }}, '{{ $opticalProperty['amount'] }}', '{{ $opticalProperty['description'] }}')"
-                            >
-                            </div> --}}
+                        @if(!empty($opticalProperty['amount']))
+                            @if(strcmp($action, "INGRESO") == 0)
+                        <a 
+                            href="#" 
+                            title="Editar" 
+                            class="btn btn-link" 
+                            x-on:click="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}' })"
+                        >
+                            {{ $opticalProperty['amount'] }}
+                        </a>
+                            @else
+                                <p>{{ $opticalProperty['amount'] }}</p>
+                            @endif
+                        @endif
                         </td>
                     @endforeach
                 </tr>
@@ -121,7 +131,7 @@
     </div>
 
 
-    {{-- Definición del Modal --}}
+    {{-- Definición del Modal Enviar a Sucursal --}}
     <x-filament::modal id="send-to-branch-modal" width="md">
         <x-slot name="heading">
             Enviar a Sucursal
@@ -131,7 +141,6 @@
             Selecciona la sucursal de destino para el código <b>{{ $baseCode }}</b>.
         </x-slot>
 
-        {{-- Contenido del Modal (Formulario) --}}
         <div class="space-y-4 py-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Sucursal Destino</label>
@@ -166,4 +175,6 @@
                 </x-filament::button>
         </x-slot>
     </x-filament::modal>
+
+    
 </x-filament-panels::page>

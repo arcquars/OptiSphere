@@ -36,4 +36,9 @@ class WarehouseStockHistory extends Model
 
         }
     }
+
+    public function audits()
+    {
+        return $this->morphMany(\App\Models\Audit::class, 'auditable');
+    }
 }
