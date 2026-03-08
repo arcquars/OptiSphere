@@ -203,12 +203,14 @@
                                     </li>
                                     @endif
                                     <li>
-                                        <a href="{{ (isset($sale->siat_invoice_id))? route('sales.invoice_pdf', ['sale' => $sale->id]) : route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" onclick="document.activeElement.blur();" target="_blank" class="text-primary">
-                                            @if(isset($sale->siat_invoice_id))
+                                        @if(isset($sale->siat_invoice_id))
+                                        <a href="{{ route('sales.invoice_pdf', ['sale' => $sale->id]) }}" onclick="document.activeElement.blur();" target="_blank" class="text-primary">
                                             <i class="fa-solid fa-print"></i> Imprimir factura
-                                            @else
+                                        </a>
+                                        @endif
+                                        <a href="{{ route('sales.receipt_pdf', ['sale' => $sale->id, 'size' => 'letter']) }}" 
+                                            onclick="document.activeElement.blur();" target="_blank" class="text-info">
                                             <i class="fa-solid fa-print"></i> Imprimir recibo
-                                            @endif
                                         </a>
                                     </li>
                                     @if($sale->can_edit)
