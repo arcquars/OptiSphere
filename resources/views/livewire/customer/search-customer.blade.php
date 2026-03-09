@@ -4,7 +4,7 @@
         customerSelect: null,
         changeUploadCustomerCart(id, name, nit){
             // alert(JSON.stringify());
-            this.customerSelect = name + '(' + nit + ')';
+            this.customerSelect = name + ' (' + nit + ')';
             $dispatch('customer-updated', {id});
         }
 
@@ -41,11 +41,11 @@
             @forelse($searchResults as $result)
                 <li>
                     <a
-                        @click.prevent="changeUploadCustomerCart({{ $result->id }}, '{{ $result->razon_social }}', '{{ $result->document_type_show }}')"
+                        @click.prevent="changeUploadCustomerCart({{ $result->id }}, '{{ $result->name . " - " . $result->razon_social }}', '{{ $result->document_type_show }}')"
                     >
                         <div class="flex items-center gap-3">
                             <div>
-                                <div class="font-bold">{{ $result->razon_social }} <small>({{ $result->document_type_show }})</small></div>
+                                <div><p>{{ $result->name }} - <b>Razon social: </b> {{ $result->razon_social }} <small>({{ $result->document_type_show }})</small></p></div>
                             </div>
                         </div>
                     </a>
