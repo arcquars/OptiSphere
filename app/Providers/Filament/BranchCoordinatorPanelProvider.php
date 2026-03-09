@@ -77,7 +77,8 @@ class BranchCoordinatorPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                //Authenticate::class,
+                \App\Http\Middleware\RedirectIfNoPanelAccess::class,
             ]);
     }
 }

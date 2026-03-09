@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Customers\Schemas;
 
 use App\Models\Branch;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -65,14 +66,18 @@ class CustomerForm
                     ->required(),
                 Select::make('branch_id')
                     ->label('Sucursal')
+                    ->default(request()->route('branch_id'))
                     ->options(Branch::query()->where('is_active', 1)->pluck('name', 'id'))
                     ->searchable()
                     ->required() // Es recomendable que sea requerido si la unicidad depende de él
-                    ->live(),
+                    ->live()
+                    ->disabled(fn () => Filament::getCurrentPanel()->getId() !== 'admin'),
                 Toggle::make('can_buy_on_credit')
-                    ->label('Credito'),
+                    ->label('Credito')
+                    ->disabled(fn () => Filament::getCurrentPanel()->getId() !== 'admin'),
                 TextInput::make('credit_limit')
                     ->label('Limite de credito')
+                    ->disabled(fn () => Filament::getCurrentPanel()->getId() !== 'admin')
                     ->numeric(),
 
             ]);

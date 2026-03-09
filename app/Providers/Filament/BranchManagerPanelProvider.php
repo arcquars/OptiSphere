@@ -93,7 +93,8 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                //Authenticate::class,
+                \App\Http\Middleware\RedirectIfNoPanelAccess::class,
             ])
             ->resources([
                 // ... Otros recursos que puedas tener

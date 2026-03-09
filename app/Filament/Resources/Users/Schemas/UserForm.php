@@ -34,7 +34,13 @@ class UserForm
                     ->label('Roles')
                     ->multiple()
                     ->relationship('roles', 'name') // Relación con el modelo de roles de Spatie
-                    ->options(Role::all()->pluck('name', 'id'))
+                    ->options(
+                    Role::all()->pluck('name', 'id')
+                        ->mapWithKeys(fn ($name, $id) => [
+                            $id => __("cerisier.{$name}") // Busca la traducción en lang/xx/roles.php
+                        ])
+                    )
+                    ->getOptionLabelFromRecordUsing(fn (Role $record) => __("cerisier.{$record->name}"))
                     ->required(),
                 Select::make('branches')
                     ->label('Sucursales')

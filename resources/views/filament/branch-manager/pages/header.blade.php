@@ -8,7 +8,8 @@
             <p class="text-success">
                 Gestionando ventas para la sucursal seleccionada <i class="fa-solid fa-lock-open"></i>
             </p>
-            <div>
+            <div class="flex justify-end">
+                <a href="{{ App\Filament\BranchManager\Resources\Customers\Pages\ListCustomers::getUrl(['branch_id' => $branch->id]) }}" class="btn btn-sm btn-primary mt-1">Adm. Clientes</a>
                 @if($isFacturable)
                 <livewire:branch.siat-connection-status :branch="$branch" />
                 @endif

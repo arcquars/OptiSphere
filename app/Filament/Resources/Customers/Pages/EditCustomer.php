@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
 use Filament\Actions\DeleteAction;
+use Filament\Facades\Filament;
 use Filament\Resources\Pages\EditRecord;
 
 class EditCustomer extends EditRecord
@@ -15,5 +16,10 @@ class EditCustomer extends EditRecord
         return [
             // DeleteAction::make(),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

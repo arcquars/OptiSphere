@@ -76,7 +76,8 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                //Authenticate::class,
+                \App\Http\Middleware\RedirectIfNoPanelAccess::class,
             ])
             ->userMenuItems([
                 'logout' => fn (Action $action) => $action->label('Log out')->url(fn (): string => route('logout'))->postToUrl()->color('danger'),

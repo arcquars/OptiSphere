@@ -85,31 +85,34 @@ class User extends Authenticatable implements FilamentUser
 //    }
     public function canAccessPanel(Panel $panel): bool
     {
-        Log::info("1 Eeee: " . $panel->getId() . " || rol:: " . $this->hasRole('admin') . " || check:: " . auth()->check());
-
-        if($this->hasRole('admin') && $this->is_active){
-            // return $this->hasVerifiedEmail();
-            return true;
-        } else if($this->hasRole('accountant') && $panel->getId() === 'accountant' && $this->is_active) {
-            // return $this->hasVerifiedEmail();
-            return true;
-        } else if(($this->hasRole('branch-manager') || $this->hasRole('admin')) && $panel->getId() === 'branch-manager' && $this->is_active) {
-            // return $this->hasVerifiedEmail();
-            return true;
-        } else if($this->hasRole('branch-coordinator') && $panel->getId() === 'branch-coordinator' && $this->is_active) {
-            // return $this->hasVerifiedEmail();
-            // return true;
-            return $this->hasRole('branch-coordinator');
+        // 1. Si el usuario no está activo, no entra a ningún lado
+        if (!$this->is_active) {
+            return false; 
         }
 
-//        if ($panel->getId() === 'admin') {
-//            Log::info("2 Eeee: " . $panel->getId());
-//            return $this->hasVerifiedEmail();
-//        } else if($panel->getId() === 'branch-manager'){
-//            Log::info("3 Eeee: " . $panel->getId());
-//            return $this->hasVerifiedEmail();
-//        }
+        $panelId = $panel->getId();
 
+        // 2. Administrador: Acceso total
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        // 3. Lógica por Panel
+        if ($panelId === 'accountant' && $this->hasRole('accountant')) {
+            return true;
+        }
+
+        if ($panelId === 'branch-manager' && $this->hasRole('branch-manager')) {
+            return true;
+        }
+
+        if ($panelId === 'branch-coordinator' && $this->hasRole('branch-coordinator')) {
+            return true;
+        }
+
+        // 4. Si llegó aquí, no tiene acceso al panel actual.
+        // Importante: No cerramos sesión aquí directamente porque Filament 
+        // chequea esto en cada carga. Si devolvemos false, Filament lanzará un 403.
         return false;
     }
 }
