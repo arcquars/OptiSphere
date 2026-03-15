@@ -9,6 +9,9 @@ class WarehouseIncome extends Model
 {
     use HasFactory;
 
+    public const STATUS_ACTIVE = "ACTIVE";
+    public const STATUS_VOID = "VOID";
+    
     /**
      * @var list<string>
      */
@@ -16,6 +19,7 @@ class WarehouseIncome extends Model
         'warehouse_id',
         'user_id',
         'base_code',
+        'status',
         'income_date'
     ];
 

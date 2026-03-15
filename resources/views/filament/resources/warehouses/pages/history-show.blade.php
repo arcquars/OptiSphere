@@ -1,3 +1,6 @@
+<?php
+use App\Models\WarehouseIncome;
+?>
 <x-filament-panels::page>
     @livewire('warehouse.edit-warehouse-stock-item-modal')
     {{-- Cabecera con los parámetros actuales --}}
@@ -8,11 +11,23 @@
             </div>
             <div>
                 @if(strcmp($action, "INGRESO") == 0)
+                    @livewire('warehouse.void-wharehouse-income-modal', ['warehouseInvoiceId' => $warehouse_m_id])
+                    <x-filament::button 
+                        color="danger" 
+                        size="xs"
+                        icon="heroicon-s-no-symbol"
+                        tag="button"
+                        :disabled="(strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0)"
+                        x-on:click="$dispatch('open-void-warehouse-invoice-modal')"
+                    >
+                        Anular Entrega
+                    </x-filament::button>
                     <x-filament::button 
                         color="primary" 
                         size="xs"
                         icon="heroicon-m-paper-airplane"
                         tag="button"
+                        :disabled="(strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0)"
                         x-on:click="$dispatch('open-modal', { id: 'send-to-branch-modal' })"
                     >
                         Enviar a Sucursal
@@ -41,7 +56,10 @@
             </div>
             <div class="flex items-center gap-2 badge badge-{{ $bgAction }}">
                 <i class="fa-regular fa-chess-pawn"></i>
-                <span>Acción : {{ $action }}</span>
+                <span>
+                    Acción : {{ $action }} 
+                    <b class="text-red-700">@if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0) (ANULADO) @endif</b>
+                </span>
             </div>
         </div>
     </div>
@@ -109,17 +127,28 @@
                                 "
                         >
                         @if(!empty($opticalProperty['amount']))
-                            @if(strcmp($action, "INGRESO") == 0)
+                            @if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
                         <a 
                             href="#" 
                             title="Editar" 
-                            class="btn btn-link" 
-                            x-on:click="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}' })"
+                            class="text-warning p-2 no-underline" 
+                            x-on:click="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}', warehouseId: '{{ $warehouse_id }}' })"
                         >
                             {{ $opticalProperty['amount'] }}
                         </a>
                             @else
                                 <p>{{ $opticalProperty['amount'] }}</p>
+                            @endif
+                        @else
+                            @if(strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
+                            <a 
+                                href="#" 
+                                title="Editar" 
+                                class="text-primary p-2 no-underline" 
+                                x-on:click="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}', warehouseId: '{{ $warehouse_id }}' })"
+                            >
+                                <i class="fa-solid fa-plus"></i>
+                            </a>
                             @endif
                         @endif
                         </td>
@@ -176,5 +205,18 @@
         </x-slot>
     </x-filament::modal>
 
+    <div wire:loading.flex 
+        class="fixed inset-0 z-[10000] items-center justify-center bg-slate-900/60 backdrop-blur-md">
+        
+        <div class="bg-base-100 p-10 rounded-3xl shadow-2xl flex flex-col items-center gap-6 border border-white/10">
+            {{-- Spinner de DaisyUI --}}
+            <span class="loading loading-spinner w-16 text-primary"></span>
+            
+            <div class="text-center">
+                <p class="text-xl font-black text-base-content tracking-tight">Procesando solicitud</p>
+                <p class="text-sm text-base-content/60">Por favor, no cierre esta ventana</p>
+            </div>
+        </div>
+    </div>
     
 </x-filament-panels::page>

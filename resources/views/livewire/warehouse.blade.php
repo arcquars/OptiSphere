@@ -485,11 +485,24 @@
 
 <x-filament-actions::modals />
 
-    <div wire:loading wire:target="save, create" class="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-all">
+    {{-- <div wire:loading wire:target="save, create" class="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm transition-all">
         <div class="flex flex-col items-center gap-4 bg-base-100 p-8 rounded-2xl shadow-2xl">
             <span class="loading loading-spinner loading-lg text-primary"></span>
             <p class="text-lg font-bold text-base-content animate-pulse">Procesando...</p>
             <p class="text-xs text-base-content/60">Guardando cambios en el servidor</p>
+        </div>
+    </div> --}}
+    <div wire:loading.flex wire:target="save, create" 
+        class="fixed inset-0 z-[10000] items-center justify-center bg-slate-900/60 backdrop-blur-md">
+        
+        <div class="bg-base-100 p-10 rounded-3xl shadow-2xl flex flex-col items-center gap-6 border border-white/10">
+            {{-- Spinner de DaisyUI --}}
+            <span class="loading loading-spinner w-16 text-primary"></span>
+            
+            <div class="text-center">
+                <p class="text-xl font-black text-base-content tracking-tight">Procesando solicitud</p>
+                <p class="text-sm text-base-content/60">Por favor, no cierre esta ventana</p>
+            </div>
         </div>
     </div>
 </div>

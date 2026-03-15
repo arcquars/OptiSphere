@@ -9,8 +9,8 @@
                     <button wire:click="closeModal" class="btn btn-sm btn-circle btn-ghost">✕</button>
                 </div>
 
-                <p>Cantidad actual en inventario: <b>{{ $this->warehouseStockHistory->warehouseStock->quantity }}</b></p>
-                <p>Cantidad registrada en esta entrada: <b>{{ $this->warehouseStockHistory->difference }}</b></p>
+                <p>Cantidad actual en inventario: <b>{{ $this->quantity ?? 0}}</b></p>
+                <p>Cantidad registrada en esta entrada: <b>{{ $this->warehouseStockHistory->difference ?? 0}}</b></p>
                 <p>Minimo permitido segun stock actual: <b>{{ $this->minAmount }}</b> 
                 </p>
                 {{-- <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Cantidad</label>
@@ -43,7 +43,12 @@
             @endif
 
             <div class="modal-action">
-                <button wire:click="updateRegister" class="btn btn-info btn-sm btn-outline">Grabar cambio</button>
+                <button 
+                    type="button"
+                    wire:click="updateRegister" 
+                    class="btn btn-info btn-sm btn-outline"
+                    wire:loading.attr="disabled"
+                >Grabar cambio</button>
                 <button wire:click="closeModal" class="btn btn-sm">Cerrar</button>
             </div>
         </div>

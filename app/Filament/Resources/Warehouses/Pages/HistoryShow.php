@@ -19,6 +19,9 @@ use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
+
+use function Livewire\on;
 
 class HistoryShow extends Page
 {
@@ -27,6 +30,8 @@ class HistoryShow extends Page
     public $action = "";
     public $type;
     public $warehouse_name;
+    // Warehouse tipo movimiento (income, delivery, refund)
+    public $warehouse_m;
     public $warehouse_m_id;
     public $warehouse_id;
 
@@ -45,6 +50,15 @@ class HistoryShow extends Page
     protected static ?string $title = 'Ver Historial de Movimiento';
     protected static string $resource = WarehouseResource::class;
 
+    // 1. Activamos carga perezosa
+    public static bool $isLazy = true;
+
+    // 2. Definimos qué se ve mientras carga (opcional)
+    public function getPlaceholderHtml(): ?string
+    {
+        return view('filament.components.loading-skeleton')->render();
+    }
+    
     protected function rules()
     {
         return [
@@ -55,9 +69,6 @@ class HistoryShow extends Page
     public function mount($history_id, $action, $type): void
     {
         $warehouseM = null;
-        $this->warehouseStockHistories = WarehouseStockHistory::where('movement_type', 'like', "%".$action."%")
-                    ->where('type_id', $history_id)->get();
-
         switch($action){
             case "INGRESO":
                 $warehouseM = WarehouseIncome::find($history_id);
@@ -76,17 +87,30 @@ class HistoryShow extends Page
 
         $this->userM = User::find($warehouseM->user_id);
         $this->warehouse_name = $warehouseM->warehouse->name;
+        $this->warehouse_m = $warehouseM;
         $this->warehouse_m_id = $warehouseM->id;
         $this->warehouse_id = $warehouseM->warehouse_id;
         $this->dateMovement = $warehouseM->created_at;
         $this->baseCode = $warehouseM->base_code;
-        $this->action = $action;
         $this->type = $type;
+        $this->action = $action;
+        // $this->warehouseStockHistories = WarehouseStockHistory::where('movement_type', 'like', "%".$action."%")
+        //             ->where('type_id', $history_id)->get();
+        $this->refreshHistories();
         $this->loadCylinders();
     }
 
+    public function refreshHistories()
+    {
+        $this->warehouseStockHistories = WarehouseStockHistory::where('movement_type', 'like', "%".$this->action."%")
+            ->where('type_id', $this->warehouse_m_id) // Asumiendo que usas las propiedades de tu clase
+            ->get();
+    }
+
+    #[On('sphere-updated')]
     public function loadCylinders(){
         if($this->baseCode){
+            $this->refreshHistories();
             $this->matrix = [];
             $opticalProperties = OpticalProperty::where('base_code', $this->baseCode)
                 ->where('type', $this->type)

@@ -5,6 +5,7 @@ namespace App\Livewire\Warehouse;
 use App\Services\WarehouseStockHistoriService;
 use Livewire\Component;
 use App\Models\Product;
+use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,10 @@ class EditWarehouseStockItemModal extends Component
     public ?WarehouseStockHistory $warehouseStockHistory = null;
 
     public $amount;
-    public $minAmount = 1;
+    public $minAmount = 0;
+    public $quantity = 0;
+    public $isNew = true;
+    public $warehouseTypeId;
 
     protected function rules()
     {
@@ -29,8 +33,9 @@ class EditWarehouseStockItemModal extends Component
     }
 
     #[On('open-edit-warehouse-stock-modal')]
-    public function loadProduct($historyId, $action, $productId)
+    public function loadProduct($historyId, $action, $productId, $warehouseId)
     {
+        $this->warehouseTypeId = $historyId;
         $this->warehouseStockHistory = WarehouseStockHistory::
             where('movement_type', 'like', "%".$action."%")
             ->where('type_id', $historyId)
@@ -40,19 +45,31 @@ class EditWarehouseStockItemModal extends Component
             ->first();
 
         $this->product = Product::find($productId);
-        $this->amount = $this->warehouseStockHistory->difference;
-    
-        $this->minAmount = $this->warehouseStockHistory->warehouseStock->quantity - $this->warehouseStockHistory->difference;
-        if($this->minAmount <= 0){
-            $this->minAmount = ($this->minAmount * -1) + 1;
+
+        if($this->warehouseStockHistory){
+            $this->isNew = false;
+            $this->amount = $this->warehouseStockHistory->difference;
+            $this->quantity = $this->warehouseStockHistory->warehouseStock->quantity;
+            $this->minAmount = $this->warehouseStockHistory->warehouseStock->quantity - $this->warehouseStockHistory->difference;
+            if($this->minAmount <= 0){
+                $this->minAmount = ($this->minAmount * -1) + 1;
+            } else {
+                $this->minAmount = 0;
+            }
         } else {
-            $this->minAmount = 1;
+            // dd("xxx: " . $productId . " || " . $warehouseId);
+            $this->isNew = true;
+            $this->amount = 0;
+            $warehouseStock = WarehouseStock::where('product_id', $productId)->where('warehouse_id', $warehouseId)->first();
+            if($warehouseStock){
+                $this->quantity = $warehouseStock->quantity;
+            } else {
+                $this->quantity = 0;
+            }
+            
         }
-        Log::info("PDM EditWarehouseStockItemModal 1:: " . $productId);
-        // Log::info("PDM EditWarehouseStockItemModal 2:: " . json_encode($this->prices));
-        if ($this->product) {
-            $this->isOpen = true;
-        }
+        $this->isOpen = true;
+        
     }
 
     public function closeModal()
@@ -72,7 +89,12 @@ class EditWarehouseStockItemModal extends Component
         $result = $this->validate();
         // dd("xxx");
         $warehouseStockHistoriService = new WarehouseStockHistoriService();
-        $warehouseStockHistoriService->updateSingleIncome($this->warehouseStockHistory->id, $this->amount);
+        if($this->isNew){
+            $warehouseStockHistoriService->createSingleIncome($this->warehouseTypeId, $this->product->id, $this->amount);
+        } else {
+            $warehouseStockHistoriService->updateSingleIncome($this->warehouseStockHistory->id, $this->amount);
+        }
+        
 
         Notification::make()
             ->title('Éxito')
@@ -80,5 +102,6 @@ class EditWarehouseStockItemModal extends Component
             ->success()
             ->send();
         $this->closeModal();
+        $this->dispatch('sphere-updated');
     }
 }
