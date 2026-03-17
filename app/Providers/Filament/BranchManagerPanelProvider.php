@@ -64,7 +64,8 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
                 BranchManager::class,
                 BranchManagerCode::class,
                 SalesReport::class,
-                CashClosing::class
+                CashClosing::class,
+                \App\Filament\Pages\CreditPaymentResource::class
             ])
             ->renderHook(
             // Hook: Justo después de la barra de búsqueda global

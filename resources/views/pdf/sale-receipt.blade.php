@@ -303,6 +303,16 @@
                     <span class="label">Total servicios:</span> {{ $sale->amount_services }}
                 </td>
             </tr>
+            <tr>
+                <td class="no-border">
+                    <span class="label">Tipo de venta:</span> {{ strtoupper($sale->sale_type) }}
+                </td>
+            </tr>
+            <tr>
+                <td class="no-border">
+                    <span class="label">Tipo de pago:</span> {{ $sale->payment_method }}
+                </td>
+            </tr>
         </table>
     </div>
     <div class="col col-5">

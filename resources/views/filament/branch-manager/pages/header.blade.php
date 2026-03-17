@@ -9,7 +9,16 @@
                 Gestionando ventas para la sucursal seleccionada <i class="fa-solid fa-lock-open"></i>
             </p>
             <div class="flex justify-end">
-                <a href="{{ App\Filament\BranchManager\Resources\Customers\Pages\ListCustomers::getUrl(['branch_id' => $branch->id]) }}" class="btn btn-sm btn-primary mt-1">Adm. Clientes</a>
+                <a 
+                    href="{{ App\Filament\BranchManager\Resources\Customers\Pages\ListCustomers::getUrl(['branch_id' => $branch->id]) }}" 
+                    class="btn btn-sm btn-primary mt-1 mx-1">
+                    Adm. Clientes
+                </a>
+                <a 
+                    href="{{ url('branch-manager/credit-payment-resource/'. $branch->id) }}" 
+                    class="btn btn-sm btn-primary mt-1 mx-1">
+                    Adm. Ventas a credito
+                </a>
                 @if($isFacturable)
                 <livewire:branch.siat-connection-status :branch="$branch" />
                 @endif

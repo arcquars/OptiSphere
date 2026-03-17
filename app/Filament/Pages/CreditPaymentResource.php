@@ -39,6 +39,15 @@ class CreditPaymentResource extends Page implements HasTable
 
     protected static ?string $title = 'Pagos a cuenta de Ventas a crédito';
 
+    public ?int $branchId = null;
+
+    protected static ?string $slug = 'credit-payment-resource/{branchId?}';
+
+    public function mount(?int $branchId = null): void
+    {
+        $this->branchId = $branchId;
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('Pagos a cuenta de Ventas');
@@ -49,13 +58,21 @@ class CreditPaymentResource extends Page implements HasTable
      */
     public function table(Table $table): Table
     {
+        $branchId = $this->branchId;
+        $query = SalePayment::query()
+                    ->where('deleted', false)
+                    ->whereHas('sale', function ($query) use ($branchId){
+                        $query->where('sales.status', Sale::SALE_STATUS_CREDIT);
+                        if($branchId){
+                            $query->where('sales.branch_id', $branchId);
+                        }
+                    });
+        if($this->branchId){
+            $query->where('branch_id', $this->branchId);
+        }
         return $table
             ->query(
-                SalePayment::query()
-                    ->where('deleted', false)
-                    ->whereHas('sale', function ($query){
-                        $query->where('sales.status', Sale::SALE_STATUS_CREDIT);
-                    })
+                $query
             )
             ->defaultSort('created_at', 'desc')
             ->headerActions([
@@ -217,5 +234,27 @@ class CreditPaymentResource extends Page implements HasTable
                     ->modalCancelActionLabel('Cerrar'),
             ])
             ->paginated();
+    }
+
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        $currentPanel = filament()->getCurrentPanel()?->getId();
+        
+        // Obtenemos el ID de la sucursal de la URL actual
+        $requestedBranchId = request()->route('branchId');
+
+        if ($currentPanel === 'branch-manager') {
+            $hasRole = $user->hasRole('branch-manager') || $user->hasRole('admin');
+            
+            // Si hay un ID en la URL, validar que el manager tenga acceso a esa sucursal específica
+            if ($requestedBranchId && !$user->hasRole('admin')) {
+                return $hasRole && $user->branches()->where('branches.id', $requestedBranchId)->exists();
+            }
+
+            return $hasRole;
+        }
+
+        return $user->hasRole('admin');
     }
 }
