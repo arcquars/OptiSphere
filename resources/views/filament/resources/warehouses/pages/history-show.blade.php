@@ -10,7 +10,7 @@ use App\Models\WarehouseIncome;
                 <h2 class="text-lg font-bold text-gray-400 uppercase tracking-wider">Detalles de la Consulta</h2>
             </div>
             <div>
-                @if(strcmp($action, "INGRESO") == 0)
+                @if(strcmp($action, "INGRESO") == 0 && auth()->user()->hasRole('admin'))
                     @livewire('warehouse.void-wharehouse-income-modal', ['warehouseInvoiceId' => $warehouse_m_id])
                     <x-filament::button 
                         color="danger" 
@@ -57,8 +57,12 @@ use App\Models\WarehouseIncome;
             <div class="flex items-center gap-2 badge badge-{{ $bgAction }}">
                 <i class="fa-regular fa-chess-pawn"></i>
                 <span>
-                    Acción : {{ $action }} 
-                    <b class="text-red-700">@if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0) (ANULADO) @endif</b>
+                    Acción : {{ $warehouse_m_id . ".-" . $action }} 
+                    <span class="text-red-700">
+                        @if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0) 
+                        (ANULADO) 
+                        @endif
+                    </span>
                 </span>
             </div>
         </div>
@@ -127,7 +131,7 @@ use App\Models\WarehouseIncome;
                                 "
                         >
                         @if(!empty($opticalProperty['amount']))
-                            @if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
+                            @if(auth()->user()->hasRole('admin') && strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
                         <a 
                             href="#" 
                             title="Editar" 
@@ -140,7 +144,7 @@ use App\Models\WarehouseIncome;
                                 <p>{{ $opticalProperty['amount'] }}</p>
                             @endif
                         @else
-                            @if(strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
+                            @if(auth()->user()->hasRole('admin') && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
                             <a 
                                 href="#" 
                                 title="Editar" 

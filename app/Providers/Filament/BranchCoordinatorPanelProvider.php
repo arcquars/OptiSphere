@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\AccountsReceivableReport;
 use App\Filament\Pages\CreditPaymentResource;
+use App\Models\User;
 use App\Filament\Pages\IncomeBranchsReport;
 use App\Filament\Resources\Branches\BranchResource;
 use App\Filament\Resources\Categories\CategoryResource;
@@ -29,6 +30,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 
 class BranchCoordinatorPanelProvider extends PanelProvider
 {
@@ -49,10 +52,11 @@ class BranchCoordinatorPanelProvider extends PanelProvider
                 SupplierResource::class,
                 // ProductResource::class // Interfaz de BranchManager
             ])
+            ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/BranchCoordinator/Resources'), for: 'App\Filament\BranchCoordinator\Resources')
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/BranchCoordinator/Pages'), for: 'App\Filament\BranchCoordinator\Pages')
             ->pages([
                 Dashboard::class,
@@ -66,6 +70,8 @@ class BranchCoordinatorPanelProvider extends PanelProvider
                 FilamentInfoWidget::class,
             ])
             ->middleware([
+                'web',
+                'auth',
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
@@ -76,9 +82,20 @@ class BranchCoordinatorPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render("@vite(['resources/css/cerisier.css', 'resources/css/app.css', 'resources/js/app.js'])"),
+            )
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->authGuard('web')
             ->authMiddleware([
                 //Authenticate::class,
                 \App\Http\Middleware\RedirectIfNoPanelAccess::class,
             ]);
+    }
+
+    public function canAccessPanel(User $user): bool
+    {
+        return $user->hasRole('branch-coordinator');
     }
 }

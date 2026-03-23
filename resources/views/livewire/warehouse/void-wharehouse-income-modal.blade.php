@@ -1,7 +1,7 @@
 <div>
     <div class="modal {{ $isOpen ? 'modal-open' : '' }}" role="dialog">
         <div class="modal-box max-w-2xl border-t-4 border-red-700 shadow-2xl">
-            <h3>Confirme que quiere anular TODA la entrega</h3>
+            <h3>Confirme que quiere anular TODA la entrega con Número: <b>{{ $warehouseInvoiceId }}</b></h3>
             <input 
                 type="hidden" 
                 wire:model.prevent="warehouseInvoiceId"

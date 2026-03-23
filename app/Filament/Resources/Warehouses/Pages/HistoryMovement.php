@@ -188,8 +188,12 @@ class HistoryMovement extends Page implements HasTable
                 ->label("Ver")
                 ->visible(fn ($record) => $record->op_type !== null)
                 ->url(fn (WarehouseIncome $record): 
-                    string => route(
-                        'filament.admin.resources.warehouses.history.show', 
+                    // string => route(
+                    //     'filament.admin.resources.warehouses.history.show', 
+                    //     ["history_id" => $record->id, "action" => $record->movement_label, "type" => $record->op_type])
+                    // )
+                    string => WarehouseResource::getUrl(
+                        'history.show', 
                         ["history_id" => $record->id, "action" => $record->movement_label, "type" => $record->op_type])
                     )
                 ->openUrlInNewTab()

@@ -368,6 +368,15 @@ class ManagerBranchCode extends Component
                     $itemTemp = Service::find($cart['id']);
                 }
                 $this->cart[$key]['price'] = $itemTemp->getPriceByType($this->branch->id, $this->saleType);
+
+                if(isset($cart['services']) && count($cart['services']) > 0){
+                    foreach ($cart['services'] as $key1 => $sub){
+                        $itemServiceTemp = Service::find($this->cart[$key]['services'][$key1]['id']);
+                        $this->cart[$key]['services'][$key1]['price'] = $itemServiceTemp->getPriceByType($this->branch->id, $this->saleType);
+                        // dd("dddd: " . $key1);
+                    }
+                }
+                // }
                 Log::info("Pdm price update::: " . $cart['price']);
             }
             $this->calculateTotals();

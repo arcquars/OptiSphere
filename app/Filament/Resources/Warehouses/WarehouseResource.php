@@ -56,8 +56,10 @@ class WarehouseResource extends Resource
             ->recordTitleAttribute('Warehouse')
             ->columns([
                 TextColumn::make('name')
+                    ->label('Nombre')
                     ->searchable(),
                 TextColumn::make('location')
+                    ->label('Dirección')
                     ->searchable(),
                 IconColumn::make('is_active')
                     ->boolean(),
@@ -79,15 +81,19 @@ class WarehouseResource extends Resource
                 Action::make('create-base-code')
                     ->label('Matriz')
                     // ->icon('c-square-3-stack-3d')
-                    ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.matrix', ['warehouse_id' => $record->id]))
+                    // ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.matrix', ['warehouse_id' => $record->id]))
+                    ->url(fn (Warehouse $record): string => static::getUrl('matrix', ['warehouse_id' => $record->id]))
                     ->color('success'),
                 Action::make('create-base-code')
                     ->label('Inventario')
                     // ->icon('c-square-3-stack-3d')
-                    ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
+                    // ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
+                    ->url(fn (Warehouse $record): string => static::getUrl('inventory', ['warehouse_id' => $record->id]))
                     ->color('success'),
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->visible(auth()->user()->hasRole('admin')),
+                DeleteAction::make()
+                    ->visible(auth()->user()->hasRole('admin')),
             ])
             ->toolbarActions([
                 // BulkActionGroup::make([
