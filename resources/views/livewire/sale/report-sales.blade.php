@@ -9,7 +9,9 @@
                 <!-- Filtro Fecha Inicio -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Fecha de Inicio</span></div>
-                    <input type="date" wire:model.defer="dateStart" class="input @error('dateStart') input-error @enderror input-bordered w-full focus:outline-none" value="2025-09-01"/>
+                    <input type="date" wire:model.defer="dateStart" 
+                        class="input input-sm 2xl:input-md @error('dateStart') input-error @enderror input-bordered w-full focus:outline-none" value="2025-09-01"
+                    />
                     @error('dateStart')
                     <p class="text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -17,7 +19,7 @@
                 <!-- Filtro Fecha Fin -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Fecha de Fin</span></div>
-                    <input type="date" wire:model.defer="dateEnd" class="input @error('dateEnd') input-error @enderror input-bordered w-full focus:outline-none"/>
+                    <input type="date" wire:model.defer="dateEnd" class="input input-sm 2xl:input-md @error('dateEnd') input-error @enderror input-bordered w-full focus:outline-none"/>
                     @error('dateEnd')
                     <p class="text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -25,7 +27,7 @@
                 <!-- Filtro Sucursal -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Sucursal</span></div>
-                    <select wire:model.defer="branchSelect" class="select select-bordered w-full focus:outline-none">
+                    <select wire:model.defer="branchSelect" class="select select-sm 2xl:select-md select-bordered w-full focus:outline-none">
                         <option value="">Todas las sucursales</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -35,7 +37,7 @@
                 <!-- Filtro Tipo de Venta -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Condición de Venta</span></div>
-                    <select wire:model.defer="statusSelect" class="select select-bordered w-full focus:outline-none">
+                    <select wire:model.defer="statusSelect" class="select select-sm 2xl:select-md select-bordered w-full focus:outline-none">
                         <option value="all">Todas</option>
                         <option value="{{ \App\Models\Sale::SALE_STATUS_PAID }}">{{ __('cerisier.'.\App\Models\Sale::SALE_STATUS_PAID) }}</option>
                         <option value="{{ \App\Models\Sale::SALE_STATUS_CREDIT }}">{{ __('cerisier.'.\App\Models\Sale::SALE_STATUS_CREDIT) }}</option>
@@ -47,7 +49,7 @@
                 <!-- Filtro Tipo venta -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Tipo venta</span></div>
-                    <select wire:model.defer="typeSale" class="select select-bordered w-full focus:outline-none">
+                    <select wire:model.defer="typeSale" class="select select-sm 2xl:select-md select-bordered w-full focus:outline-none">
                         <option value="">Todas</option>
                         @foreach($typeSales as $ts)
                             <option value="{{ $ts }}">{{ $ts }}</option>
@@ -57,12 +59,12 @@
                 <!-- Filtro Tipo venta -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Cliente</span></div>
-                    <input wire:model.defer="clientSearch" type="text" class="input focus:outline-none">
+                    <input wire:model.defer="clientSearch" type="text" class="input input-sm 2xl:input-md focus:outline-none">
                 </label>
                 <!-- Filtro Usuario -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Usuarios</span></div>
-                    <select wire:model.defer="userFilter" class="select select-bordered w-full focus:outline-none">
+                    <select wire:model.defer="userFilter" class="select select-sm 2xl:select-md select-bordered w-full focus:outline-none">
                         <option value="">Todos</option>
                         @foreach($users as $u)
                             <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -73,7 +75,7 @@
 
                 <!-- <div class="col-span-1 md:col-span-2 lg:col-span-4"> -->
                 <div class="col-span-1 md:col-span-2 lg:col-span-2">
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Generar Reporte</button>
+                    <button type="submit" class="btn btn-sm 2xl:btn-md btn-primary"><i class="fa-solid fa-filter"></i> Generar Reporte</button>
                 </div>
             </div>
         </div>
@@ -109,8 +111,8 @@
 
         @if(count($sales) > 0)
         <!-- 3. Tabla de Resultados -->
-        <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
+        <div class="overflow-x-auto w-full">
+            <table class="table table-xs 2xl:table-lg table-zebra">
                 <thead>
                 <tr>
                     <th>ID Venta</th>
@@ -135,30 +137,30 @@
                         <td>
                             @switch($sale->sale_type)
                                 @case(\App\Models\Price::TYPE_ESPECIAL)
-                                <div class="badge badge-outline badge-info">{{ strtoupper($sale->sale_type) }}</div>
+                                <div class="badge badge-xs 2xl:badge-md badge-outline badge-info">{{ strtoupper($sale->sale_type) }}</div>
                                 @break
                                 @case(\App\Models\Price::TYPE_MAYORISTA)
-                                <div class="badge badge-outline badge-primary">{{ strtoupper($sale->sale_type) }}</div>
+                                <div class="badge badge-xs 2xl:badge-md badge-outline badge-primary">{{ strtoupper($sale->sale_type) }}</div>
                                 @break
                                 @default
-                                <div class="badge badge-outline badge-neutral">{{ strtoupper($sale->sale_type) }}</div>
+                                <div class="badge badge-xs 2xl:badge-md badge-outline badge-neutral">{{ strtoupper($sale->sale_type) }}</div>
                             @endswitch
                         </td>
                         <td>
 
                             @switch($sale->payment_method)
                                 @case(\App\Models\SalePayment::METHOD_TRANSFER)
-                                <div class="badge badge-outline badge-secondary">
+                                <div class="badge badge-xs 2xl:badge-md badge-outline badge-secondary">
                                     <i class="fa-solid fa-credit-card mr-1"></i>{{ $sale->payment_method }}
                                 </div>
                                 @break
                                 @case(\App\Models\SalePayment::METHOD_QR)
-                                <div class="badge badge-outline badge-info">
+                                <div class="badge badge-xs 2xl:badge-md badge-outline badge-info">
                                     <i class="fa-solid fa-qrcode mr-1"></i>{{ $sale->payment_method }}
                                 </div>
                                 @break
                                 @default
-                                <div class="badge badge-outline badge-success">
+                                <div class="badge badge-xs 2xl:badge-md badge-outline badge-success">
                                     <i class="fa-solid fa-money-bill-wave mr-1"></i>{{ $sale->payment_method }}
                                 </div>
                             @endswitch
@@ -178,15 +180,15 @@
                         </td>
                         <td>
                             @if($sale->use_promotion)
-                                <div class="badge badge-soft badge-success">Sí</div>
+                                <div class="badge badge-xs 2xl:badge-md badge-soft badge-success">Sí</div>
                             @else
-                                <div class="badge badge-soft badge-error">No</div>
+                                <div class="badge badge-xs 2xl:badge-md badge-soft badge-error">No</div>
                             @endif
                         </td>
                         <td class="text-right font-mono font-bold">{{ config('cerisier.currency_symbol') }} {{ $sale->final_total }}</td>
                         <td>
                             <div class="dropdown dropdown-bottom dropdown-end">
-                                <div tabindex="0" role="button" class="btn btn-sm btn-primary m-1">Acciones <i class="fa-solid fa-sort-down"></i></div>
+                                <div tabindex="0" role="button" class="btn btn-xs 2xl:btn-md btn-primary m-1">Acciones <i class="fa-solid fa-sort-down"></i></div>
                                 <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
                                     <li><a @click="$dispatch('toggleViewSale', {saleId: '{{$sale->id}}'}); document.activeElement.blur(); return false;" class="text-primary">
                                             <i class="fa-solid fa-eye"></i> Ver
@@ -268,7 +270,7 @@
     </div>
 
     <!-- Modal de confirmación -->
-    <x-modal id="voidSaleModal" title="Anular venta">
+    {{-- <x-modal id="voidSaleModal" title="Anular venta">
         <div class="space-y-3">
             <p class="text-sm">Esta acción revertirá el inventario y marcará la venta como anulada.</p>
             <textarea class="textarea textarea-bordered w-full" wire:model="voidReason" placeholder="Motivo (opcional)"></textarea>
@@ -277,5 +279,5 @@
                 <button type="button" class="btn btn-error" wire:click="voidSale">Anular</button>
             </div>
         </div>
-    </x-modal>
+    </x-modal> --}}
 </div>

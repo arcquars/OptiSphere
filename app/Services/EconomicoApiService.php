@@ -30,6 +30,7 @@ class EconomicoApiService
     const ENDPOINT_AUTH = 'api/authentication/authenticate';
     const ENDPOINT_GENERATE_QR = 'api/qrsimple/generateQR';
     const ENDPOINT_CHECK_QR = 'api/qrsimple/v2/statusQR';
+    const ENDPOINT_CANCEL_QR = 'api/qrsimple/v2/cancelQR';
     const ENDPOINT_LIST_PAID_QR = 'api/qrsimple/v2/paidQR';
 
     /**
@@ -132,7 +133,7 @@ class EconomicoApiService
                     'currency' => $payload['currency'],
                     'description' => $payload['description'],
                     'branch_code' => $this->branchCode,
-                    'status' => 0,
+                    'status' => PagoQr::STATUS_PENDING,
                     'payment_date' => $payload['dueDate'],
                     'qr_image' => $paymentQr->qrImage,
                     'extra_data' => json_encode($dataExtra)
@@ -177,33 +178,37 @@ class EconomicoApiService
             return ['success' => false, 'error' => $data['message'] ?? 'Error al verificar QR'];
         }
 
-        $estado = $data['statusQrCode'];
-        $fechaPago = $estado === 1 && !empty($data['payment'][0]['paymentDate'])
-            ? substr($data['payment'][0]['paymentDate'], 0, 10)
-            : null;
-        $horaPago = $estado === 1 && !empty($data['payment'][0]['paymentTime'])
-            ? $data['payment'][0]['paymentTime']
-            : null;
-
-        if ($estado == 1) {
-            PagoQr::updateOrCreate(
-                ['qr_id' => $qrId],
-                [
-                    'transaction_id' => $data['payment'][0]['transactionId'] ?? $qrId,
-                    'qr_id' => $data['payment'][0]['qrId'],
-                    'amount' => $data['payment'][0]['amount'] ?? 0,
-                    'currency' => $data['payment'][0]['currency'] ?? 'BOB',
-                    'description' => $data['payment'][0]['description'] ?? null,
-                    'status' => $data['statusQrCode'],
-                    'payment_date' => $fechaPago,
-                    'payment_time' => $horaPago,
-                    'sender_bank_code' => $data['payment'][0]['senderBankCode']?? null,
-                    'sender_name' => $data['payment'][0]['senderName']?? null,
-                    'sender_document_id' => $data['payment'][0]['senderDocumentId']?? null,
-                    'sender_account' => $data['payment'][0]['senderAccount']?? null,
-                ]
-            );
+        $estado = (int) $data['statusQrCode'];
+        $status = "";
+        $fechaPago = null;
+        $horaPago = null;
+        if($estado == 0){
+            $status = PagoQr::STATUS_PENDING;
+        } else if($estado == 1){
+            $status = PagoQr::STATUS_PAID;
+            $fechaPago = substr($data['payment'][0]['paymentDate'], 0, 10);
+            $horaPago = $data['payment'][0]['paymentTime'];
+        } else if($estado == 9){
+            $status = PagoQr::STATUS_CANCELLED;
         }
+
+        PagoQr::updateOrCreate(
+            ['qr_id' => $qrId],
+            [
+                'transaction_id' => $data['payment'][0]['transactionId'] ?? $qrId,
+                'qr_id' => $data['payment'][0]['qrId'],
+                'amount' => $data['payment'][0]['amount'] ?? 0,
+                'currency' => $data['payment'][0]['currency'] ?? 'BOB',
+                'description' => $data['payment'][0]['description'] ?? null,
+                'status' => $status,
+                'payment_date' => $fechaPago,
+                'payment_time' => $horaPago,
+                'sender_bank_code' => $data['payment'][0]['senderBankCode']?? null,
+                'sender_name' => $data['payment'][0]['senderName']?? null,
+                'sender_document_id' => $data['payment'][0]['senderDocumentId']?? null,
+                'sender_account' => $data['payment'][0]['senderAccount']?? null,
+            ]
+        );
 
         return [
                 'success' => true,
@@ -218,6 +223,73 @@ class EconomicoApiService
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+
+    /**
+     * Verifica el estado de un QR.
+     *
+     * @param string $qrId Identificador del QR.
+     * @return array Datos del estado y pagos realizados si existen.
+     */
+    public function cancelQr(string $qrId): array
+    {
+        $token = $this->authenticate();
+        try{
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $token['token'],
+            ])
+            ->delete("https://apimkt.baneco.com.bo/ApiGateway/api/qrsimple/cancelQR", ['qrId' => $qrId]);
+
+        Log::info("Pdm 18:: " . json_encode($response->body()));
+        $data = $response->json();
+        if (!$response->successful()) {
+            // 1. Intentar decodificar el JSON de error si existe
+            $errorData = $response->json();
+            
+            // 2. Extraer un mensaje específico o usar un fallback
+            // Buscamos en 'message', 'error', o 'errors' (comunes en APIs)
+            $errorMessage = $errorData['message'] 
+                ?? $errorData['error'] 
+                ?? $errorData['errors'][0] 
+                ?? null;
+
+            // 3. Si no hay un mensaje claro en el JSON, usamos el status code
+            if (!$errorMessage) {
+                $errorMessage = "Código de estado: " . $response->status();
+            }
+
+            // 4. LOG: Es vital guardar el error real en los logs para soporte técnico
+            // Esto no lo ve el usuario, pero tú sí en storage/logs/laravel.log
+            Log::error("Error al cancelar QR", [
+                'qrId' => $qrId,
+                'status' => $response->status(),
+                'body'   => $response->body(),
+                'url'    => $response->effectiveUri()
+            ]);
+
+            return [
+                'success' => false, 
+                'error'   => "Error al cancelar QR: " . $errorMessage
+            ];
+        } if((int)$data['responseCode'] != 0){
+            return ['success' => false, 'error' => $data['message'] ?? 'Error al cancelar QR con codigo de Error:: ' . $data['message']];
+        }
+
+        $pagoQr = PagoQr::where("qr_id", $qrId)->first();
+        $pagoQr->status = PagoQr::STATUS_CANCELLED;
+        $pagoQr->extra_data = $data;
+        $pagoQr->save();
+
+        return [
+                'success' => true,
+                'message' => $data['message'] ?? null
+            ];
+        } catch (Exception $e) {
+            Log::error('Error verificarQr: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
 
     // --- Métodos Privados ---
 
@@ -252,8 +324,6 @@ class EconomicoApiService
      */
     private function encryptData($text): array
     {
-        Log::info("Texto a encryptar::::::::::::::::: " . $text);
-        Log::info("Texto a encryptar::::::::::::::::: " . $this->baseUrl . self::ENDPOINT_ENCRYPT);
         $response = Http::timeout(60)
             ->get($this->baseUrl . self::ENDPOINT_ENCRYPT, [
                 'text' => $text,

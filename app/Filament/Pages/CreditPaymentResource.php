@@ -2,10 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\Services\Pages\CreateService;
 use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\SalePayment;
 use App\Filament\Exports\SalePaymentExporter;
+use App\Models\PagoQr;
+use App\Services\CreditService;
+use App\Services\EconomicoApiService;
 use Filament\Pages\Page;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -25,7 +29,16 @@ use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ExportAction;
+use Filament\Forms\Components\Hidden;
+use Filament\Schemas\Components\Image;
+use Filament\Schemas\Components\View as ComponentsView;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
+use Illuminate\Support\Collection;
 
 class CreditPaymentResource extends Page implements HasTable
 {
@@ -61,6 +74,12 @@ class CreditPaymentResource extends Page implements HasTable
         $branchId = $this->branchId;
         $query = SalePayment::query()
                     ->where('deleted', false)
+                    ->whereIn('id', function ($subquery) {
+                        $subquery->selectRaw('MAX(id)')
+                                ->from('sale_payments')
+                                ->where('deleted', false)
+                                ->groupBy('sale_id');
+                    })
                     ->whereHas('sale', function ($query) use ($branchId){
                         $query->where('sales.status', Sale::SALE_STATUS_CREDIT);
                         if($branchId){
@@ -85,6 +104,8 @@ class CreditPaymentResource extends Page implements HasTable
                     ->columnMapping(false)
             ])
             ->columns([
+                TextColumn::make('sale.id')
+                    ->label('ID'),
                 TextColumn::make('sale.date_sale')
                     ->label('Fecha de venta')
                     ->date('Y-m-d')
@@ -104,7 +125,7 @@ class CreditPaymentResource extends Page implements HasTable
                 TextColumn::make('user.name')
                     ->label('Usuario'),
                 TextColumn::make('amount')
-                    ->label('Cantidad')
+                    ->label('Pago')
                     ->numeric(decimalPlaces: 2)
                     ->alignRight(),
                 TextColumn::make('payment_method')
@@ -172,15 +193,78 @@ class CreditPaymentResource extends Page implements HasTable
                         return $indicators;
                     })
             ])
-            ->actions([
+            ->recordActions([
+                Action::make('view_qr')
+                    ->label('')
+                    ->icon('fas-qrcode')
+                    ->visible(fn ($record) => $record->sale->final_total != $record->sale->paid_amount)
+                    ->modalHeading('Generar QR de pago')
+                    ->modalWidth(Width::Small)
+                    ->fillForm(function (SalePayment $record): array {
+                        $creditService = new CreditService();
+                        $pagoQr = $creditService->getQrPartialPayment($record->sale_id);
+                        $pagoQrId = 0;
+                        $qrId = "";
+                        $qrImage = "";
+                        if($pagoQr){
+                            $pagoQrId = $pagoQr->id;
+                            $qrId = $pagoQr->qr_id;
+                            $qrImage = $pagoQr->qr_image;
+                        }
+                        return [
+                            'pagoQrId' => $pagoQrId,
+                            'qrId' => $qrId,
+                            'qrImage' => $qrImage
+                        ];
+                    })
+                    ->schema([
+                        Image::make(url: 'qr_preview', alt: 'Qr de pago')
+                            ->url(fn ($get) => $get('qrImage') 
+                                ? 'data:image/png;base64,' . $get('qrImage') 
+                                : asset('img/cerisier-no-image.png')
+                            )
+                            ->imageSize('18rem')
+                            ->alignCenter(),
+                        Hidden::make('qrId'),
+                        Hidden::make('pagoQrId'),
+                        ComponentsView::make('filament.pages.actions.sale-payment-qr')
+                    ])
+                    ->action(function (array $data, SalePayment $record): void {
+                        $apiService = new EconomicoApiService($record->sale->branch_id);
+                        $apiService->cancelQr($data['qrId']);
+
+                        $sale = Sale::find($record->sale_id);
+                        $sale->partialQrPayments()->updateExistingPivot($data['pagoQrId'], [
+                            'status' => PagoQr::STATUS_CANCELLED,
+                        ]);
+
+                        Notification::make()
+                            ->title('Se ANULO correctamente el QR')
+                            ->success()
+                            ->send();
+                    })
+                    ->modalSubmitActionLabel("Cancelar QR")
+                    ->color('success')
+                    ->modalCancelActionLabel('Cerrar'),
                 Action::make('view_history')
                     ->label('')
                     ->icon('far-clock')
                     ->modalHeading('Historial y Registro de Abonos')
-                    ->modalContent(fn (SalePayment $record): View => view(
-                        'filament.pages.actions.sale-payment-history',
-                        ['salePayment' => $record],
-                    ))
+                    ->modalContent(function (SalePayment $record) {
+                        $sale = Sale::with(['partialQrPayments' => function ($query) {
+                            $query->wherePivot('status', 'PENDING');
+                        }])->find($record->sale_id);
+                        $isQrActive = false;
+                        if(count($sale->partialQrPayments) > 0){
+                            $isQrActive = true;
+                        }
+                        $payments = SalePayment::where('sale_id', $record->sale_id)->get();
+
+                        return view(
+                            'filament.pages.actions.sale-payment-history',
+                            ['record' => $record, 'isQrActive' => $isQrActive, 'payments' => $payments],
+                        );
+                    })
                     // Definición del esquema condicional
                     ->schema(fn (SalePayment $record): array => $record->sale->is_paid 
                         ? [] 
@@ -207,23 +291,26 @@ class CreditPaymentResource extends Page implements HasTable
                         ]
                     )
                     ->action(function (array $data, SalePayment $record): void {
-                        DB::transaction(function () use ($data, $record) {
-                            $sale = $record->sale;
-                            $currentResidue = $sale->final_total - $sale->paid_amount;
-                            
-                            SalePayment::create([
-                                'sale_id' => $sale->id,
-                                'user_id' => auth()->id(),
-                                'branch_id' => $record->branch_id,
-                                'amount' => $data['amount'],
-                                'payment_method' => $data['payment_method'],
-                                'residue' => $currentResidue - $data['amount'],
-                                'deleted' => false,
-                            ]);
-
-                            $sale->increment('paid_amount', $data['amount']);
-                        });
-
+                        $sale = Sale::with(['partialQrPayments' => function ($query) {
+                            $query->wherePivot('status', 'PENDING');
+                        }])->find($record->sale_id);
+                        if(count($sale->partialQrPayments) > 0){
+                            Notification::make()
+                                ->title('Actualmente existe un QR de pago vigente, si quiere registrar pago Anule el qr.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+                        
+                        $creditService = new CreditService();
+                        $creditService->registerPayment(
+                            $data['amount'],
+                            $record->residue,
+                            $record->sale,
+                            $data['payment_method'],
+                            auth()->id(),
+                            null
+                        );
                         Notification::make()
                             ->title('Pago registrado correctamente')
                             ->success()
@@ -233,6 +320,42 @@ class CreditPaymentResource extends Page implements HasTable
                     ->modalSubmitActionLabel('Registrar pago')
                     ->modalCancelActionLabel('Cerrar'),
             ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    // DeleteBulkAction::make(),
+                    BulkAction::make('paymentGroup')
+                        ->label("Pagar grupo")
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records) {
+                            $creditService = new CreditService();
+                            foreach($records as $record){
+                                $creditService->registerPayment(
+                                    $record->residue,
+                                    $record->residue,
+                                    $record->sale,
+                                    SalePayment::METHOD_CASH,
+                                    auth()->id(),
+                                    "Registrado mediante por: Grupo de Pagos"
+                                );
+                            }
+                            
+                            Notification::make()
+                                ->title('Pagos registrados correctamente')
+                                ->success()
+                                ->send();
+                        })
+                        ->modalContent(function (Collection $records) {
+                            return view(
+                                'filament.pages.actions.sale-payment-sales',
+                                ['records' => $records]
+                            );
+                        }),
+                ]),
+                
+            ])
+            ->checkIfRecordIsSelectableUsing(
+                fn (SalePayment $record): bool => !$record->sale->is_paid,
+            )
             ->paginated();
     }
 

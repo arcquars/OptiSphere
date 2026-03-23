@@ -961,6 +961,8 @@ class ManagerBranchCode extends Component
      */
     public function closeQrModal()
     {
+        $apiService = new EconomicoApiService($this->branch->id);
+        $apiService->cancelQr($this->qrId);
         $this->showQrModal = false;
         $this->qrImage = null;
         $this->qrId = null;

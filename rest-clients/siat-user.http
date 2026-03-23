@@ -1,4 +1,4 @@
-POST facturaciones.lab-cdcc.com/api/v1.0.0/users/get-token
+POST http://127.0.0.1:8065/api/v1.0.0/users/get-token
 Accept: application/json
 Content-Type: application/json
 
@@ -10,6 +10,61 @@ Content-Type: application/json
 ###
 GET facturaciones.lab-cdcc.com/api/invoices/siat/v2/actividades
 Content-Type: application/json
-Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwczpcL1wvaHVwZXIuaGVtb2xhYi1iby5jb20iLCJhdWQiOiJodHRwczpcL1wvaHVwZXIuaGVtb2xhYi1iby5jb20iLCJpYXQiOjE3NjQ2NDQ4MTcsIm5iZiI6MTc2NDY0NDgxNywidXNlciI6eyJ1c2VyX2lkIjozOCwidXNlcm5hbWUiOiJjZXJpc2llciIsInB3ZCI6ImE2YzRmYzY4OWY4NzRlYmY4Yzk1NzExM2IxMjY2ZTIyIn19.kAFzDOXlpX6NvYuxZp7Yt1WPU2n6xEtN3drPod2LALdBWk2K_iyr4ZbVOBHM8XG-MER7IXhJklGYboz1-2F9Pg
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwOlwvXC8xMjcuMC4wLjE6ODA2NSIsImF1ZCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDY1IiwiaWF0IjoxNzY1MzMzODY3LCJuYmYiOjE3NjUzMzM4NjcsInVzZXIiOnsidXNlcl9pZCI6OSwidXNlcm5hbWUiOiJjZXJpc2llciIsInB3ZCI6ImE2YzRmYzY4OWY4NzRlYmY4Yzk1NzExM2IxMjY2ZTIyIn19.4ALTt8c4nsosJZVBD0ODlDVtvedOmcRsrYdXOhX-qnZofdP1ZlEDCeMsqZGLMLBln3MIqGnMH2-B8LFYxwWVhg
 
+###
+POST http://127.0.0.1:8065/api/invoices
+Content-Type:application/json
+Authorization:Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJodHRwOlwvXC8xMjcuMC4wLjE6ODA2NSIsImF1ZCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDY1IiwiaWF0IjoxNzY1MzMzODY3LCJuYmYiOjE3NjUzMzM4NjcsInVzZXIiOnsidXNlcl9pZCI6OSwidXNlcm5hbWUiOiJjZXJpc2llciIsInB3ZCI6ImE2YzRmYzY4OWY4NzRlYmY4Yzk1NzExM2IxMjY2ZTIyIn19.4ALTt8c4nsosJZVBD0ODlDVtvedOmcRsrYdXOhX-qnZofdP1ZlEDCeMsqZGLMLBln3MIqGnMH2-B8LFYxwWVhg
 
+{
+    "customer_id":1228,
+    "customer":"Murillo",
+    "nit_ruc_nif":"4508822",
+    "sub_total":66.5,
+    "total_tax":8.65,
+    "discount":"0.00",
+    "monto_giftcard":"0.00",
+    "total":66.5,
+    "invoice_date_time":"",
+    "currency_code":"BOB",
+    "codigo_sucursal":"0",
+    "punto_venta":"0",
+    "codigo_documento_sector":1,
+    "tipo_documento_identidad":1,
+    "codigo_metodo_pago":1,
+    "codigo_moneda":1,
+    "complemento":null,
+    "numero_tarjeta":null,
+    "tipo_cambio":1,
+    "tipo_factura_documento":1,
+    "items":[
+        {
+            "product_id":2,
+            "product_code":"test-8989",
+            "product_name":"Test 89",
+            "price":33,
+            "quantity":1,
+            "unidad_medida":57,
+            "numero_seria":"",
+            "numero_imei":"",
+            "codigo_producto_sin":1002063,
+            "codigo_actividad":"4773100",
+            "discount":0,
+            "total":33
+        },{
+            "product_id":2,
+            "product_code":"maq-585-rr",
+            "product_name":"Corte maq-585",
+            "price":33.5,
+            "quantity":1,
+            "unidad_medida":58,
+            "numero_seria":"",
+            "numero_imei":"",
+            "codigo_producto_sin":1002061,
+            "codigo_actividad":"4773100",
+            "discount":0,
+            "total":33.5
+        }],
+    "data":"{}"
+} 

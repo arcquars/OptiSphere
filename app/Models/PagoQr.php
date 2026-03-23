@@ -4,9 +4,14 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PagoQr extends Model
 {
+    const STATUS_PENDING = "PENDING";
+    const STATUS_PAID = "PAID";
+    const STATUS_CANCELLED = "CANCELLED";
+    const STATUS_EXPIRED = "EXPIRED";
     protected $table = 'pago_qrs';
 
     protected $fillable = [
@@ -41,4 +46,18 @@ class PagoQr extends Model
             set: fn ($value) => $value instanceof Carbon ? $value->format('H:i:s') : $value,
         );
     }
+
+    public function sales(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            Sale::class, 
+            'sale_partial_payment_qrs', 
+            'pago_qr_id', 
+            'sale_id'
+        )
+        ->withPivot('status')
+        ->withPivot('amount')
+        ->withTimestamps();
+    }
+    
 }

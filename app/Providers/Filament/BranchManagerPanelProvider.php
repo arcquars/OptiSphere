@@ -51,6 +51,8 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
         return $panel
             ->id('branch-manager')
             ->path('branch-manager')
+            ->sidebarCollapsibleOnDesktop()
+            // ->collapsedSidebarWidth('2rem')
             ->favicon(asset('favicon.ico'))
             ->login()
             ->colors([

@@ -1,17 +1,20 @@
 <div>
+    @if($isQrActive)
+    <h1 class="text-error text-center font-bold mb-2">Existe un QR activo para el pago de esta venta a credito</h1>
+    @endif
     <div class="grid grid-cols-2 gap-1">
         <div>
-            <p class="text-sm"><b>Fecha de venta: </b> {{ $salePayment->sale->date_sale }}</p>
+            <p class="text-sm"><b>Fecha de venta: </b> {{ $record->sale->date_sale }}</p>
         </div>
         <div>
-            <p class="text-sm"><b>Usuario: </b> {{ $salePayment->sale->user->name }}</p>
+            <p class="text-sm"><b>Usuario: </b> {{ $record->sale->user->name }}</p>
         </div>
         <div>
-            <p class="text-sm"><b>Total venta: </b> {{ $salePayment->sale->total_amount }}</p>
+            <p class="text-sm"><b>Total venta: </b> {{ $record->sale->total_amount }}</p>
         </div>
         <div>
-            <p class="text-sm @if(!$salePayment->sale->is_paid) text-error @else text-success @endif">
-                <b>Saldo: </b> {{ number_format($salePayment->sale->due_amount, 2) }}
+            <p class="text-sm @if(!$record->sale->is_paid) text-error @else text-success @endif">
+                <b>Saldo: </b> {{ number_format($record->sale->due_amount, 2) }}
             </p>
         </div>
     </div>
@@ -28,8 +31,8 @@
             </tr>
             </thead>
             <tbody>
-            @foreach ($salePayment->sale->payments as $i => $payment)
-            <tr class="@if($payment->id == $salePayment->id) bg-orange-200 @endif">
+            @foreach ($payments as $i => $payment)
+            <tr class="@if($payment->id == $record->id) bg-orange-200 @endif">
                 <th>{{ $i++ }}</th>
                 <td>{{ $payment->user->name }}</td>
                 <td>{{ $payment->created_at }}</td>

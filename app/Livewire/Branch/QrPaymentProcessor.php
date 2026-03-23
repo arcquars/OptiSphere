@@ -13,8 +13,7 @@ class QrPaymentProcessor extends Component
     public $shouldPoll = true;
     // Solo este pequeño componente se refrescará cada 5-10 segundos
     public function checkStatus12() {
-        Log::info("ssss: " . $this->qrId);
-        $pagoQr = PagoQr::where('qr_id', "=", $this->qrId)->where('status', '=', 1)->first();
+        $pagoQr = PagoQr::where('qr_id', "=", $this->qrId)->where('status', 'like', PagoQr::STATUS_PAID)->first();
         if ($pagoQr) {
             $this->shouldPoll = false;
             $this->dispatch('payment-confirmed'); // Avisar al padre

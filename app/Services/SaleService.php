@@ -177,6 +177,7 @@ class SaleService
                 // Utilizamos el CreditService para registrar el primer abono.
                 $this->creditService->registerPayment(
                     $paidAmount,
+                    $dueAmount,
                     $sale,
                     $data['payment_method'], // Método del abono inicial
                     $data['user_id'],

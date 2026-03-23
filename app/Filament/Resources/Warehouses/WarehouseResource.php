@@ -70,18 +70,20 @@ class WarehouseResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultPaginationPageOption(10)
+            // ->compact()
             ->filters([
                 //
             ])
             ->recordActions([
                 Action::make('create-base-code')
                     ->label('Matriz')
-                    ->icon('c-square-3-stack-3d')
+                    // ->icon('c-square-3-stack-3d')
                     ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.matrix', ['warehouse_id' => $record->id]))
                     ->color('success'),
                 Action::make('create-base-code')
                     ->label('Inventario')
-                    ->icon('c-square-3-stack-3d')
+                    // ->icon('c-square-3-stack-3d')
                     ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
                     ->color('success'),
                 EditAction::make(),

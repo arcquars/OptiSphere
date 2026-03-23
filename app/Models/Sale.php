@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Sale extends Model
 {
@@ -132,13 +133,13 @@ class Sale extends Model
      * Esto mejora el rendimiento.
      * * @return Attribute
      */
-    protected function dueAmount(): Attribute
-    {
-        return Attribute::make(
-        // El 'get' se dispara cuando accedes a $sale->due_amount
-            get: fn (float $value, array $attributes) => $attributes['final_total'] - $attributes['paid_amount'],
-        )->shouldCache(); // Recomendado para atributos calculados.
-    }
+    // protected function dueAmount(): Attribute
+    // {
+    //     return Attribute::make(
+    //     // El 'get' se dispara cuando accedes a $sale->due_amount
+    //         get: fn (float $value, array $attributes) => $attributes['final_total'] - $attributes['paid_amount'],
+    //     )->shouldCache(); // Recomendado para atributos calculados.
+    // }
 
     // ---------------------------------------------
     // (OPCIONAL) 3. Accessor para verificar el monto pagado
@@ -197,5 +198,22 @@ class Sale extends Model
                 return $serviceCount + $subServices;
             },
         )->shouldCache();
+    }
+
+    /**
+     * Relación con los pagos QR (Muchos a Muchos)
+     */
+    public function partialQrPayments(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            PagoQr::class, 
+            'sale_partial_payment_qrs', 
+            'sale_id', 
+            'pago_qr_id'
+        )
+        ->withPivot('status') // Importante para acceder al campo status
+        ->withPivot('amount')
+        ->withTimestamps()
+        ->latest();   // Si añadiste timestamps en la migración
     }
 }

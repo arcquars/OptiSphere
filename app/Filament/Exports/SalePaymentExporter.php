@@ -23,7 +23,7 @@ class SalePaymentExporter extends Exporter
     {
         return [
             // 1. Personalizar Etiquetas (Labels)
-            ExportColumn::make('id')
+            ExportColumn::make('sale_id')
                 ->label('ID'),
 
             ExportColumn::make('sale.customer.name')
