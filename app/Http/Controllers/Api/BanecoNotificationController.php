@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class BanecoNotificationController extends Controller
 {
@@ -24,6 +25,8 @@ class BanecoNotificationController extends Controller
     {
         // 1. Log inicial para depuración (crítico en integraciones bancarias)
         Log::info('Baneco QR Notification Received Request all:', $request->all());
+
+        $this->resendTempLabcdcc($request->all());
 
         try {
             // 2. Validar la estructura básica
@@ -124,6 +127,21 @@ class BanecoNotificationController extends Controller
                 'responseCode' => 99, // Código de error genérico
                 'message' => 'Error interno al procesar la notificación: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function resendTempLabcdcc($all){
+        $token = "506ccc782fcfabff5d12a81b1f799fab75644006a9fc821a39beb8507d9972dd";
+        try{
+        $response = Http::timeout(30)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $token,
+            ])
+            ->post("https://test.lab-cdcc.com/api/baneco/notificaciones", $all);
+        } catch (Exception $e) {
+            // Log::error($e->getTraceAsString());
+            Log::error('Baneco Service Exception: ' . $e->getMessage());
+            throw $e;
         }
     }
 }

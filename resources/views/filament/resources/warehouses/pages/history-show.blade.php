@@ -33,15 +33,49 @@ use App\Models\WarehouseIncome;
                         Enviar a Sucursal
                     </x-filament::button>
                 @endif
+                <x-filament::button 
+                    color="primary" 
+                    size="xs"
+                    icon="heroicon-m-printer"
+                    tag="a"
+                    target="_blank"
+                    :disabled="(strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0)"
+                    href="{{ route('export.pdf.history.movement', ['movement' => $action, 'movement_id' => $warehouse_m_id, 'type' => $type]) }}"
+                >
+                    Imprimir
+                </x-filament::button>
             </div>
         </div>
         
         <h4><b>Registrado por:</b> {{ $userM->name }}</h4>
         <div class="flex flex-wrap gap-3 mt-3">
+            <div class="flex items-center gap-2 badge badge-{{ $bgAction }}">
+                <i class="fa-regular fa-chess-pawn"></i>
+                <span>
+                    Acción : {{ $warehouse_m_id . ".-" . $action }} 
+                    <span class="text-red-700">
+                        @if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0) 
+                        (ANULADO) 
+                        @endif
+                    </span>
+                </span>
+            </div>
             <div class="flex items-center gap-2 badge badge-soft badge-primary">
                 <i class="fa-solid fa-warehouse"></i>
                 <span>Almacén: {{ $warehouse_name }}</span>
             </div>
+            @if(strcmp($action, "ENTREGA") == 0)
+            <div class="flex items-center gap-2 badge badge-soft badge-primary">
+                <i class="fa-solid fa-warehouse"></i>
+                <span>Se entrego a: {{ $warehouse_m->branch->name }}</span>
+            </div>
+            @endif
+            @if(strcmp($action, "DEVOLUCION") == 0)
+            <div class="flex items-center gap-2 badge badge-soft badge-primary">
+                <i class="fa-solid fa-warehouse"></i>
+                <span>Devolvio: {{ $warehouse_m->branch->name }}</span>
+            </div>
+            @endif
             <div class="flex items-center gap-2 badge badge-soft badge-info">
                 <i class="fa-solid fa-tags"></i>
                 <span>Tipo: {{ $type }}</span>
@@ -54,17 +88,7 @@ use App\Models\WarehouseIncome;
                 <i class="fa-regular fa-clock"></i>
                 <span>Fecha : {{ $dateMovement }}</span>    
             </div>
-            <div class="flex items-center gap-2 badge badge-{{ $bgAction }}">
-                <i class="fa-regular fa-chess-pawn"></i>
-                <span>
-                    Acción : {{ $warehouse_m_id . ".-" . $action }} 
-                    <span class="text-red-700">
-                        @if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0) 
-                        (ANULADO) 
-                        @endif
-                    </span>
-                </span>
-            </div>
+            
         </div>
     </div>
 

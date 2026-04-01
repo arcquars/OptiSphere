@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExportPdfController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -65,6 +66,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/sales/{sale}/receipt-pdf', [SalePdfController::class, 'receipt'])->name('sales.receipt_pdf');
     Route::get('/sales/{sale}/invoice-pdf', [SalePdfController::class, 'invoice'])->name('sales.invoice_pdf');
+
+    Route::get('/export-pdf/history/{movement}/{movement_id}/{type}', [ExportPdfController::class, 'historyByMovement'])->name('export.pdf.history.movement');
 });
 
 require __DIR__.'/auth.php';
