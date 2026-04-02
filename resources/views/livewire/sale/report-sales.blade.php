@@ -1,7 +1,6 @@
 <div x-data class="container mx-auto">
     <!-- Contenedor Principal del Reporte -->
-    <div class="bg-base-100 p-6 rounded-box shadow-lg">
-
+    <div class="bg-base-100 p-4 rounded-box shadow-lg">
         <!-- 1. Cabecera y Filtros -->
         <form wire:submit="search">
         <div class="border-b border-base-300 pb-6 mb-6">
@@ -45,6 +44,21 @@
                 </label>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <!-- Filtro # venta -->
+                <label class="w-full">
+                    <div class="label"><span class="label-text">Numero Venta</span></div>
+                    <input wire:model.defer="saleId" type="number" class="input input-sm 2xl:input-md focus:outline-none">
+                </label>
+                <!-- Filtro Tipo venta -->
+                <label class="w-full">
+                    <div class="label"><span class="label-text">Cliente</span></div>
+                    <input wire:model.defer="clientSearch" type="text" class="input input-sm 2xl:input-md focus:outline-none">
+                </label>
+                <!-- Filtro Tipo de Venta -->
+                <label class="w-full">
+                    <div class="label"><span class="label-text">Facturado</span></div>
+                    <input wire:model.defer="isFacturado" type="checkbox">
+                </label>
                 @can('report sale admin')
                 <!-- Filtro Tipo venta -->
                 <label class="w-full">
@@ -55,11 +69,6 @@
                             <option value="{{ $ts }}">{{ $ts }}</option>
                         @endforeach
                     </select>
-                </label>
-                <!-- Filtro Tipo venta -->
-                <label class="w-full">
-                    <div class="label"><span class="label-text">Cliente</span></div>
-                    <input wire:model.defer="clientSearch" type="text" class="input input-sm 2xl:input-md focus:outline-none">
                 </label>
                 <!-- Filtro Usuario -->
                 <label class="w-full">

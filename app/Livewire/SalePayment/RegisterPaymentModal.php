@@ -54,6 +54,7 @@ class RegisterPaymentModal extends Component
         $this->validate();
         $svc->registerPayment(
             $this->amountPayment,
+            $this->sale->due_amount,
             $this->sale,
             $this->paymentType,
             Auth::id(),

@@ -29,8 +29,10 @@ class ReportSales extends Component
     public $typeSale;
     public $userFilter;
     public $clientSearch;
+    public $saleId;
 
     public $branches;
+    public $isFacturado;
 
     public function mount(): void
     {
@@ -59,9 +61,9 @@ class ReportSales extends Component
             return;
         }
 
-        // 2️⃣ Diferencia máxima de 30 días
-        if ($start->diffInDays($end) > 30) {
-            $this->addError('dateEnd', 'El rango no puede ser mayor a 30 días.');
+        // 2️⃣ Diferencia máxima de 180 días
+        if ($start->diffInDays($end) > 180) {
+            $this->addError('dateEnd', 'El rango no puede ser mayor a 180 días.');
             return;
         }
     }
@@ -99,6 +101,13 @@ class ReportSales extends Component
             $query->where('user_id', '=', $this->userFilter);
         }
         
+        if($this->saleId){
+            $query->where('id', '=', $this->saleId);
+        }
+        
+        if($this->isFacturado){
+            $query->whereNotNull('siat_invoice_id');
+        }
 
         if($this->clientSearch && !empty($this->clientSearch)){
             $search = $this->clientSearch;

@@ -1,6 +1,36 @@
 <div class="space-y-4">
     @if($branchId)
-        <h3>Caja abierta: {{ $cashBoxClosing?->opening_time }} | Balance inicial: {{ $cashBoxClosing?->initial_balance }}</h3>
+        <h3>Caja abierta: {{ $cashBoxClosing?->opening_time }} | Balance inicial: {{ $cashBoxClosing?->initial_balance }} | </h3>
+    
+
+    <div class="grid grid-cols-4 p-2 border-2 rounded">
+        <div class="col-span-3 flex flex-row gap-3">
+            <div class="px-2 border-r-2">
+                <p class="font-bold">
+                    <i class="fas fa-lock-open text-green-600"></i>  Caja: Abierta
+                </p>
+            </div>
+            <div class="px-2 border-r-2">
+                <p>
+                    <i class="far fa-calendar-alt"></i>  Desde: {{ $cashBoxClosing?->opening_time }}
+                </p>
+                
+            </div>
+            <div>
+                <p>
+                    <i class="fas fa-money-bill"></i>  Balance inicial: {{ $cashBoxClosing?->initial_balance }}
+                </p>
+            </div>
+            
+        </div>
+        <div class="grid grid-flow-col justify-items-end">
+            <button type="button" class="btn btn-sm btn-primary">
+                <i class="fas fa-history"></i> Historial
+            </button>
+        </div>
+    </div>
+
+
     <!-- Filtros / cabecera -->
     <div class="bg-base-100 rounded-2xl shadow-sm p-4 md:p-6">
         <div class="flex flex-col md:flex-row md:items-end gap-4">

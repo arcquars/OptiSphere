@@ -159,7 +159,7 @@ class SaleService
                 'sale_type' => $data['sale_type'],
                 'date_sale' => $data['date_sale'] ?? now(),
                 'paid_amount' => 0,
-                'due_amount' => 0,
+                'due_amount' => $data['final_total'],
                 'notes' => $data['notes'] ?? null,
                 'qrid' => $data['qrid'],
                 'siat_invoice_id' => $data['siat_invoice_id'] ?? null,
