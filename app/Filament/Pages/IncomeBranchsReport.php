@@ -108,7 +108,7 @@ class IncomeBranchsReport extends Page implements HasTable
                     ->alignCenter()
             ])
             ->recordActions([
-                Action::make('delete')
+                Action::make('show')
                     ->hiddenLabel(true)
                     ->icon('fas-eye')
                     ->color("info")

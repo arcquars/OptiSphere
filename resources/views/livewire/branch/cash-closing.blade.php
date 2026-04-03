@@ -24,9 +24,9 @@
             
         </div>
         <div class="grid grid-flow-col justify-items-end">
-            <button type="button" class="btn btn-sm btn-primary">
+            <a href="{{ route('filament.branch-manager.resources.cash-movements.history-cash-close', ['branchId' => $branchId, 'userId' => Auth()->id()]) }}" class="btn btn-sm btn-primary">
                 <i class="fas fa-history"></i> Historial
-            </button>
+            </a>
         </div>
     </div>
 

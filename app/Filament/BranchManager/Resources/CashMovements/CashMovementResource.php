@@ -4,6 +4,7 @@ namespace App\Filament\BranchManager\Resources\CashMovements;
 
 use App\Filament\BranchManager\Resources\CashMovements\Pages\CreateCashMovement;
 use App\Filament\BranchManager\Resources\CashMovements\Pages\EditCashMovement;
+use App\Filament\BranchManager\Resources\CashMovements\Pages\HistoryCashClose;
 use App\Filament\BranchManager\Resources\CashMovements\Pages\ListCashMovements;
 use App\Filament\BranchManager\Resources\CashMovements\Pages\ViewCashMovement;
 use App\Filament\BranchManager\Resources\CashMovements\Schemas\CashMovementForm;
@@ -57,6 +58,7 @@ class CashMovementResource extends Resource
             'create' => CreateCashMovement::route('/create'),
             'view' => ViewCashMovement::route('/{record}'),
             'edit' => EditCashMovement::route('/{record}/edit'),
+            'history-cash-close' => HistoryCashClose::route('/history/cash-code/{branchId}/{userId}'),
         ];
     }
 }
