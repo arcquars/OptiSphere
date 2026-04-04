@@ -9,6 +9,11 @@
                 Gestionando ventas para la sucursal seleccionada <i class="fa-solid fa-lock-open"></i>
             </p>
             <div class="flex justify-end">
+                <button 
+                    x-on:click="$dispatch('toggle-history-income')"
+                    class="btn btn-sm btn-primary mt-1 mx-1">
+                    Historial Entrega
+                </button>
                 <a 
                     href="{{ App\Filament\BranchManager\Resources\Customers\Pages\ListCustomers::getUrl(['branch_id' => $branch->id]) }}" 
                     class="btn btn-sm btn-primary mt-1 mx-1">
