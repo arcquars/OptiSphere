@@ -38,4 +38,17 @@ class CreateCashMovement extends CreateRecord
             ->first()->id;
         return $data;
     }
+
+    protected function afterCreate(): void
+    {
+        $record = $this->record;
+
+        // Generamos la URL del PDF
+        $url = route('export.pdf.cash.movement', [
+            "cash_movement_id" => $record->id
+        ]);
+
+        // Inyectamos JavaScript al navegador para abrir la pestaña
+        $this->js("window.open('{$url}', '_blank');");
+    }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class CashBoxClosing extends Model
 {
@@ -71,6 +72,13 @@ class CashBoxClosing extends Model
         $branch = Branch::find($branchId);
 
         return $branch->isOpenCashBoxClosingByUser($userId);
+    }
+
+    protected function isClosing(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool => (isset($this->closing_time))? true : false
+        );
     }
 
     public function test(){

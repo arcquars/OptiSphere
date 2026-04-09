@@ -3,6 +3,7 @@
 namespace App\Livewire\Branch;
 
 use App\Models\Branch;
+use App\Models\OpticalProperty;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Forms\Components\Select;
@@ -47,14 +48,19 @@ class HistoryIncomeFormModal extends Component implements HasForms
                 Grid::make(2)
                     ->schema([
                         // Select con búsqueda — "Codigo base"
+                        // Select::make('base_code')
+                        //     ->label('Codigo base')
+                        //     ->required()
+                        //     ->searchable()
+                        //     ->options(fn () => \App\Models\BaseCode::pluck('name', 'id')) // ajusta al modelo real
+                        //     ->placeholder('Seleccione una opción')
+                        //     ->columnSpan(2),
                         Select::make('base_code')
                             ->label('Codigo base')
-                            ->required()
+                            ->options(OpticalProperty::groupBy('base_code')->pluck('base_code', 'base_code'))
                             ->searchable()
-                            ->options(fn () => \App\Models\BaseCode::pluck('name', 'id')) // ajusta al modelo real
-                            ->placeholder('Seleccione una opción')
-                            ->columnSpan(2),
-
+                        ->required()
+                        ->columnSpan(2),
                         // Botones Positivo/Negativo — Toggle Buttons
                         \Filament\Forms\Components\ToggleButtons::make('sign')
                             ->label('Positivo/Negativo?')
@@ -64,7 +70,7 @@ class HistoryIncomeFormModal extends Component implements HasForms
                             ])
                             ->colors([
                                 'positive' => 'warning',
-                                'negative' => 'gray',
+                                'negative' => 'danger',
                             ])
                             ->default('positive')
                             ->inline()
@@ -82,12 +88,17 @@ class HistoryIncomeFormModal extends Component implements HasForms
             ->statePath('formData');
     }
 
-    public function load(): void
+    public function load()
     {
         $data = $this->form->getState();
 
         // Lógica de carga con $data['base_code'], $data['action'], $data['sign']
-        dd($data);
+        // dd($data);
+        return redirect()->route('filament.branch-manager.pages.branch-history-income', [
+            'branchId' => $this->branch->id,
+            'codeBase' => $data['base_code'],
+            'type' => $data['sign'],
+        ]);
     }
 
     public function render()

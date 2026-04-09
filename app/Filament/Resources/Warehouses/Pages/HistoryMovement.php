@@ -149,6 +149,8 @@ class HistoryMovement extends Page implements HasTable
                     ->select('history.*', 'users.name as user_name', 'branches.name as branch_name')
             )
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('Numero'),
                 Tables\Columns\TextColumn::make('date')
                     ->label('Fecha')
                     ->dateTime('d/m/Y H:i')

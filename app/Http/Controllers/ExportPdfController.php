@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OpticalProperty;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Models\WarehouseDelivery;
 use App\Models\WarehouseIncome;
 use App\Models\WarehouseRefund;
@@ -91,6 +92,82 @@ class ExportPdfController extends Controller
         return $pdf->stream($filename);
     }
 
+    public function saldoByWarehouse(Request $request, $warehouseId, $codeBase, $type)
+    {        
+        $opticalProperties = OpticalProperty::where('base_code', $codeBase)
+                ->where('type', $type)
+                ->whereHas('product', function ($query){
+                    $query->where('is_active', true);
+                })
+                ->get();
+        $uniqueSpheres = $opticalProperties->pluck('sphere')->unique()->sort()->values();
+        $uniqueCylinders = $opticalProperties->pluck('cylinder')->unique()->sort()->values();
+        $warehouse = Warehouse::find($warehouseId);
+        
+
+        $matrix = $this->loadSaldoCylinders($warehouseId, $codeBase, $type, $opticalProperties, $uniqueSpheres, $uniqueCylinders);
+
+        $size = $request->get('size', 'letter');
+
+        $paper = match ($size) {
+            'half' => [0, 0, 396, 612],
+            'roll' => [0, 0, 226, 800],
+            default => 'letter',
+        };
+
+        // 2. Datos para la cabecera (puedes reemplazarlos con tu modelo de BD)
+        $data = [
+            'warehouse' => $warehouse, 
+            'type' => $type, 
+            'uniqueSpheres' => $uniqueSpheres, 
+            'uniqueCylinders' => $uniqueCylinders, 
+            'matrix' => $matrix, 
+            'codigo' => $codeBase,
+        ];
+
+        $view = 'export-pdf.saldo-warehouse';
+
+        // IMPORTANTE: Cambiado a 'landscape' para que quepan las 26 columnas
+        $pdf = Pdf::loadView($view, $data)->setPaper($paper, 'landscape');
+
+        $filename = 'saldo-warehouse-' . $codeBase . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
+    public function cashMovement(Request $request, $cash_movement_id)
+    {
+        $cashMovement = \App\Models\CashMovement::findOrFail($cash_movement_id);
+        
+        $size = $request->get('size', 'letter');
+
+        $paper = match ($size) {
+            'half' => [0, 0, 396, 612],
+            'roll' => [0, 0, 226, 800],
+            default => 'letter',
+        };
+
+        // 1. Generar array de medidas (0.00 a 6.00 en saltos de 0.25)
+        $medidas = [];
+        for ($i = 0; $i <= 6; $i += 0.25) {
+            $medidas[] = number_format($i, 2);
+        }
+
+        // 2. Datos para la cabecera (puedes reemplazarlos con tu modelo de BD)
+        $data = [
+            'cashMovement' => $cashMovement,
+        ];
+
+        $view = 'export-pdf.cash-movement';
+
+        // IMPORTANTE: Cambiado a 'landscape' para que quepan las 26 columnas
+        $pdf = Pdf::loadView($view, $data)->setPaper($paper, 'landscape');
+
+        $filename = 'cash-movement-' . $cashMovement->id . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
     private function loadCylinders($warehouseM, $type, $uniqueSpheres, $uniqueCylinders, &$matrix, &$warehouseStockHistories){
         if($warehouseM->base_code){
             foreach ($uniqueSpheres as $sphere){
@@ -124,5 +201,31 @@ class ExportPdfController extends Controller
                 $matrix[] = $row;
             }
         }
+    }
+
+    private function loadSaldoCylinders($warehouseId, $codeBase, $type, $ops, $uniqueSpheres, $uniqueCylinders){
+        $matrix = [];
+        foreach ($uniqueSpheres as $sphere){
+            $row = [];
+            foreach ($uniqueCylinders as $cylinder){
+                $specific = $ops->filter(function($op) use ($sphere, $cylinder){
+                    return $op->sphere == $sphere && $op->cylinder == $cylinder;
+                })->first();
+
+                if($specific){
+                    $amount = $specific->product->stockByWarehouse($warehouseId);
+                    $row[] = [
+                    'id' => $specific->product_id,
+                    'type' => $specific->type,
+                    'sphere' => $specific->sphere,
+                    'cylinder' => $specific->cylinder,
+                    'description' => "",
+                    'amount' => $amount];
+                }
+            }
+            $matrix[] = $row;
+        }
+
+        return $matrix;
     }
 }

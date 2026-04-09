@@ -110,6 +110,13 @@ class CashClosing extends Component
 
         $this->branchId = null;
 
+        $url = route('cahsboxclosing.export.pdf', [
+            "cbcId" => $closing->id
+        ]);
+
+        // Inyectamos JavaScript al navegador para abrir la pestaña
+        $this->js("window.open('{$url}', '_blank');");
+
         Notification::make()
             ->title('Cerrar Caja')
             ->body("Caja cerrada correctamente.")

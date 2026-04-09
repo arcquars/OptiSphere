@@ -214,6 +214,20 @@
             <i class="fa-regular fa-rectangle-list"></i>
             Historial    
         </a>
+        @if(strcmp($action, "saldo") === 0)
+            | <a 
+            href="{{ route('export.pdf.saldo.warehouse', [
+                'warehouseId' => $warehouseId, 
+                'codeBase' => $baseCode,
+                'type' => $type ? '+' : '-', 
+            ]) }}"
+            class="text-primary"
+            target="_blank"
+            >   
+            <i class="fa-solid fa-print"></i>
+            Imprimir saldo
+        </a>
+        @endif
     </h4>
 
     @switch($action)

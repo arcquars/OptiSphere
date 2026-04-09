@@ -71,6 +71,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cash-box-closing/{cbcId}/export-pdf', [CashBoxClosingPdfController::class, 'exportPdf'])->name('cahsboxclosing.export.pdf');
 
     Route::get('/export-pdf/history/{movement}/{movement_id}/{type}', [ExportPdfController::class, 'historyByMovement'])->name('export.pdf.history.movement');
+    Route::get('/export-pdf/cash-movement/{cash_movement_id}', [ExportPdfController::class, 'cashMovement'])->name('export.pdf.cash.movement');
+    Route::get('/export-pdf/saldo-warehouse/{warehouseId}/{codeBase}/{type}', [ExportPdfController::class, 'saldoByWarehouse'])->name('export.pdf.saldo.warehouse');
 });
 
 require __DIR__.'/auth.php';

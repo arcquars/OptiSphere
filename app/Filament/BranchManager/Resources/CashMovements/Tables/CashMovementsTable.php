@@ -4,6 +4,7 @@ namespace App\Filament\BranchManager\Resources\CashMovements\Tables;
 
 use App\Models\CashBoxClosing;
 use App\Models\CashMovement;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -123,11 +124,22 @@ class CashMovementsTable
 
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                ->hiddenLabel(),
                 EditAction::make()
                 ->visible(function (CashMovement $record): bool {
                     return $record->can_edit;
-                }),
+                })
+                ->hiddenLabel(),
+                Action::make('exportPdf')
+                    ->hiddenLabel(true)
+                    ->icon("far-file-pdf")
+                    ->url(fn (CashMovement $record): string => route(
+                        'export.pdf.cash.movement', 
+                        [
+                            "cash_movement_id" => $record->id
+                        ]))
+                    ->openUrlInNewTab()
             ])
             ->toolbarActions([
 //                BulkActionGroup::make([

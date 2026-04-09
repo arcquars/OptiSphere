@@ -59,7 +59,6 @@
                     <div class="label"><span class="label-text">Facturado</span></div>
                     <input wire:model.defer="isFacturado" type="checkbox">
                 </label>
-                @can('report sale admin')
                 <!-- Filtro Tipo venta -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Tipo venta</span></div>
@@ -70,6 +69,7 @@
                         @endforeach
                     </select>
                 </label>
+                @can('report sale admin')
                 <!-- Filtro Usuario -->
                 <label class="w-full">
                     <div class="label"><span class="label-text">Usuarios</span></div>

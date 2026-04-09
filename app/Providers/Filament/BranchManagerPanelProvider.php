@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\BranchManager\Pages\BranchHistoryIncome;
 use App\Filament\BranchManager\Pages\BranchManager;
 use App\Filament\BranchManager\Pages\BranchManagerCode;
 use App\Filament\BranchManager\Pages\CashClosing;
@@ -67,6 +68,7 @@ class BranchManagerPanelProvider extends PanelProvider implements HasActions
                 BranchManagerCode::class,
                 SalesReport::class,
                 CashClosing::class,
+                BranchHistoryIncome::class,
                 \App\Filament\Pages\CreditPaymentResource::class
             ])
             ->renderHook(

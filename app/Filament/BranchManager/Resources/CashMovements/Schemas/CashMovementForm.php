@@ -10,6 +10,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
@@ -51,9 +52,13 @@ class CashMovementForm
                     ->required(),
 
                 // --- No admins: ver su nombre, pero no cambiar ---
-                Placeholder::make('user_name')
+                // Placeholder::make('user_name')
+                //     ->label('Usuario')
+                //     ->content(fn () => auth()->user()?->name)
+                //     ->visible(fn () => ! self::isAdmin()),
+                TextEntry::make('user_name')
                     ->label('Usuario')
-                    ->content(fn () => auth()->user()?->name)
+                    ->formatStateUsing(fn ($state) => ! self::isAdmin() ? auth()->user()?->name : $state)
                     ->visible(fn () => ! self::isAdmin()),
                 // Campo real que se guarda cuando no es admin
                 Hidden::make('user_id')
