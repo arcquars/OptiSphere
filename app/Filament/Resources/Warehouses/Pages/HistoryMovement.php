@@ -53,30 +53,29 @@ class HistoryMovement extends Page implements HasTable
         $wh_id = $this->wharehouse_id;
 
         // 1. Construimos las consultas individuales con SELECT consistentes
-        $incomes = DB::table('warehouse_incomes')
+        $incomes = DB::table('warehouse_incomes as wi')
             ->select(
-                'id', 
-                'income_date as date', 
-                DB::raw("'INGRESO' as movement_label"), 
-                'user_id',
-                'base_code', 
-                'warehouse_id', 
+                'wi.id',
+                'wi.income_date as date',
+                DB::raw("'INGRESO' as movement_label"),
+                'wi.user_id',
+                DB::raw('MIN(op.base_code) as base_code'), // 👈 primer valor
+                'wi.warehouse_id',
                 DB::raw("NULL as branch_id"),
-                DB::raw("CASE 
-                    WHEN base_code IS NOT NULL THEN (
-                        SELECT op.type 
-                        FROM optical_properties op 
-                        INNER JOIN products p ON p.id = op.product_id
-                        INNER JOIN warehouse_stocks ws ON  ws.product_id = p.id 
-                        INNER JOIN warehouse_stock_histories wsh ON wsh.warehouse_stock_id = ws.id
-                        WHERE wsh.movement_type='INGRESO' AND wsh.type_id = warehouse_incomes.id 
-                        LIMIT 1
-                    ) 
-                    ELSE NULL 
-                END as op_type")
+                DB::raw('MIN(op.type) as op_type')          // 👈 primer valor
             )
-            ->where('warehouse_id', $wh_id)
-            ->where('base_code', 'like', $this->code);
+            ->join('warehouse_stock_histories as wsh', function ($join) {
+                $join->on('wsh.type_id', '=', 'wi.id')
+                    ->where('wsh.movement_type', '=', 'INGRESO');
+            })
+            ->join('warehouse_stocks as ws', 'ws.id', '=', 'wsh.warehouse_stock_id')
+            ->join('products as p', 'p.id', '=', 'ws.product_id')
+            ->join('optical_properties as op', function ($join) {
+                $join->on('op.product_id', '=', 'p.id')
+                    ->where('op.base_code', 'like', $this->code);
+            })
+            ->where('wi.warehouse_id', $wh_id)
+            ->groupBy('wi.id', 'wi.income_date', 'wi.user_id', 'wi.warehouse_id'); // 👈
 
         $deliveries = DB::table('warehouse_deliveries')
             ->select(
@@ -196,7 +195,7 @@ class HistoryMovement extends Page implements HasTable
                     // )
                     string => WarehouseResource::getUrl(
                         'history.show', 
-                        ["history_id" => $record->id, "action" => $record->movement_label, "type" => $record->op_type])
+                        ["history_id" => $record->id, "action" => $record->movement_label, "type" => $record->op_type, "code" => $record->base_code])
                     )
                 ->openUrlInNewTab()
             ])

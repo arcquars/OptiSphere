@@ -60,6 +60,7 @@ class VoidWharehouseIncomeModal extends Component
 
     public function voidRegister(){
         $this->validate();
+
         $this->warehouseInvoice->refresh();
         if(strcmp($this->warehouseInvoice->status, WarehouseIncome::STATUS_VOID) == 0){
             Notification::make()
@@ -67,6 +68,17 @@ class VoidWharehouseIncomeModal extends Component
             ->body('El registro ya se encuentra como ANULADO.')
             ->danger()
             ->send();
+            $this->closeVoidWherhouseIncomeModal();
+            return;
+        }
+
+        if(!$this->warehouseInvoice->base_code){
+            Notification::make()
+            ->title('Error')
+            ->body('El registro de ingreso tiene productos diferentes a productos OPTICOS.')
+            ->danger()
+            ->send();
+            $this->closeVoidWherhouseIncomeModal();
             return;
         }
         

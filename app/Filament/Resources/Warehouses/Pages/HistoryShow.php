@@ -6,6 +6,7 @@ use App\Filament\Resources\Warehouses\WarehouseResource;
 use App\Http\Requests\SendProductsRequest;
 use App\Models\InventoryMovement;
 use App\Models\OpticalProperty;
+use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\User;
 use App\Models\WarehouseDelivery;
@@ -66,7 +67,7 @@ class HistoryShow extends Page
         ];
     }
 
-    public function mount($history_id, $action, $type): void
+    public function mount($history_id, $action, $type, $code): void
     {
         $warehouseM = null;
         switch($action){
@@ -91,7 +92,7 @@ class HistoryShow extends Page
         $this->warehouse_m_id = $warehouseM->id;
         $this->warehouse_id = $warehouseM->warehouse_id;
         $this->dateMovement = $warehouseM->created_at;
-        $this->baseCode = $warehouseM->base_code;
+        $this->baseCode = $code;
         $this->type = $type;
         $this->action = $action;
         // $this->warehouseStockHistories = WarehouseStockHistory::where('movement_type', 'like', "%".$action."%")
@@ -163,19 +164,29 @@ class HistoryShow extends Page
         $warehouseStockHistories = WarehouseStockHistory::where('movement_type', $this->action)
             ->where('type_id', $this->warehouse_m_id)->get();
         $warehouseMid = $this->warehouse_id;
+        $baseCodeAux = $this->baseCode;
 
-        DB::transaction(function () use ($warehouseStockHistories, $branchId, $warehouseMid) {
+        DB::transaction(function () use ($warehouseStockHistories, $branchId, $warehouseMid, $baseCodeAux) {
             $warehouseDelivery = WarehouseDelivery::create([
                 'warehouse_id' => $warehouseMid,
                 'branch_id' => $branchId,
                 'user_id' => Auth::id(),
-                'base_code' => $this->baseCode,
+                'base_code' => $baseCodeAux,
                 'delivery_date' => Carbon::now()
             ]);
 
             foreach ($warehouseStockHistories as $data) {
                 // 'id' es el ID de la tabla 'product_stocks'.
                 $stockId = $data->warehouseStock->product_id;
+                $op = OpticalProperty::where('product_id', $stockId)->first();
+
+                if(!$op){
+                    continue; // Saltar este registro si el base_code no coincide
+                }
+                if($op && $op->base_code != $baseCodeAux){
+                    continue; // Saltar este registro si el base_code no coincide
+                }
+
                 // 'amount' es la nueva cantidad que viene del input.
                 $amount = (int) $data->difference;
 
