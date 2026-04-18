@@ -52,10 +52,99 @@
                                     @foreach($sale->items as $item)
                                         <tr>
                                             <td>
-                                                {{ $item->salable->name ?? '—' }}
+                                                @if(in_array($item->id, $this->editItems) && !$item->is_service)
+    <div
+        class="relative"
+        x-data="{
+            open: false,
+            anchorTop: 0,
+            anchorLeft: 0,
+            anchorWidth: 0,
+            updatePosition() {
+                const rect = this.$refs.inputWrapper.getBoundingClientRect();
+                this.anchorTop    = rect.bottom + window.scrollY;
+                this.anchorLeft   = rect.left   + window.scrollX;
+                this.anchorWidth  = rect.width;
+            }
+        }"
+        x-on:click.outside="open = false"
+    >
+        {{-- Input + botón cancelar --}}
+        <div class="join" x-ref="inputWrapper">
+            <input
+                class="input input-sm join-item w-48"
+                placeholder="Buscar código o nombre..."
+                wire:model.live.debounce.300ms="searchQuery.{{ $item->id }}"
+                x-on:focus="updatePosition(); open = true"
+                x-on:input="updatePosition(); open = true"
+                autocomplete="off"
+            />
+            <button
+                class="btn btn-sm join-item btn-ghost"
+                wire:click="cancelEdit({{ $item->id }})"
+                type="button"
+                title="Cancelar"
+            >
+                <i class="fa-solid fa-arrow-rotate-left"></i>
+            </button>
+        </div>
 
-                                                @if ($item->is_service)
-                                                    <div class="badge badge-info badge-xs ml-1">{{ $item->type_label }}</div>
+        {{-- Dropdown teletransportado al body --}}
+        <template x-teleport="body">
+            <div
+                x-show="open"
+                x-cloak
+                :style="`position: absolute; top: ${anchorTop}px; left: ${anchorLeft}px; width: ${anchorWidth + 120}px; z-index: 9999;`"
+                class="bg-base-100 border border-base-300 rounded-box shadow-lg max-h-60 overflow-y-auto"
+            >
+                @if(!empty($searchResults[$item->id] ?? []))
+                    <ul class="menu menu-sm p-1">
+                        @foreach($searchResults[$item->id] as $result)
+                            <li>
+                                <button
+                                    type="button"
+                                    class="flex items-center gap-2 text-left w-full"
+                                    wire:click="replaceItemProduct({{ $item->id }}, {{ $result['id'] }})"
+                                    x-on:click="open = false"
+                                >
+                                    <span class="badge badge-outline badge-sm font-mono shrink-0">
+                                        {{ $result['code'] }}
+                                    </span>
+                                    <span class="truncate text-sm">{{ $result['name'] }}</span>
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+                @elseif(strlen($searchQuery[$item->id] ?? '') >= 2)
+                    <div class="p-3 text-sm text-base-content/60 text-center">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i>
+                        Sin resultados para "<strong>{{ $searchQuery[$item->id] ?? '' }}</strong>"
+                    </div>
+                @else
+                    <div class="p-3 text-sm text-base-content/60 text-center">
+                        <i class="fa-solid fa-keyboard mr-1"></i>
+                        Escribe al menos 2 caracteres
+                    </div>
+                @endif
+            </div>
+        </template>
+    </div>
+@else
+
+
+
+
+
+                                                    @if (!$item->is_service && auth()->user()->hasRole('admin'))
+                                                        <a href="#" wire:click="editItem({{ $item->id }})" class="p-1 text-primary text-lg">
+                                                            <i class="fa-regular fa-pen-to-square"></i>
+                                                        </a>
+                                                    @endif
+                                                    {{ $item->salable->name ?? '—' }}
+
+                                                    @if ($item->is_service)
+                                                        <div class="badge badge-info badge-xs ml-1">{{ $item->type_label }}</div>
+                                                    @endif
                                                 @endif
                                             </td>
                                             <td class="text-center">{{ $item->quantity }}</td>

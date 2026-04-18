@@ -31,7 +31,7 @@
                 <th>Nombre</th>
                 <th>Codigo</th>
                 <th>Cantidad</th>
-{{--                <th>Acciones</th>--}}
+               <th>Acciones</th>
             </tr>
             </thead>
             <tbody>
@@ -41,6 +41,15 @@
                     <td>{{ $product->id }} {{ $product->name }}</td>
                     <td>{{ $product->code }}</td>
                     <td class="text-right">{{ $product->stockByStockWarehouse(1)? $product->stockByStockWarehouse($warehouseId)->quantity : 0 }}</td>
+                    <td class="text-right">
+                        <button class="btn btn-sm btn-primary text-base" 
+                            {{-- wire:click="toggleOpenHistoryBuModal({{ $product->id }})" --}}
+                            @click="$dispatch('toggleOpenHistoryBuModal', { product: '{{ $product->id }}' })"
+                            title="Historial de producto"
+                        >
+                          <i class="fa-regular fa-rectangle-list"></i>  
+                        </button>
+                    </td>
                 </tr>
             @endforeach
             </tbody>

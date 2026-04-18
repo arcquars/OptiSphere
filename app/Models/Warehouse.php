@@ -9,6 +9,9 @@ class Warehouse extends Model
 {
     use HasFactory;
 
+    const BUSINESS_WAREHOUSE = 'ALMACEN';
+    const BUSINESS_BRANCH = 'SUCURSAL';
+
     /**
      * @var list<string>
      */
