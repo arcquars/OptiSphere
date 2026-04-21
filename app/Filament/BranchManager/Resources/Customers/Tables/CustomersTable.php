@@ -3,6 +3,7 @@
 namespace App\Filament\BranchManager\Resources\Customers\Tables;
 
 use App\Filament\BranchManager\Resources\Customers\CustomerResource;
+use App\Models\Customer;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -10,12 +11,16 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Builder;
 
 class CustomersTable
 {
-    public static function configure(Table $table): Table
+    public static function configure(Table $table, $branchId): Table
     {
         return $table
+            ->modifyQueryUsing(
+                fn (Builder $query) => $query->where('branch_id', $branchId)
+            )
             ->recordUrl(null)
             ->columns([
                 TextColumn::make('name')
@@ -49,18 +54,35 @@ class CustomersTable
             ->filters([])
             ->recordActions([
                 EditAction::make()
-                    ->label('')
-                    ->tooltip('Editar')
-                    ->icon('fas-pen-to-square')
-                    ->url(fn ($record): string => CustomerResource::getUrl('edit', [
-                        'record' => $record,
-                        'branch_id' => request()->route('branch_id') ?? request()->query('branch_id'),
-                    ]))
+                    // Construir la URL de edición con branch_id
+                    ->url(fn (Customer $record): string =>
+                        CustomerResource::getUrl('edit', [
+                            'record'    => $record,
+                        ])
+                    ),
+                // EditAction::make()
+                //     ->label('')
+                //     ->tooltip('Editar')
+                //     ->icon('fas-pen-to-square')
+                //     ->url(fn ($record): string => CustomerResource::getUrl('edit', [
+                //         'record' => $record,
+                //         'branch_id' => request()->route('branch_id') ?? request()->query('branch_id'),
+                //     ]))
             ])
             ->toolbarActions([
                 // BulkActionGroup::make([
                 //     DeleteBulkAction::make(),
                 // ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $branchId = request()->route('branch_id');
+
+        return static::getEloquentQuery()
+            ->when($branchId, fn (Builder $query) =>
+                $query->where('branch_id', $branchId)
+            );
     }
 }

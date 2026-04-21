@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CustomerResource extends Resource
 {
@@ -26,14 +27,12 @@ class CustomerResource extends Resource
     protected static ?string $modelLabel = 'Cliente';
 
     protected static ?string $pluralModelLabel = 'Clientes';
+
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function form(Schema $schema): Schema
     {
         return CustomerForm::configure($schema);
-    }
-
-    public static function table(Table $table): Table
-    {
-        return CustomersTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -47,8 +46,8 @@ class CustomerResource extends Resource
     {
         return [
             'index' => ListCustomers::route('/{branch_id?}'),
-            'create' => CreateCustomer::route('/create'),
-            'edit' => EditCustomer::route('/{record}/{branch_id?}/edit'),
+            'create' => CreateCustomer::route('/create/{branch_id}'),
+            'edit' => EditCustomer::route('/{record}/edit'),
         ];
     }
 

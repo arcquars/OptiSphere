@@ -180,7 +180,7 @@
                 <div id="cart-items" class="flex-grow overflow-y-auto border-t border-b border-neutral-200 py-1 min-h-[200px]">
                     <div class="space-y-2">
                         @forelse($cart as $key => $item)
-                            <div class="gap-2 p-2 rounded-lg bg-neutral-100">
+                            <div wire:key="cart-item-{{ $key }}" class="gap-2 p-2 rounded-lg bg-neutral-100">
                             <div class="flex items-center">
                                 <div class="flex-grow">
                                     <p class="font-bold">{{ $item['name'] }}
@@ -208,23 +208,55 @@
                                         @endif
                                     </p> --}}
                                 </div>
-                                <button
-                                    type="button"    
-                                    wire:click="incrementCartQuantity('{{ $key }}',false)"  
-                                    class="btn btn-square btn-sm btn-outline btn-accent"
-                                    title="Quitar cantidad"
+                               <div
+                                    wire:key="qty-{{ $key }}"
+                                    x-data="{ qty: {{ $item['quantity'] }} }"
+                                    x-init="
+                                        $wire.$watch('cart', (cart) => {
+                                            if (cart['{{ $key }}'] !== undefined) {
+                                                qty = cart['{{ $key }}']['quantity'];
+                                            }
+                                        })
+                                    "
+                                    class="flex items-center gap-1"
                                 >
-                                    <i class="fa-solid fa-minus"></i>
-                                </button>
-                                <p class="badge badge-lg mx-1">{{ $item['quantity'] }}</p>
-                                <button
-                                    type="button"
-                                    wire:click="incrementCartQuantity('{{ $key }}', true)" 
-                                    class="btn btn-square btn-sm btn-outline btn-accent"
-                                    title="Incrementar cantidad"
-                                >
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
+                                    {{-- Botón restar --}}
+                                    <button
+                                        type="button"
+                                        class="btn btn-square btn-sm btn-outline btn-accent"
+                                        title="Quitar cantidad"
+                                        @click="
+                                            qty = Math.max(1, qty - 1);
+                                            $wire.updateCartQuantity('{{ $key }}', qty)
+                                        "
+                                    >
+                                        <i class="fa-solid fa-minus"></i>
+                                    </button>
+
+                                    {{-- Input numérico — Alpine controla el valor local, Livewire recibe en blur/enter --}}
+                                    <input
+                                        type="text"
+                                        class="input input-sm w-8 text-center px-0 text-xs"
+                                        min="1"
+                                        max="{{ $item['limit'] }}"
+                                        x-model.number="qty"
+                                        @blur="$wire.updateCartQuantity('{{ $key }}', qty)"
+                                        @keydown.enter.prevent="$wire.updateCartQuantity('{{ $key }}', qty)"
+                                    />
+
+                                    {{-- Botón sumar --}}
+                                    <button
+                                        type="button"
+                                        class="btn btn-square btn-sm btn-outline btn-accent"
+                                        title="Incrementar cantidad"
+                                        @click="
+                                            qty = Math.min({{ $item['limit'] }}, qty + 1);
+                                            $wire.updateCartQuantity('{{ $key }}', qty)
+                                        "
+                                    >
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
                                 @if($item['type'] !== 'service')
                                     <button
                                         type="button"

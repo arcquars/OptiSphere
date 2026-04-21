@@ -11,17 +11,25 @@ class CashMovementInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('branch.name'),
-                TextEntry::make('user.name'),
+                TextEntry::make('branch.name')
+                    ->label('Sucursal'),
+                TextEntry::make('user.name')
+                    ->label('Usuario'),
                 TextEntry::make('cash_box_closing_id')
+                    ->label('Cierre de Caja')
                     ->numeric(),
-                TextEntry::make('type'),
+                TextEntry::make('type')
+                    ->label('Tipo'),
                 TextEntry::make('amount')
+                    ->label('Monto')
                     ->numeric(),
-                TextEntry::make('description'),
+                TextEntry::make('description')
+                    ->label('Descripción'),
                 TextEntry::make('created_at')
+                    ->label('Creado en')
                     ->dateTime(),
                 TextEntry::make('updated_at')
+                    ->label('Actualizado en')
                     ->dateTime(),
             ]);
     }

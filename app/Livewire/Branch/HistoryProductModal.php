@@ -39,15 +39,15 @@ class HistoryProductModal extends Component
         $movements = Collection::empty();
         if($this->product){
             $movements = InventoryMovement::where('product_id', $this->product->id)
-            ->where(function($query) {
-                $query->where([
-                    ['from_location_type', 'like', 'SUCURSAL'],
-                    ['from_location_id', $this->branch->id]
-                ])
-                ->orWhere([
-                    ['to_location_type', 'like', 'SUCURSAL'],
-                    ['to_location_id', $this->branch->id]
-                ]);
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('from_location_type', 'SUCURSAL')
+                    ->where('from_location_id', $this->branch->id);
+                })
+                ->orWhere(function ($q) {
+                    $q->where('to_location_type', 'SUCURSAL')
+                    ->where('to_location_id', $this->branch->id);
+                });
             })
             ->orderByDesc('created_at')->paginate(config('cerisier.pagination', 3), pageName: 'movsPage');
         }

@@ -311,25 +311,32 @@ class ManagerBranchCode extends Component
     // Actualiza la cantidad de un ítem en el carrito
     public function updateCartQuantity($cartKey, $quantity)
     {
-        if (isset($this->cart[$cartKey])) {
-            if($quantity <= 0){
-                $this->cart[$cartKey]['quantity'] = 1;
-                $this->calculateTotals();
-            }
+        if (!isset($this->cart[$cartKey])) {
+            return;
+        }
 
-            if($quantity < $this->cart[$cartKey]['limit']){
-                $this->cart[$cartKey]['quantity'] = max(1, (int)$quantity);
-                $this->calculateTotals();
-            }
+        if(!is_numeric($quantity)){
+            $quantity = 1;
+        }
 
-            if(isset($this->cart[$cartKey]['services']) && count($this->cart[$cartKey]['services']) > 0){
-                foreach ($this->cart[$cartKey]['services'] as $key => $sub){
-                    $this->cart[$cartKey]['services'][$key]['quantity'] = $this->cart[$cartKey]['quantity'];
-                    $this->cart[$cartKey]['services'][$key]['limit'] = $this->cart[$cartKey]['limit'];
-                }
-                $this->calculateTotals();
+//        dd($quantity);
+
+        $limit = (int) $this->cart[$cartKey]['limit'];
+
+        // Convertimos a entero (texto → 0), luego clampeamos entre 1 y el límite de stock
+        $quantity = max(1, min((int) $quantity, $limit));
+
+        $this->cart[$cartKey]['quantity'] = $quantity;
+
+        // Sincronizamos los sub-servicios del producto
+        if (isset($this->cart[$cartKey]['services']) && count($this->cart[$cartKey]['services']) > 0) {
+            foreach ($this->cart[$cartKey]['services'] as $key => $sub) {
+                $this->cart[$cartKey]['services'][$key]['quantity'] = $quantity;
+                $this->cart[$cartKey]['services'][$key]['limit']    = $limit;
             }
         }
+
+        $this->calculateTotals();
     }
 
     public function incrementCartQuantity($cartKey, $add = true)
@@ -357,6 +364,8 @@ class ManagerBranchCode extends Component
                 }
                 $this->calculateTotals();
             }
+
+
         }
     }
 

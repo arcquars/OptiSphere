@@ -174,7 +174,10 @@ class Sale extends Model
     protected function amountProducts(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->items()->where('salable_type', Product::class)->count(),
+            get: fn () => $this
+                ->items()
+                ->where('salable_type', Product::class)
+                ->sum("quantity"),
         )->shouldCache();
     }
 
@@ -187,11 +190,13 @@ class Sale extends Model
 
                 $serviceCount = $this->items()
                     ->where('salable_type', Service::class)
-                    ->count();
+                    ->sum("quantity");
 
                 $subServices = 0;
                 foreach ($this->items as $i){
-                    $subServices += count($i->attachedServices);
+                    foreach ($i->attachedServices as $s){
+                        $subServices += $s->quantity;
+                    }
                 }
 
                 // Retorno explícito

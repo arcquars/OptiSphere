@@ -106,7 +106,7 @@ class CreateCustomer extends Component implements HasSchemas
                         Select::make('type')
                             ->label('Tipo de cliente')
                             ->default('normal')
-                            ->disabled(! auth()->user()->hasRole('admin'))
+                            // ->disabled(! auth()->user()->hasRole('admin'))
                             ->options(
                                 config('cerisier.tipo_cliente')
                             )->required(),
