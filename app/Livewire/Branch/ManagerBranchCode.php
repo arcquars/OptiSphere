@@ -29,6 +29,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use League\Config\Exception\ValidationException;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -335,6 +336,31 @@ class ManagerBranchCode extends Component
                 $this->cart[$cartKey]['services'][$key]['limit']    = $limit;
             }
         }
+
+        $this->calculateTotals();
+    }
+
+    // Actualiza la cantidad de un sub-servicio de forma independiente al producto padre
+    public function updateSubServiceQuantity(string $cartKey, string $subKey, $quantity): void
+    {
+        if (!isset($this->cart[$cartKey]['services'][$subKey])) {
+            return;
+        }
+
+        // El límite del servicio es la cantidad del producto padre
+        $limit = (int) $this->cart[$cartKey]['services'][$subKey]['limit'];
+
+        // Clampear: mínimo 1, máximo el límite heredado del producto
+        $quantity = max(1, min((int) $quantity, $limit));
+
+        Log::info("updateSubServiceQuantity :: ", [
+            "carKey" => $cartKey,
+            "subKey" => $subKey,
+            "quantity" => $quantity,
+            "limit" => $limit
+        ]);
+        
+        $this->cart[$cartKey]['services'][$subKey]['quantity'] = $quantity;
 
         $this->calculateTotals();
     }
@@ -1076,5 +1102,40 @@ class ManagerBranchCode extends Component
         $this->excepcionNit = true;
         $this->completePayment(true);
         $this->closeNitValidarModal();
+    }
+
+    #[Computed]
+    public function totalProducts()
+    {
+        $total = 0;
+        if(count($this->cart) > 0){
+            foreach ($this->cart as $key => $cart){
+                if(strcmp($cart['type'], 'service') != 0){
+                    $total += (int)$cart['quantity'];
+                }
+            }
+        }
+        return $total;
+    }
+
+    #[Computed]
+    public function totalServices(){
+        $total = 0;
+        if(count($this->cart) > 0){
+            foreach ($this->cart as $key => $cart){
+                if(strcmp($cart['type'], 'service') == 0){
+                    $total += (int)$cart['quantity'];
+                }
+
+                if(isset($cart['services']) && count($cart['services']) > 0){
+                    foreach ($cart['services'] as $key1 => $sub){
+                        $total += (int)$sub['quantity'];
+                    }
+                }
+            }
+        }
+
+        return $total;
+
     }
 }

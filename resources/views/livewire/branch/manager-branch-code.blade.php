@@ -290,40 +290,110 @@
                             </div>
 
 
-                            @if(isset($item['services']))
-                                <hr class="my-1">
-                                @foreach($item['services'] as $subKey => $sub)
-                                        <div class="pl-4 flex items-center pb-1">
-                                            <div class="flex-grow">
-                                                <p class="font-bold text-sm">
-                                                    <i class="fa-solid fa-check"></i>
-                                                    {{ $sub['name'] }}
-                                                    <span class="badge badge-info badge-xs ml-2">Servicio</span>
-                                                    @if($sub['promotion'])
-                                                        <span class="badge badge-info badge-xs ml-2">
-                                                            {{ ($sub['promotion'])? "-" .$sub['promotion'] . "%" : "" }}
-                                                        </span>
-                                                    @endif
-                                                    <span class="text-sm text-base text-gray-500 pl-2">
-                                                        @if($sub['promotion'] == null)
-                                                            {{ config('cerisier.currency_symbol') }} {{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }} {{ number_format($sub['price'] * $sub['quantity'], 2) }}
-                                                        @else
-                                                            {{ config('cerisier.currency_symbol') }} ({{ number_format($sub['price'], 2) }} - {{ number_format(($sub['price'] *  ($sub['promotion']/100)), 2) }}) x {{ $sub['quantity'] }} = {{ config('cerisier.currency_symbol') }} {{ number_format(($sub['price'] - $sub['price'] *  ($sub['promotion']/100) )* $sub['quantity'], 2) }}
-                                                        @endif
-                                                    </span>
-                                                </p>
-                                                
-                                            </div>
-                                            <button 
-                                                type="button" 
-                                                wire:click.stop.prevent="removeSubFromCart('{{ $key }}', '{{ $subKey }}')" 
-                                                class="btn btn-xs btn-outline btn-error" title="Quitar"
-                                            >
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </div>
-                                @endforeach
-                            @endif
+                    @if(isset($item['services']))
+                        <hr class="my-1">
+                        @foreach($item['services'] as $subKey => $sub)
+                            <div class="pl-4 flex items-center gap-2 pb-1">
+
+                                {{-- Info del servicio --}}
+                                <div class="flex-grow">
+                                    <p class="font-bold text-sm">
+                                        <i class="fa-solid fa-check"></i>
+                                        {{ $sub['name'] }}
+                                        <span class="badge badge-info badge-xs ml-2">Servicio</span>
+
+                                        @if($sub['promotion'])
+                                            <span class="badge badge-warning badge-xs ml-1">
+                                                -{{ $sub['promotion'] }}%
+                                            </span>
+                                        @endif
+
+                                        <span class="text-sm text-gray-500 pl-2">
+                                            @if($sub['promotion'] == null)
+                                                {{ config('cerisier.currency_symbol') }}
+                                                {{ number_format($sub['price'], 2) }} x {{ $sub['quantity'] }} =
+                                                {{ config('cerisier.currency_symbol') }}
+                                                {{ number_format($sub['price'] * $sub['quantity'], 2) }}
+                                            @else
+                                                {{ config('cerisier.currency_symbol') }}
+                                                ({{ number_format($sub['price'], 2) }} -
+                                                {{ number_format($sub['price'] * ($sub['promotion'] / 100), 2) }})
+                                                x {{ $sub['quantity'] }} =
+                                                {{ config('cerisier.currency_symbol') }}
+                                                {{ number_format(($sub['price'] - $sub['price'] * ($sub['promotion'] / 100)) * $sub['quantity'], 2) }}
+                                            @endif
+                                        </span>
+                                    </p>
+                                </div>
+
+                                {{-- Input de cantidad del servicio --}}
+                                <div
+                                    wire:key="sub-qty-{{ $subKey }}"
+                                    x-data="{ qty: {{ $sub['quantity'] }} }"
+                                    x-init="
+                                        $wire.$watch('cart', (cart) => {
+                                            if (
+                                                cart['{{ $key }}']?.services?.['{{ $subKey }}'] !== undefined
+                                            ) {
+                                                qty = cart['{{ $key }}']['services']['{{ $subKey }}']['quantity'];
+                                            }
+                                        })
+                                    "
+                                    class="flex items-center gap-1"
+                                >
+                                    {{-- Restar --}}
+                                    {{-- <button
+                                        type="button"
+                                        class="btn btn-square btn-xs btn-outline btn-accent"
+                                        title="Quitar cantidad"
+                                        @click="
+                                            qty = Math.max(1, qty - 1);
+                                            $wire.updateSubServiceQuantity('{{ $key }}', '{{ $subKey }}', qty)
+                                        "
+                                    >
+                                        <i class="fa-solid fa-minus"></i>
+                                    </button> --}}
+
+                                    {{-- Input auto-ancho según dígitos --}}
+                                    <input
+                                        type="number"
+                                        class="input input-xs text-center px-1"
+                                        min="1"
+                                        max="{{ $sub['limit'] }}"
+                                        x-model.number="qty"
+                                        :style="'width: calc(' + String(qty).length + 'ch + 2.2rem)'"
+                                        @blur="$wire.updateSubServiceQuantity('{{ $key }}', '{{ $subKey }}', qty)"
+                                        @change="$wire.updateSubServiceQuantity('{{ $key }}', '{{ $subKey }}', qty)"
+                                        @keydown.enter.prevent="$wire.updateSubServiceQuantity('{{ $key }}', '{{ $subKey }}', qty)"
+                                    />
+
+                                    {{-- Sumar --}}
+                                    {{-- <button
+                                        type="button"
+                                        class="btn btn-square btn-xs btn-outline btn-accent"
+                                        title="Incrementar cantidad"
+                                        @click="
+                                            qty = Math.min({{ $sub['quantity'] }}, qty + 1);
+                                            $wire.updateSubServiceQuantity('{{ $key }}', '{{ $subKey }}', qty)
+                                        "
+                                    >
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button> --}}
+                                </div>
+
+                                {{-- Botón eliminar servicio --}}
+                                <button
+                                    type="button"
+                                    wire:click.stop.prevent="removeSubFromCart('{{ $key }}', '{{ $subKey }}')"
+                                    class="btn btn-xs btn-outline btn-error"
+                                    title="Quitar servicio"
+                                >
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+
+                            </div>
+                        @endforeach
+                    @endif
                     </div>
                         @empty
                             <p class="text-center text-gray-500">El carrito está vacío.</p>
@@ -331,6 +401,8 @@
                     </div>
                 </div>
 
+                <p><b>Total productos: </b>{{ $this->totalProducts }}</p>
+                <p><b>Total servicios: </b>{{ $this->totalServices }}</p>
                 <div class="card mt-2 border p-1">
                     <div class="flex items-center justify-between m-2">
                         <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">

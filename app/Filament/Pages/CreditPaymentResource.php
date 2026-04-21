@@ -230,6 +230,7 @@ class CreditPaymentResource extends Page implements HasTable
                         ComponentsView::make('filament.pages.actions.sale-payment-qr')
                     ])
                     ->action(function (array $data, SalePayment $record): void {
+                        
                         $apiService = new EconomicoApiService($record->sale->branch_id);
                         $apiService->cancelQr($data['qrId']);
 
@@ -244,6 +245,56 @@ class CreditPaymentResource extends Page implements HasTable
                             ->send();
                     })
                     ->modalSubmitActionLabel("Cancelar QR")
+                    ->extraModalFooterActions([
+                        Action::make('verify_qr_payment')
+                            ->label('Verificar pago')
+                            ->icon('heroicon-o-check-circle')
+                            ->color('warning')
+                            ->action(function (array $data, SalePayment $record, Action $action): void {
+                                $parentData = $action
+                                    ->getLivewire()
+                                    ->getMountedTableActionForm()
+                                    ->getState();
+
+                                $qrId     = $parentData['qrId']     ?? null;
+                                $pagoQrId = $parentData['pagoQrId'] ?? null;
+                                if (empty($qrId)) {
+                                    Notification::make()
+                                        ->title('No hay QR activo para verificar')
+                                        ->warning()
+                                        ->send();
+                                    return;
+                                }
+
+                                $apiService = new EconomicoApiService($record->sale->branch_id);
+                                $result = $apiService->checkQrStatus($qrId);
+
+                                if ($result['success'] && $result['estado']) {
+                                    $saldo = $record->sale->final_total - $record->sale->paid_amount;
+
+                                    $creditService = new CreditService();
+                                    $creditService->registerPayment(
+                                        $saldo,
+                                        $saldo,
+                                        $record->sale,
+                                        'QR',
+                                        auth()->id(),
+                                        $qrId,
+                                    );
+
+                                    Notification::make()
+                                        ->title('¡Pago QR confirmado y registrado!')
+                                        ->success()
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('Pago aún no realizado')
+                                        ->body($result['message'] ?? 'El cliente no ha escaneado el QR.')
+                                        ->warning()
+                                        ->send();
+                                }
+                            }),
+                    ])
                     ->color('success')
                     ->modalCancelActionLabel('Cerrar'),
                 Action::make('view_history')
