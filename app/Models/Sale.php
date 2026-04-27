@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Sale extends Model
 {
@@ -93,6 +94,16 @@ class Sale extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(SalePayment::class)->where('deleted', false);
+    }
+
+    /**
+     * Obtiene el último pago realizado.
+     */
+    public function lastPayment(): HasOne
+    {
+        return $this->hasOne(SalePayment::class)
+            ->where('deleted', false)
+            ->latestOfMany();
     }
 
     public function scopeNotVoided($q) {

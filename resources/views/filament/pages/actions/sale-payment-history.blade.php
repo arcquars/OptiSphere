@@ -4,20 +4,21 @@
     @endif
     <div class="grid grid-cols-2 gap-1">
         <div>
-            <p class="text-sm"><b>Fecha de venta: </b> {{ $record->sale->date_sale }}</p>
+            <p class="text-sm"><b>Fecha de venta: </b>{{ $record->id }} {{ $record->date_sale->format('Y-m-d') }}</p>
         </div>
         <div>
-            <p class="text-sm"><b>Usuario: </b> {{ $record->sale->user->name }}</p>
+            <p class="text-sm"><b>Usuario: </b> {{ $record->user->name }}</p>
         </div>
         <div>
-            <p class="text-sm"><b>Total venta: </b> {{ $record->sale->total_amount }}</p>
+            <p class="text-sm"><b>Total venta: </b> {{ $record->final_total }}</p>
         </div>
         <div>
-            <p class="text-sm @if(!$record->sale->is_paid) text-error @else text-success @endif">
-                <b>Saldo: </b> {{ number_format($record->sale->due_amount, 2) }}
+            <p class="text-sm @if(!$record->is_paid) text-error @else text-success @endif">
+                <b>Saldo: </b> {{ number_format($record->due_amount, 2) }}
             </p>
         </div>
     </div>
+    @if(count($payments) > 0)
     <div class="overflow-x-auto">
         <table class="table table-sm">
             <!-- head -->
@@ -32,7 +33,7 @@
             </thead>
             <tbody>
             @foreach ($payments as $i => $payment)
-            <tr class="@if($payment->id == $record->id) bg-orange-200 @endif">
+            <tr class="@if($payment->id == $record->lastPayment->id) bg-orange-200 @endif">
                 <th>{{ $i++ }}</th>
                 <td>{{ $payment->user->name }}</td>
                 <td>{{ $payment->created_at }}</td>
@@ -44,4 +45,7 @@
             </tbody>
         </table>
     </div>
+    @else
+    <h2 class="text-center text-info my-2">Sin registro de pagos</h2>
+    @endif
 </div>

@@ -236,7 +236,7 @@
                                     {{-- Input numérico — Alpine controla el valor local, Livewire recibe en blur/enter --}}
                                     <input
                                         type="text"
-                                        class="input input-sm w-8 text-center px-0 text-xs"
+                                        class="input input-sm w-16 text-center px-0 text-xs"
                                         min="1"
                                         max="{{ $item['limit'] }}"
                                         x-model.number="qty"

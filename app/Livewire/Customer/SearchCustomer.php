@@ -30,9 +30,10 @@ class SearchCustomer extends Component
             return;
         }
 
-        $this->searchResults = Customer::where(function ($query) use ($value) {
+        // dd($this->branchId);
+        $this->searchResults = Customer::where('branch_id', '=', $this->branchId)->where(function ($query) use ($value) {
             // Todas las condiciones dentro de esta función se agruparán entre paréntesis en el SQL final
-            $query->where('branch_id', '=', $this->branchId)
+            $query
                 ->where('name', 'like', '%' . $value . '%')
                 ->orWhere('razon_social', 'like', '%' . $value . '%')
                 ->orWhere('nit', 'like', '%' . $value . '%');

@@ -244,6 +244,8 @@
                                             </a>
                                         </li>
                                         @endif
+
+                                        @hasanyrole('admin|branch-coordinator')
                                     <li>
                                         <a
                                             @click="$dispatch('toggleDeleteSale', {saleId: '{{$sale->id}}', deleteSale: true}); document.activeElement.blur(); return false;"
@@ -252,6 +254,7 @@
                                             <i class="fa-solid fa-trash-can"></i> Eliminar
                                         </a>
                                     </li>
+                                        @endhasanyrole
                                     @endif
                                 </ul>
                             </div>

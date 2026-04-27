@@ -18,6 +18,10 @@ class CustomersTable
     public static function configure(Table $table, $branchId): Table
     {
         return $table
+            ->extraAttributes([
+                'class' => 'tabla-compact',
+                'x-data' => '', // necesario para que Alpine no interfiera
+            ])
             ->modifyQueryUsing(
                 fn (Builder $query) => $query->where('branch_id', $branchId)
             )
@@ -31,7 +35,8 @@ class CustomersTable
                     ->searchable(),
                 TextColumn::make('address')
                     ->label('Dirección')
-                    ->searchable(),
+                    ->searchable()
+                    ->visibleFrom('xl'),
                 TextColumn::make('email')
                     ->label('Correo electrónico')
                     ->label('Email address')
@@ -41,7 +46,8 @@ class CustomersTable
                     ->searchable(),
                 TextColumn::make('contact_info')
                     ->label('Información de contacto')
-                    ->searchable(),
+                    ->searchable()
+                    ->visibleFrom('xl'),
                 TextColumn::make('branch.name')
                     ->label('Sucursal')
                     ->searchable(),

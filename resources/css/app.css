@@ -71,3 +71,10 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+.tabla-compact td.fi-ta-cell,
+.tabla-compact td.fi-ta-cell .fi-ta-text-item,
+.tabla-compact td.fi-ta-cell .fi-ta-icon {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
