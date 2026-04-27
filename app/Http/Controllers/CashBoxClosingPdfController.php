@@ -19,7 +19,7 @@ class CashBoxClosingPdfController extends Controller
                             closing: $cashBoxClosing,
                             from: null,
                             until: null,
-                            userIdFilter: 8,
+                            userIdFilter: $cashBoxClosing->user_id,
                         );
 
         $size = $request->get('size', 'letter');
