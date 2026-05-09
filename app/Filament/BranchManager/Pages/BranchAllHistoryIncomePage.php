@@ -2,51 +2,38 @@
 
 namespace App\Filament\BranchManager\Pages;
 
-use App\Models\CashBoxClosing;
-use App\Models\WarehouseDelivery;
-use App\Models\WarehouseStockHistory;
+use App\Models\Branch;
 use Filament\Pages\Page;
 use Filament\Panel;
-use Filament\Actions\Action;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables;
-use Filament\Tables\Columns\IconColumn;
+use App\Models\WarehouseDelivery;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
 
-class BranchHistoryIncome extends Page implements HasTable
+class BranchAllHistoryIncomePage extends Page implements HasTable
 {
     use InteractsWithTable;
-    protected string $view = 'filament.branch-manager.pages.branch-history-income';
-
-    protected static ?string $title = 'Historial de Ingresos Matriz';
+    protected string $view = 'filament.branch-manager.pages.branch-all-history-income-page';
 
     protected static bool $shouldRegisterNavigation = false;
 
-    public $branch;
-    public $codeBase;
-    public $type;
+    public Branch $branch;
 
     public static function getRoutePath(Panel $panel): string
     {
-        return 'store/history-income/{branchId}/{codeBase}/{type}';
+        return 'store/history-income/{branchId}';
     }
 
-    public function mount(int $branchId, string $codeBase, string $type): void
+    public function getTitle(): string
     {
-        // Aquí puedes cargar la sucursal o hacer validaciones
-        $this->branch = \App\Models\Branch::findOrFail($branchId);
-        $this->codeBase = $codeBase;
-        $this->type = $type;
+        return ($this->branch->name ?? 'Sucursal') . " - Historial de Ingresos";
     }
 
-    protected function getViewData(): array
+    public function mount(int $branchId): void
     {
-        return [
-            'branch' => $this->branch,
-            'codeBase' => $this->codeBase,
-            'type' => $this->type,
-        ];
+        $this->branch = Branch::findOrFail($branchId);
     }
 
     /**
@@ -58,7 +45,6 @@ class BranchHistoryIncome extends Page implements HasTable
         return $table
             ->query(
                 WarehouseDelivery::query()
-                ->where('base_code', $this->codeBase)
                 ->where('branch_id', $this->branch->id)
             )
             ->extraAttributes([
@@ -85,18 +71,16 @@ class BranchHistoryIncome extends Page implements HasTable
                     ->searchable()
                     ->sortable(),
             ])
+            ->reorderable('delivery_date', direction: 'desc')
             ->recordActions([
-                Action::make('exportPdf')
+                Action::make('details')
                     ->hiddenLabel(true)
-                    ->icon("far-file-pdf")
+                    ->icon("far-eye")
                     ->url(fn (WarehouseDelivery $record): string => route(
-                        'export.pdf.history.movement', 
+                        'filament.branch-manager.pages.income-details-page', 
                         [
-                            "movement" => "ENTREGA",
-                            "movement_id" => $record->id,
-                            "type" => (strcmp($this->type, 'negative') === 0) ? '-' : '+'
+                            "warehouseDeliveryId" => $record->id
                         ]))
-                    ->openUrlInNewTab()
             ])
             ->filters([
                 // Aquí puedes añadir filtros

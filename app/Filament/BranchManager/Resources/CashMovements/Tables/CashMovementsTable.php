@@ -39,7 +39,7 @@ class CashMovementsTable
                     ->searchable()
                     ->visible(fn () => auth()->user()?->hasRole('admin')),
                 TextColumn::make('cash_box_closing_id')
-                    ->label('Cerrado')
+                    ->label('Iden. Caja')
                     ->numeric(),
                 TextColumn::make('type')
                     ->label('Tipo')
