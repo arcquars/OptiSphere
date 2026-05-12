@@ -94,6 +94,10 @@ class ManageBranch extends Component implements HasSchemas
 
     public function form(Schema $schema): Schema
     {
+        $options = ['saldo' => 'Saldo'];
+        if(auth()->user()->hasRole('admin')){
+            $options['devolucion'] = 'Devolucion';
+        }
         return $schema
             ->components([
                 Grid::make()
@@ -109,13 +113,7 @@ class ManageBranch extends Component implements HasSchemas
                             ->searchable()
                             ->required(),
                         Select::make('action')
-                            ->options([
-                                'saldo' => 'Saldo',
-                                'devolucion' => 'Devolucion',
-//                                'price-normal' => 'Precio normal',
-//                                'price-especial' => 'Precio especial',
-//                                'price-mayorista' => 'Precio mayorista',
-                            ])
+                            ->options($options)
                             ->required(),
                         ToggleButtons::make('type')
                             ->label('Positivo/Negativo?')

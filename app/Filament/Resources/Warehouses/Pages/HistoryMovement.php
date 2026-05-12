@@ -51,6 +51,10 @@ class HistoryMovement extends Page implements HasTable
     public function table(Table $table): Table
     {
         $wh_id = $this->wharehouse_id;
+        $type = "-";
+        if(strcmp($this->type, "1") === 0){
+            $type = "+";
+        }
 
         // 1. Construimos las consultas individuales con SELECT consistentes
         $incomes = DB::table('warehouse_incomes as wi')
@@ -70,9 +74,10 @@ class HistoryMovement extends Page implements HasTable
             })
             ->join('warehouse_stocks as ws', 'ws.id', '=', 'wsh.warehouse_stock_id')
             ->join('products as p', 'p.id', '=', 'ws.product_id')
-            ->join('optical_properties as op', function ($join) {
+            ->join('optical_properties as op', function ($join) use ($type) {
                 $join->on('op.product_id', '=', 'p.id')
-                    ->where('op.base_code', 'like', $this->code);
+                    ->where('op.base_code', 'like', $this->code)
+                    ->where('op.type', $type);
             })
             ->where('wi.warehouse_id', $wh_id)
             ->groupBy('wi.id', 'wi.income_date', 'wi.user_id', 'wi.warehouse_id'); // 👈
@@ -94,7 +99,7 @@ class HistoryMovement extends Page implements HasTable
                         INNER JOIN warehouse_stocks ws ON  ws.product_id = p.id 
                         INNER JOIN warehouse_stock_histories wsh ON wsh.warehouse_stock_id = ws.id
                         WHERE wsh.movement_type='ENTREGA_SUCURSAL' AND wsh.type_id = warehouse_deliveries.id 
-                        LIMIT 1
+                        AND op.type = '" . $type . "' LIMIT 1 
                     ) 
                     ELSE NULL 
                 END as op_type")
@@ -119,7 +124,7 @@ class HistoryMovement extends Page implements HasTable
                         INNER JOIN warehouse_stocks ws ON  ws.product_id = p.id 
                         INNER JOIN warehouse_stock_histories wsh ON wsh.warehouse_stock_id = ws.id
                         WHERE wsh.movement_type='DEVOLUCION' AND wsh.type_id = warehouse_refunds.id 
-                        LIMIT 1
+                        AND op.type = '" . $type . "' LIMIT 1 
                     ) 
                     ELSE NULL 
                 END as op_type")
@@ -146,6 +151,7 @@ class HistoryMovement extends Page implements HasTable
                     ->leftJoin('users', 'history.user_id', '=', 'users.id')
                     ->leftJoin('branches', 'history.branch_id', '=', 'branches.id')
                     ->select('history.*', 'users.name as user_name', 'branches.name as branch_name')
+                    ->whereNotNull('op_type')
             )
             ->columns([
                 Tables\Columns\TextColumn::make('id')

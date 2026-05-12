@@ -81,7 +81,8 @@ class BranchesTable
                 EditAction::make()
                     ->label('')
                     ->tooltip('Editar')
-                    ->icon('fas-pen-to-square'),
+                    ->icon('fas-pen-to-square')
+                    ->hidden(!auth()->user()->hasRole('admin')),
             ])
             ->toolbarActions([
 //                BulkActionGroup::make([

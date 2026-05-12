@@ -26,14 +26,14 @@
                         Configurar SIAT
                     </a>
                 </li>
-                <li>
+                {{-- <li>
                     <a 
                         href="{{ $urlSiatConfig }}"
                         class="hover:bg-warning-focus active:bg-warning-focus"
                     >
                         Configurar Qr banco
                     </a>
-                </li>
+                </li> --}}
                 <li>
                     <a 
                         href="{{ env('AMYR_APIREST_HOST') }}/admin/login-i.php?username=cerisier&amp;pwd=123pedro" target="_blank" 

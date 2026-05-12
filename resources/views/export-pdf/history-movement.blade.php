@@ -99,7 +99,7 @@
         <table class="badges-table">
             <tr>
                 {{-- bgAction --}}
-                <td class="b-accion-{{ $bgAction }}">Acción : {{ $accion }}</td>
+                <td class="b-accion-{{ $bgAction }}">Acción : {{ $accion }} # {{ $warehouseM->id }}</td>
                 <td class="b-almacen">Almacén: {{ $warehouseM->warehouse->name }}</td>
                 @if(strcmp($accion, "ENTREGA") == 0)
                 <td class="b-almacen">Se entrego a: {{ $warehouseM->branch->name }}</td>
