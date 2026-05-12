@@ -9,6 +9,7 @@ use App\Models\Warehouse;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class HistoryProductByBusinessUnitModal extends Component
 {
@@ -52,6 +53,7 @@ class HistoryProductByBusinessUnitModal extends Component
         $buType = $this->buType;
         $movements = Collection::empty();
         if($this->product){
+            Log::info('Product ID: '.$this->product->id . " || " . 'Business Unit Type: '.$buType . " || " . 'Business Unit ID: '.$this->bu->id);
             $movements = InventoryMovement::where('product_id', $this->product->id)
             ->where(function($query) use ($buType) {
                 $query->where([

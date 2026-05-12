@@ -44,7 +44,7 @@
                     <td class="text-right">
                         <button class="btn btn-sm btn-primary text-base" 
                             {{-- wire:click="toggleOpenHistoryBuModal({{ $product->id }})" --}}
-                            @click="$dispatch('toggleOpenHistoryBuModal', { product: '{{ $product->id }}' })"
+                            @click="$dispatch('toggleOpenHistoryProduct', { productId: '{{ $product->id }}' })"
                             title="Historial de producto"
                         >
                           <i class="fa-regular fa-rectangle-list"></i>  

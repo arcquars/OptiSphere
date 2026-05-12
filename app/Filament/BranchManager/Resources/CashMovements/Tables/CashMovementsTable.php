@@ -4,6 +4,7 @@ namespace App\Filament\BranchManager\Resources\CashMovements\Tables;
 
 use App\Models\CashBoxClosing;
 use App\Models\CashMovement;
+use Dom\Text;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -31,6 +32,10 @@ class CashMovementsTable
             })
             ->recordUrl(null)
             ->columns([
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('branch.name')
                     ->label('Sucursal')
                     ->searchable(),

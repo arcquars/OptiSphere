@@ -83,8 +83,40 @@
                 @endcan
 
                 <!-- <div class="col-span-1 md:col-span-2 lg:col-span-4"> -->
-                <div class="col-span-1 md:col-span-2 lg:col-span-2">
+                <div class="col-span-1 md:col-span-2 lg:col-span-2 flex flex-wrap gap-2 items-end">
                     <button type="submit" class="btn btn-sm 2xl:btn-md btn-primary"><i class="fa-solid fa-filter"></i> Generar Reporte</button>
+
+                    {{-- Exportar PDF --}}
+                    <button
+                        type="button"
+                        wire:click="exportPdf"
+                        wire:loading.attr="disabled"
+                        wire:target="exportPdf"
+                        class="btn btn-sm 2xl:btn-md btn-error"
+                    >
+                        <span wire:loading.remove wire:target="exportPdf">
+                            <i class="fa-solid fa-file-pdf"></i> PDF
+                        </span>
+                        <span wire:loading wire:target="exportPdf">
+                            <span class="loading loading-spinner loading-xs"></span> Generando...
+                        </span>
+                    </button>
+
+                    {{-- Exportar Excel --}}
+                    <button
+                        type="button"
+                        wire:click="exportExcel"
+                        wire:loading.attr="disabled"
+                        wire:target="exportExcel"
+                        class="btn btn-sm 2xl:btn-md btn-success"
+                    >
+                        <span wire:loading.remove wire:target="exportExcel">
+                            <i class="fa-solid fa-file-excel"></i> Excel
+                        </span>
+                        <span wire:loading wire:target="exportExcel">
+                            <span class="loading loading-spinner loading-xs"></span> Generando...
+                        </span>
+                    </button>
                 </div>
             </div>
         </div>

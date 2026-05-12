@@ -7,9 +7,13 @@ use App\Models\Warehouse;
         <livewire:warehouse.product-delivery :warehouseId="$warehouse->id" />
     </div>
 
-    <livewire:warehouse.history-product-by-business-unit-modal 
+    {{-- <livewire:warehouse.history-product-by-business-unit-modal 
         :businessUnitType="Warehouse::BUSINESS_WAREHOUSE" 
-        :businessUnitId="$warehouse->id" />
+        :businessUnitId="$warehouse->id" /> --}}
+
+    <livewire:warehouse.history-product-modal 
+        :warehouseId="$warehouse->id" />
+
     <livewire:warehouse.inventory-warehouse :warehouseId="$warehouse->id" />
 
 </x-filament-panels::page>

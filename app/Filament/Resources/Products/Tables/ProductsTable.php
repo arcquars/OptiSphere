@@ -16,6 +16,7 @@ class ProductsTable
 {
     public static function configure(Table $table): Table
     {
+        $isAdmin = auth()->user()->hasRole('admin');
         return $table
             ->columns([
                 TextColumn::make('name')
@@ -39,7 +40,18 @@ class ProductsTable
             ])
             ->recordActions([
                 EditAction::make()
-                    ->hidden(fn (Product $record): bool => $record->opticalProperties()->exists()),
+                    //->hidden(fn (Product $record): bool => ($record->opticalProperties()->exists() && auth()->user()->hasRole('admin'))),
+                    ->hidden(function (Product $record) use($isAdmin): bool {
+                        if ($isAdmin) {
+                            return $record->opticalProperties()->exists();
+                            // if($record->opticalProperties()->exists()){
+                            //     dd();
+                            //     return false;
+                            // }
+                            
+                        }
+                        return true;
+                    }),
                 DeleteAction::make()
                     ->hidden(fn (Product $record): bool => $record->opticalProperties()->exists()),
             ])

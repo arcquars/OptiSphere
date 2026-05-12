@@ -45,7 +45,8 @@ class ListProducts extends ListRecords
                             ->send();
                     }
 
-                }),
+                })
+                ->hidden(!auth()->user()->hasRole('admin')),
             Action::make('create-base-code')
                 ->label('Crear con códigos Base')
                 ->url(fn (): string => route('filament.admin.resources.products.generate'))
@@ -53,7 +54,8 @@ class ListProducts extends ListRecords
             Action::make('edit-base-code')
                 ->label('Editar códigos Base')
                 ->url(fn (): string => route('filament.admin.resources.products.generate-edit'))
-                ->color('success'),
+                ->color('success')
+                ->hidden(!auth()->user()->hasRole('admin')),
             CreateAction::make()
         ];
     }
