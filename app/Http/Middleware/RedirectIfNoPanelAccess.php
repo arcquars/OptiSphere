@@ -20,6 +20,7 @@ class RedirectIfNoPanelAccess
         $user = Auth::user();
         $panel = Filament::getCurrentPanel();
 
+        
         // 1. Si no hay usuario o no hay panel, seguimos el flujo normal
         if (!$user || !$panel) {
             return $next($request);

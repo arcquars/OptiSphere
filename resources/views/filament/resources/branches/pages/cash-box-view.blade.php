@@ -75,13 +75,13 @@
                 <p class="p-1">{{ $cashBc->notes }}</p>
             </div>
 
-            <button
+            <a 
+                href="{{ route('cahsboxclosing.export.pdf', ['cbcId' => $this->cashBc->id]) }}" 
+                target="_blank"
                 class="btn btn-warning"
-                wire:click="printPdf"
-                @if(strcmp($this->cashBc->status, \App\Models\CashBoxClosing::STATUS_OPEN) == 0) disabled @endif
             >
-                Imprimir Pdf
-            </button>
+                Imprimir reporte PDF
+            </a>
         </div>
 
     </div>

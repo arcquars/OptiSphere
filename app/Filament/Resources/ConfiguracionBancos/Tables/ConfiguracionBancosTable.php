@@ -13,6 +13,7 @@ class ConfiguracionBancosTable
 {
     public static function configure(Table $table): Table
     {
+        $hasPermitido = auth()->user()->hasRole('admin');
         return $table
             ->recordUrl(null)
             ->columns([
@@ -33,7 +34,8 @@ class ConfiguracionBancosTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                ->hidden($hasPermitido ? false : true),
             ])
             ->toolbarActions([
                 // BulkActionGroup::make([

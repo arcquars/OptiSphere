@@ -531,12 +531,8 @@ class CreditPaymentResource extends Page implements HasTable
                     ->trueLabel('Pagado')
                     ->falseLabel('Con saldo')
                     ->queries(
-                        true: fn ($query) => $query->whereHas('sale', function ($query){
-                            $query->whereRaw('sales.final_total = sales.paid_amount');
-                        }),
-                        false: fn ($query) => $query->whereHas('sale', function ($query){
-                            $query->whereRaw('sales.final_total <> sales.paid_amount');
-                        }),
+                        true: fn ($query) => $query->whereRaw('sales.final_total = sales.paid_amount'),
+                        false: fn ($query) => $query->whereRaw('sales.final_total <> sales.paid_amount'),
                     ),
                 
                 SelectFilter::make('user_id')
@@ -548,6 +544,11 @@ class CreditPaymentResource extends Page implements HasTable
                 SelectFilter::make('customer_id')
                     ->label('Cliente')
                     ->relationship('customer', 'name')
+                    ->searchable()
+                    ->preload(),
+                SelectFilter::make('branch_id')
+                    ->label('Sucursal')
+                    ->relationship('branch', 'name')
                     ->searchable()
                     ->preload(),
 

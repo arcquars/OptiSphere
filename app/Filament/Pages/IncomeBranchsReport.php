@@ -191,17 +191,28 @@ class IncomeBranchsReport extends Page implements HasTable
                     ->searchable()
                     ->preload(),
                 Filter::make('opening_time')
-                ->label('Fecha de apertura')
-                ->schema([
-                    DatePicker::make('opening_time')
-                ])
-                ->query(function (Builder $query, array $data): Builder {
-                    return $query
-                        ->when(
-                            $data['opening_time'],
-                            fn (Builder $query, $date): Builder => $query->whereDate('opening_time', '>=', $date),
-                        );
-                })
+                    ->label('Rango de fechas')
+                    ->schema([
+                        DatePicker::make('from')->label('Desde'),
+                        DatePicker::make('until')->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when($data['from'], fn ($q, $date) => $q->whereDate('opening_time', '>=', $date))
+                            ->when($data['until'], fn ($q, $date) => $q->whereDate('opening_time', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from'] ?? null) {
+                            $indicators[] = Indicator::make('Desde: ' . Carbon::parse($data['from'])->format('d/m/Y'))
+                                ->removeField('from');
+                        }
+                        if ($data['until'] ?? null) {
+                            $indicators[] = Indicator::make('Hasta: ' . Carbon::parse($data['until'])->format('d/m/Y'))
+                                ->removeField('until');
+                        }
+                        return $indicators;
+                    })
             ])
             ->paginated();
     }

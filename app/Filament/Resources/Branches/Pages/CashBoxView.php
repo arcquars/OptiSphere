@@ -60,26 +60,4 @@ class CashBoxView extends Page
             userIdFilter: $this->cashBc->user_id,
         );
     }
-
-    public function printPdf()
-    {
-        // 1. Obtener los datos necesarios para el PDF
-        $data = [
-            'closing' => $this->cashBc,
-            'totals' => $this->totals,
-            'branchName' => $this->cashBc->branch->name, // Ejemplo de dato
-            'userName' => $this->cashBc->user->name,     // Ejemplo de dato
-        ];
-
-        // 2. Cargar la vista Blade para el PDF
-        // Reemplaza 'pdf.cash_box_report' con el nombre de tu vista Blade para el PDF.
-        $pdf = Pdf::loadView('pdf.cash_box_report', $data);
-
-        // 3. Devolver la respuesta de descarga usando streaming
-        // Livewire maneja esto correctamente para forzar la descarga en el navegador.
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output(); // Esto genera el contenido binario del PDF
-        }, 'cierre-caja-' . $this->cashBc->id . '.pdf'); // Nombre del archivo
-
-    }
 }

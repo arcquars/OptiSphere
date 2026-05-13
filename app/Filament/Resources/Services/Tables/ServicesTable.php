@@ -28,6 +28,7 @@ class ServicesTable
 {
     public static function configure(Table $table): Table
     {
+        $hasPermitido = auth()->user()->hasRole('admin');
         return $table
             ->recordUrl(null)
             ->columns([
@@ -55,9 +56,11 @@ class ServicesTable
                 //
             ])
             ->recordActions([
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->hidden($hasPermitido ? false : true),
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->hidden($hasPermitido ? false : true),
                 Action::make('set-price-service')
                     ->label('Cambiar precios')
                     ->modalHeading(fn (Service $record) => "Precios para: {$record->name}")
@@ -75,6 +78,7 @@ class ServicesTable
                                         ->pluck('name', 'id')
                                         ->toArray()
                                     )
+                                    ->required()
                                     ->searchable()
                                     ->preload()
                                     ->columnSpan(3)

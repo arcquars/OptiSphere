@@ -82,7 +82,7 @@ class ListCbc extends Component implements HasActions, HasSchemas, HasTable
 //                TextColumn::make('status')
 //                    ->searchable(),
             ])
-            ->defaultSort('initial_balance', 'desc')
+            ->defaultSort('opening_time', 'desc')
             ->filters([
                 SelectFilter::make('user_id')
                     ->label('Filtrar por Usuario')
