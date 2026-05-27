@@ -69,6 +69,16 @@
                         @endforeach
                     </select>
                 </label>
+                <!-- Filtro Tipo de pago -->
+                <label class="w-full">
+                    <div class="label"><span class="label-text">Tipo pago</span></div>
+                    <select wire:model.defer="typePaymentSelect" class="select select-sm 2xl:select-md select-bordered w-full focus:outline-none">
+                        <option value="">Todas</option>
+                        @foreach($typePayments as $tp)
+                            <option value="{{ $tp }}">{{ $tp }}</option>
+                        @endforeach
+                    </select>
+                </label>
                 @can('report sale admin')
                 <!-- Filtro Usuario -->
                 <label class="w-full">

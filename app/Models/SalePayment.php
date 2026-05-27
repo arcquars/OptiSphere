@@ -14,6 +14,8 @@ class SalePayment extends Model
     const METHOD_TRANSFER = 'TRANSFERENCIA';
     const METHOD_OTHER = 'OTRO';
 
+    const PAYMENT_TYPES = ["EFECTIVO", "TARJETA", "QR"];
+
     protected $fillable = [
         'sale_id',          // Clave foránea a la venta
         'user_id',          // Usuario que registró el pago

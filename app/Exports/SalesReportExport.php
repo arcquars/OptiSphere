@@ -33,6 +33,7 @@ class SalesReportExport implements
         private mixed   $saleTypeSelect,
         private mixed   $statusSelect,
         private mixed   $typeSale,
+        private mixed   $typePaymentSelect,
         private mixed   $userFilter,
         private mixed   $clientSearch,
         private mixed   $saleId,
@@ -62,6 +63,10 @@ class SalesReportExport implements
 
         if ($this->typeSale) {
             $query->where('sale_type', '=', $this->typeSale);
+        }
+
+        if ($this->typePaymentSelect && $this->typePaymentSelect !== 'all') {
+            $query->where('payment_method', '=', $this->typePaymentSelect);
         }
 
         if ($this->userFilter) {
@@ -96,6 +101,7 @@ class SalesReportExport implements
             'NIT',
             'Sucursal',
             'Tipo Venta',
+            'Tipo Pago',
             'Método Pago',
             'Estado',
             'Promoción',

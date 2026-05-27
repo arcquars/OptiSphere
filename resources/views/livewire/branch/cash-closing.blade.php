@@ -74,6 +74,10 @@
                 <div class="flex justify-between"><span>Efectivo</span><span class="font-semibold">{{ number_format($this->totals['sales']['cash'], 2) }}</span></div>
                 <div class="flex justify-between"><span>Transferencia</span><span class="font-semibold">{{ number_format($this->totals['sales']['transfer'], 2) }}</span></div>
                 <div class="flex justify-between"><span>QR</span><span class="font-semibold">{{ number_format($this->totals['sales']['qr'], 2) }}</span></div>
+                <div class="flex justify-between">
+                    <span class="font-bold">Subtotal</span>
+                    <span class="font-bold">{{ number_format($this->totals['sales']['qr'] + $this->totals['sales']['transfer'] + $this->totals['sales']['cash'], 2) }}</span>
+                </div>
             </div>
         </div>
 
@@ -83,6 +87,10 @@
                 <div class="flex justify-between"><span>Efectivo</span><span class="font-semibold">{{ number_format($this->totals['credit_payments']['cash'], 2) }}</span></div>
                 <div class="flex justify-between"><span>Transferencia</span><span class="font-semibold">{{ number_format($this->totals['credit_payments']['transfer'], 2) }}</span></div>
                 <div class="flex justify-between"><span>QR</span><span class="font-semibold">{{ number_format($this->totals['credit_payments']['qr'], 2) }}</span></div>
+                <div class="flex justify-between">
+                    <span class="font-bold">Subtotal</span>
+                    <span class="font-bold">{{ number_format($this->totals['credit_payments']['qr'] + $this->totals['credit_payments']['transfer'] + $this->totals['credit_payments']['cash'], 2) }}</span>
+                </div>
             </div>
         </div>
 

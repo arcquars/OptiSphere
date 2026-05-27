@@ -26,7 +26,7 @@ class BanecoNotificationController extends Controller
         // 1. Log inicial para depuración (crítico en integraciones bancarias)
         Log::info('Baneco QR Notification Received Request all:', $request->all());
 
-        $this->resendTempLabcdcc($request->all());
+        // $this->resendTempLabcdcc($request->all());
 
         try {
             // 2. Validar la estructura básica

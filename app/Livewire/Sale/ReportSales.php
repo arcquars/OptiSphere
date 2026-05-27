@@ -14,6 +14,7 @@ use Livewire\WithoutUrlPagination;
 use Livewire\WithPagination;
 
 use App\Exports\SalesReportExport;
+use App\Models\SalePayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -31,6 +32,11 @@ class ReportSales extends Component
     public $saleTypeSelect = 'all';
     public $statusSelect = 'all';
     public $typeSales;
+
+    public $typePaymentSelect;
+
+    public $typePayments;
+
     public $users;
     public $typeSale;
     public $userFilter;
@@ -45,6 +51,7 @@ class ReportSales extends Component
         $this->dateStart = now()->startOfMonth()->format('Y-m-d');
         $this->dateEnd = now()->endOfMonth()->format('Y-m-d');
         $this->typeSales = Sale::SALE_TYPE_SALES;
+        $this->typePayments = SalePayment::PAYMENT_TYPES;
         $this->users = User::role('branch-manager')->get();
         if (auth()->user()->hasRole('admin')) {
             $this->branches = Branch::where('is_active', true)->get();
@@ -104,8 +111,8 @@ class ReportSales extends Component
             $query->where('sale_type', '=', $this->typeSale);
         }
 
-        if ($this->userFilter) {
-            $query->where('user_id', '=', $this->userFilter);
+        if ($this->typePaymentSelect && $this->typePaymentSelect !== 'all') {
+            $query->where('payment_method', '=', $this->typePaymentSelect);
         }
 
         if ($this->saleId) {
@@ -178,6 +185,10 @@ class ReportSales extends Component
 
         if ($this->typeSale) {
             $query->where('sale_type', '=', $this->typeSale);
+        }
+
+        if ($this->typePaymentSelect && $this->typePaymentSelect !== 'all') {
+            $query->where('payment_method', '=', $this->typePaymentSelect);
         }
 
         if ($this->userFilter) {
@@ -265,6 +276,7 @@ class ReportSales extends Component
                 saleTypeSelect: $this->saleTypeSelect,
                 statusSelect: $this->statusSelect,
                 typeSale: $this->typeSale,
+                typePaymentSelect: $this->typePaymentSelect,
                 userFilter: $this->userFilter,
                 clientSearch: $this->clientSearch,
                 saleId: $this->saleId,

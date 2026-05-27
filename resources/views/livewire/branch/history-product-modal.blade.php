@@ -9,6 +9,7 @@
                     <table class="table table-xs">
                         <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Fecha</th>
                             <th>Desde</th>
                             <th>Hasta</th>
@@ -22,7 +23,8 @@
                         <tbody>
                             @foreach ($movements as $movement)
                                 <tr>
-                                    <th>{{ $movement->created_at }}</th>
+                                    <th>{{ $movement->id }}</th>
+                                    <td>{{ $movement->created_at }}</td>
                                     <td>{{ $movement->from_location_name }}</td>
                                     <td>{{ $movement->to_location_name }}</td>
                                     <td>{{ $movement->type }}</td>

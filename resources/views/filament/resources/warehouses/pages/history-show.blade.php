@@ -20,7 +20,7 @@ use App\Models\WarehouseIncome;
                         :disabled="(strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0)"
                         x-on:click="$dispatch('open-void-warehouse-invoice-modal')"
                     >
-                        Anular Entrega
+                        Anular Ingreso
                     </x-filament::button>
                     <x-filament::button 
                         color="primary" 
