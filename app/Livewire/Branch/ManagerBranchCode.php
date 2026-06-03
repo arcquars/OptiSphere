@@ -647,7 +647,7 @@ class ManagerBranchCode extends Component
             $this->dispatch('customer-clear-search');
             $this->searchTerm = "";
             $this->searchResults = [];
-            $this->reset(['cart', 'customer', 'selectedPromo', 'discountPercentage', 'saleType', 'paymentType']);
+            $this->reset(['cart', 'customer', 'selectedPromo', 'discountPercentage', 'saleType', 'paymentType', 'partial_payment', 'isSaleCredit']);
             // Puedes emitir un evento para imprimir la factura aquí
             $this->cart = [];
             $this->calculateTotals();

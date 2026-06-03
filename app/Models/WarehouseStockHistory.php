@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class WarehouseStockHistory extends Model
@@ -47,6 +48,34 @@ class WarehouseStockHistory extends Model
                 return $this->belongsTo(WarehouseDelivery::class, 'type_id');
 
         }
+    }
+
+    public function dateMovementLabel(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                $date = null;
+
+                // Normalizamos a mayúsculas por si la BD tiene valores inconsistentes
+                switch (strtoupper($this->movement_type)) {
+                    case "INGRESO":
+                        $date = $this->warehouseIncome()->first()?->created_at;
+                        break;
+                    case "DEVOLUCION":
+                        $date = $this->warehouseRefund()->first()?->created_at;
+                        break;
+                    case "ENTREGA_SUCURSAL":
+                        $date = $this->warehouseDelivery()->first()?->created_at;
+                        break;
+                    default:
+                        $date = $this->created_at;
+                        break;
+                }
+
+                // Si $date existe la formatea, si no, devuelve 'N/A' o la fecha actual
+                return $date?->format('d/m/Y H:i') ?? 'N/A'; 
+            },
+        );
     }
 
     public function audits()

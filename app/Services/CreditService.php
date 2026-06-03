@@ -46,7 +46,7 @@ class CreditService
             throw new InvalidArgumentException("Esta venta ya está completamente pagada o no es una venta a crédito.");
         }
 
-        if ($amount > $dueAmount) {
+        if ($amount <= $dueAmount) {
             throw new InvalidArgumentException("El monto del pago ($amount) excede el saldo pendiente ({$sale->due_amount}).");
         }
 

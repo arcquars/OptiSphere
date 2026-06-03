@@ -27,4 +27,9 @@ class WarehouseRefund extends Model
     public function branch(){
         return $this->belongsTo(Branch::class);
     }
+
+    public function warehouseStockHistory(){
+        // aumentar mevement_type para diferenciar entre ingresos, entregas y devoluciones
+        return $this->hasMany(WarehouseStockHistory::class, 'type_id')->where('movement_type', WarehouseStockHistory::MOVEMENT_TYPE_REFUND);
+    }
 }

@@ -46,9 +46,9 @@ class BanecoNotificationController extends Controller
 
             // 4. Buscar el registro de la venta en la base de datos
             // Buscamos por qrId o transactionId (el ID único que generaste al crear el QR)
-            $pagoQr = PagoQr::where('qr_id', $paymentData->qrId)->where('transaction_id', $paymentData->transactionId)
-                        ->first();
-
+            // $pagoQr = PagoQr::where('qr_id', $paymentData->qrId)->where('transaction_id', $paymentData->transactionId)
+            //             ->first();
+            $pagoQr = PagoQr::where('qr_id', $paymentData->qrId)->first();
             if (!$pagoQr) {
                 Log::warning("Baneco Notify: Pago recibido para QR inexistente en DB local: " . $paymentData->qrId);
                 // Respondemos con error al banco para que sepa que no lo procesamos
@@ -74,6 +74,7 @@ class BanecoNotificationController extends Controller
                 // Actualizamos estado y guardamos la metadata del banco
                 $pagoQr->update([
                     'qr_id' => $pagoQr->qr_id,
+                    'transaction_id' => $paymentData->transactionId,
                     'amount' => $paymentData->amount,
                     'currency' => $paymentData->currency,
                     'status' => PagoQr::STATUS_PAID,
@@ -85,7 +86,6 @@ class BanecoNotificationController extends Controller
                     'sender_account' => $paymentData->senderAccount,
                     
                 ]);
-                
                 
                 if($sale && $sale->due_amount > 0){
                     $credirService = new CreditService();
@@ -137,7 +137,7 @@ class BanecoNotificationController extends Controller
             ->withHeaders([
                 'Authorization' => 'Bearer ' . $token,
             ])
-            ->post("https://test.lab-cdcc.com/api/baneco/notificaciones", $all);
+            ->post("https://test.lab-cdcc.com/api/amyrit-qr/notify", $all);
         } catch (Exception $e) {
             // Log::error($e->getTraceAsString());
             Log::error('Baneco Service Exception: ' . $e->getMessage());

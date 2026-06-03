@@ -26,4 +26,9 @@ class WarehouseIncome extends Model
     public function warehouse(){
         return $this->belongsTo(Warehouse::class);
     }
+
+    public function warehouseStockHistory(){
+        // aumentar mevement_type para diferenciar entre ingresos, entregas y devoluciones
+        return $this->hasMany(WarehouseStockHistory::class, 'type_id')->where('movement_type', WarehouseStockHistory::MOVEMENT_TYPE_INCOME);
+    }
 }

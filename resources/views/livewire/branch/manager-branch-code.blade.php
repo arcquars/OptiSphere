@@ -475,7 +475,7 @@
                         @if ($isSaleCredit)
                             <div class="mt-4">
                                 <label class="font-semibold">Pago parcial:</label>
-                                <input type="number" wire:model="partial_payment" min="0" max="{{ $total }}" class="input input-bordered w-full mt-2 focus:outline-none">
+                                <input type="number" wire:model="partial_payment" step="0.1" min="0" max="{{ $total }}" class="input input-bordered w-full mt-2 focus:outline-none">
                                 <div class="text-error">@error('partial_payment') {{ $message }} @enderror</div>
                                 <p class="text-sm text-gray-500 mt-1">
                                     Restante a crédito: <strong>{{ config('cerisier.currency_symbol') }} {{ $total - (is_numeric($partial_payment))? $partial_payment: 0 }}</strong>
