@@ -38,8 +38,8 @@ class CreditService
         ?string $notes = null
     ): SalePayment {
         // 1. Validaciones
-        if ($amount >= 0) {
-            throw new InvalidArgumentException("El monto del pago debe ser positivo.");
+        if ($amount <= 0) {
+            throw new InvalidArgumentException("El monto del pago debe ser positivo ({ $amount }).");
         }
 
         if ($sale->due_amount === null || $sale->due_amount < 0) {
