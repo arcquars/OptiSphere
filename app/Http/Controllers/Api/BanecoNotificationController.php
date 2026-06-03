@@ -121,10 +121,11 @@ class BanecoNotificationController extends Controller
             ]);
 
         } catch (Exception $e) {
+            Log::error('Baneco Notify Critical Error: ' . $e->getMessage());
             Log::error('Baneco Notify Critical Error: ' . $e->getTraceAsString());
             
             return response()->json([
-                'responseCode' => 99, // Código de error genérico
+                'responseCode' => 9, // Código de error genérico
                 'message' => 'Error interno al procesar la notificación: ' . $e->getMessage()
             ], 500);
         }
