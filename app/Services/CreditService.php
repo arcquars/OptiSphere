@@ -35,7 +35,8 @@ class CreditService
         Sale $sale,
         string $paymentMethod,
         int $userId,
-        ?string $notes = null
+        ?string $notes = null,
+        ?string $qrId = null
     ): SalePayment {
         // 1. Validaciones
         if ($amount < 0) {
@@ -46,22 +47,26 @@ class CreditService
             throw new InvalidArgumentException("Esta venta ya está completamente pagada o no es una venta a crédito.");
         }
 
-        if ($amount < $dueAmount) {
-            throw new InvalidArgumentException("El monto del pago ($amount) excede el saldo pendiente ({$sale->due_amount}).");
+        if ($amount > $dueAmount) {
+            throw new InvalidArgumentException("El monto del pago ($amount) excede el saldo pendiente ({$dueAmount}).");
         }
 
         // 2. Ejecutar Transacción (Garantiza que ambas operaciones se completen o ninguna)
-        return DB::transaction(function () use ($sale, $amount, $paymentMethod, $userId, $notes) {
+        return DB::transaction(function () use ($sale, $amount, $paymentMethod, $userId, $notes, $qrId) {
 
             $branch = Branch::find($sale->branch_id);
-            $cashBc = $branch->getCashBoxClosingByUser($userId);
+            $cashBcId = null;
+            if(strcmp($paymentMethod, SalePayment::METHOD_QR) != 0){
+                $cashBcId = $branch->getCashBoxClosingByUser($userId)?->id;
+                $qrId = null;
+            }
             // a) Crear el registro del abono (SalePayment)
             $payment = SalePayment::create([
                 'sale_id' => $sale->id,
                 'branch_id' => $sale->branch_id,
                 'user_id' => $userId,
-                'qrid' => $sale->qrid,
-                'cash_box_closing_id' => $cashBc?->id,
+                'qrid' => $qrId,
+                'cash_box_closing_id' => $cashBcId,
                 'amount' => $amount,
                 'residue' => $sale->final_total - ($sale->paid_amount + $amount),
                 'payment_method' => $paymentMethod,

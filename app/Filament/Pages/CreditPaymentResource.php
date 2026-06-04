@@ -39,6 +39,8 @@ use Filament\Schemas\Components\View as ComponentsView;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Intervention\Image\Laravel\Facades\Image as InterventionImage; // Asegúrate de importar la librería de imágenes
 
 class CreditPaymentResource extends Page implements HasTable
 {
@@ -598,15 +600,58 @@ class CreditPaymentResource extends Page implements HasTable
                         return [
                             'pagoQrId' => $pagoQrId,
                             'qrId' => $qrId,
-                            'qrImage' => $qrImage
+                            'qrImage' => $qrImage,
+                            'monto' => $record->final_total - $record->paid_amount
                         ];
                     })
                     ->schema([
                         Image::make(url: 'qr_preview', alt: 'Qr de pago')
-                            ->url(fn ($get) => $get('qrImage') 
-                                ? 'data:image/png;base64,' . $get('qrImage') 
-                                : asset('img/cerisier-no-image.png')
-                            )
+                            ->url(function ($get) {
+                                $base64Original = $get('qrImage');
+                                $monto = $get('monto') ?? 0;
+
+                                if (!$base64Original) {
+                                    return asset('img/cerisier-no-image.png');
+                                }
+
+                                try {
+                                    // 1. Decodificar el base64 original a datos binarios
+                                    $imgData = base64_decode($base64Original);
+                                    
+                                    // 2. [v3] Cargar el QR original usando read() en lugar de make()
+                                    $img = InterventionImage::read($imgData);
+
+                                    // 3. Aumentar el tamaño del lienzo
+                                    $nuevoAncho = $img->width();
+                                    $nuevoAlto = $img->height() + 40;
+                                    
+                                    // [v3] La sintaxis de resizeCanvas cambia ligeramente (cuarto parámetro es el fondo)
+                                    // 'top' ancla la imagen arriba, creando el espacio blanco en la parte inferior
+                                    $img->resizeCanvas(width: $nuevoAncho, height:$nuevoAlto, background:'ffffff', position:'top');
+                                    // 4. Escribir el texto
+                                    $texto = "CERISIER - Monto " . number_format($monto, 2, '.', '') . " Bs";
+                                    
+                                    // [v3] La escritura de texto mantiene una sintaxis muy similar
+                                    $img->text($texto, $nuevoAncho / 2, $nuevoAlto - 15, function($font) {
+                                        // Recomendado: Usa una fuente TTF real en v3 para evitar errores de renderizado
+                                        $font->file(public_path('fonts/roboto_mono/RobotoMono-Italic-VariableFont_wght.ttf')); 
+                                        $font->size(45);
+                                        $font->color('000000'); // Color hexadecimal sin el #
+                                        $font->align('center');
+                                        $font->valign('bottom');
+                                    });
+
+                                    // 5. [v3] Convertir a Base64 URI de forma nativa
+                                    // toDataUri() ya devuelve la cadena completa: "data:image/png;base64,..."
+                                    return $img->toPng()->toDataUri();
+
+                                } catch (\Exception $e) {
+                                    Log::error("Error al procesar la imagen del QR: " . $e->getMessage());
+                                    Log::error("Error al procesar la imagen del QR: " . $e->getTraceAsString());
+                                    // Si falla (ej: falta la fuente tipográfica), retornamos el original concatenado
+                                    return 'data:image/png;base64,' . $base64Original;
+                                }
+                            })
                             ->imageSize('18rem')
                             ->alignCenter(),
                         Hidden::make('qrId'),

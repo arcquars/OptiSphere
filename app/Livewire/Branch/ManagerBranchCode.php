@@ -609,7 +609,8 @@ class ManagerBranchCode extends Component
             'payment_method' => $this->paymentType,
             'sale_type' => $this->saleType,
             'paid_amount' => ($this->isSaleCredit)? $this->partial_payment : null,
-            'due_amount' => ($this->isSaleCredit)? $this->total - $this->partial_payment : null,
+            // 'due_amount' => ($this->isSaleCredit)? $this->total - $this->partial_payment : null,
+            'due_amount' => ($this->isSaleCredit)? $this->total : null,
             'qrid' => $this->qrId,
             'items' => $itemsData,
         ]);

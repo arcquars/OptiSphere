@@ -7,6 +7,7 @@ use App\DTOs\PaymentQr;
 use App\DTOs\PaymentQrDto;
 use App\Models\PagoQr;
 use App\Models\Sale; // Asegúrate de que este sea tu modelo de ventas o pagos
+use App\Models\SalePayment;
 use App\Services\CreditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -93,9 +94,10 @@ class BanecoNotificationController extends Controller
                         $paymentData->amount,
                         $sale->due_amount,
                         $sale,
-                        'QR',
+                        SalePayment::METHOD_QR,
                         Auth::id(),
-                        'Se registro el pago a credito desde QR del Banco'
+                        'Se registro el pago a credito desde QR del Banco',
+                        $paymentData->qrId
                     );
                     $pagoQr->sales()->updateExistingPivot($sale->id, [
                         'status' => PagoQr::STATUS_PAID,
