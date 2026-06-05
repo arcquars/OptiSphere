@@ -1,5 +1,8 @@
 <?php
 use App\Models\WarehouseIncome;
+use App\Models\WarehouseDelivery;
+use App\Models\WarehouseRefund;
+use App\Models\WarehouseStockHistory;
 ?>
 <x-filament-panels::page>
     @livewire('warehouse.edit-warehouse-stock-item-modal')
@@ -33,6 +36,32 @@ use App\Models\WarehouseIncome;
                         Enviar a Sucursal
                     </x-filament::button>
                 @endif
+                @if(strcmp($action, "ENTREGA") == 0 && auth()->user()->hasRole('admin'))
+                    @livewire('warehouse.void-wharehouse-delivery-modal', ['warehouseDeliveryId' => $warehouse_m_id])
+                    <x-filament::button 
+                        color="danger" 
+                        size="xs"
+                        icon="heroicon-s-no-symbol"
+                        tag="button"
+                        :disabled="(strcmp($warehouse_m->status, WarehouseDelivery::STATUS_VOID) == 0)"
+                        x-on:click="$dispatch('open-void-warehouse-delivery-modal')"
+                    >
+                        Anular Entrega
+                    </x-filament::button>
+                @endif
+                @if(strcmp($action, "DEVOLUCION") == 0 && auth()->user()->hasRole('admin'))
+                    @livewire('warehouse.void-wharehouse-refund-modal', ['warehouseRefundId' => $warehouse_m_id])
+                    <x-filament::button 
+                        color="danger" 
+                        size="xs"
+                        icon="heroicon-s-no-symbol"
+                        tag="button"
+                        :disabled="(strcmp($warehouse_m->status, WarehouseRefund::STATUS_VOID) == 0)"
+                        x-on:click="$dispatch('open-void-warehouse-refund-modal')"
+                    >
+                        Anular Devolucion
+                    </x-filament::button>
+                @endif
                 <x-filament::button 
                     color="primary" 
                     size="xs"
@@ -55,6 +84,14 @@ use App\Models\WarehouseIncome;
                     Acción : {{ $warehouse_m_id . ".-" . $action }} 
                     <span class="text-red-700">
                         @if(strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0) 
+                        (ANULADO) 
+                        @endif
+
+                        {{-- @if(strcmp($action, WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY) == 0 && strcmp($warehouse_m->status, WarehouseDelivery::STATUS_VOID) == 0)  --}}
+                        @if(strcmp($action, "ENTREGA") == 0 && strcmp($warehouse_m->status, WarehouseDelivery::STATUS_VOID) == 0) 
+                        (ANULADO) 
+                        @endif
+                        @if(strcmp($action, "DEVOLUCION") == 0 && strcmp($warehouse_m->status, WarehouseRefund::STATUS_VOID) == 0) 
                         (ANULADO) 
                         @endif
                     </span>
@@ -168,7 +205,7 @@ use App\Models\WarehouseIncome;
                                 <p>{{ $opticalProperty['amount'] }}</p>
                             @endif
                         @else
-                            @if(auth()->user()->hasRole('admin') && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
+                            @if(auth()->user()->hasRole('admin') && strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
                             <a 
                                 href="#" 
                                 title="Editar" 

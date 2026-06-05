@@ -66,7 +66,8 @@ class HistoryMovement extends Page implements HasTable
                 DB::raw('MIN(op.base_code) as base_code'), // 👈 primer valor
                 'wi.warehouse_id',
                 DB::raw("NULL as branch_id"),
-                DB::raw('MIN(op.type) as op_type')          // 👈 primer valor
+                DB::raw('MIN(op.type) as op_type'),
+                'status'
             )
             ->join('warehouse_stock_histories as wsh', function ($join) {
                 $join->on('wsh.type_id', '=', 'wi.id')
@@ -102,7 +103,8 @@ class HistoryMovement extends Page implements HasTable
                         AND op.type = '" . $type . "' LIMIT 1 
                     ) 
                     ELSE NULL 
-                END as op_type")
+                END as op_type"),
+                'status'
             )
             ->where('warehouse_id', $wh_id)
             ->where('base_code', 'like', $this->code);
@@ -127,7 +129,8 @@ class HistoryMovement extends Page implements HasTable
                         AND op.type = '" . $type . "' LIMIT 1 
                     ) 
                     ELSE NULL 
-                END as op_type")
+                END as op_type"),
+                'status'
             )
             ->where('warehouse_id', $wh_id)
             ->where('base_code', 'like', $this->code);
@@ -163,6 +166,7 @@ class HistoryMovement extends Page implements HasTable
                 Tables\Columns\TextColumn::make('movement_label')
                     ->label('Tipo de Acción')
                     ->badge()
+                    ->alignCenter()
                     ->color(fn (string $state): string => match ($state) {
                         'INGRESO' => 'success',
                         'ENTREGA' => 'info',
@@ -180,6 +184,14 @@ class HistoryMovement extends Page implements HasTable
                     ->label('Sucursal Relacionada')
                     ->placeholder('N/A (Ingreso Directo)')
                     ->default('-'),
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => __("statuses.{$state}"))
+                    ->alignCenter()
+                    ->color(fn (string $state): string => match ($state) {
+                        'ACTIVE' => 'success',
+                        'VOID' => 'danger',
+                    })
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('movement_label')

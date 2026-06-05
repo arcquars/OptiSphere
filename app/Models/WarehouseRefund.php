@@ -9,6 +9,9 @@ class WarehouseRefund extends Model
 {
     use HasFactory;
 
+    public const STATUS_ACTIVE = "ACTIVE";
+    public const STATUS_VOID = "VOID";
+
     /**
      * @var list<string>
      */
@@ -17,6 +20,7 @@ class WarehouseRefund extends Model
         'branch_id',
         'user_id',
         'base_code',
+        'status',
         'refund_date'
     ];
 

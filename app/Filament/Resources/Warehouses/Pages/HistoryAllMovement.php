@@ -61,6 +61,7 @@ class HistoryAllMovement extends Page implements HasTable
                 'user_id', 
                 'warehouse_id',
                 DB::raw("NULL as branch_id"),
+                'status'
             )
             ->where('warehouse_id', $wh_id);
 
@@ -72,6 +73,7 @@ class HistoryAllMovement extends Page implements HasTable
                 'user_id', 
                 'warehouse_id',
                 'branch_id',
+                'status'
             )
             ->where('warehouse_id', $wh_id);
 
@@ -83,6 +85,7 @@ class HistoryAllMovement extends Page implements HasTable
                 'user_id', 
                 'warehouse_id',
                 'branch_id',
+                'status'
             )
             ->where('warehouse_id', $wh_id);
 
@@ -131,6 +134,14 @@ class HistoryAllMovement extends Page implements HasTable
                     ->label('Sucursal Relacionada')
                     ->placeholder('N/A (Ingreso Directo)')
                     ->default('-'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => __("statuses.{$state}"))
+                    ->alignCenter()
+                    ->color(fn (string $state): string => match ($state) {
+                        'ACTIVE' => 'success',
+                        'VOID' => 'danger',
+                    })
             ])
             ->filters([
                 // Filtros opcionales

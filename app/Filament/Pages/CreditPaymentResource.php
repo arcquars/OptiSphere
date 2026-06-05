@@ -132,7 +132,7 @@ class CreditPaymentResource extends Page implements HasTable
                     ->label('Usuario')
                     ->visibleFrom('xl'),
                 TextColumn::make('amount')
-                    ->label('Pago')
+                    ->label('Ult. Pago')
                     ->numeric(decimalPlaces: 2)
                     ->alignRight(),
                 TextColumn::make('payment_method')
@@ -508,7 +508,7 @@ class CreditPaymentResource extends Page implements HasTable
                     ->label('Usuario')
                     ->visibleFrom('xl'),
                 TextColumn::make('lastPayment.amount')
-                    ->label('Pago')
+                    ->label('Ult. Pago')
                     ->numeric(decimalPlaces: 2)
                     ->alignRight(),
                 TextColumn::make('payment_method')

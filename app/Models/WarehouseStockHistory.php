@@ -10,6 +10,8 @@ class WarehouseStockHistory extends Model
     const MOVEMENT_TYPE_INCOME = "INGRESO";
     const MOVEMENT_TYPE_REFUND = "DEVOLUCION";
     const MOVEMENT_TYPE_DELIVERY = "ENTREGA_SUCURSAL";
+    const MOVEMENT_TYPE_VOID_DELIVERY = "ANULACION_ENTREGA_SUCURSAL";
+    const MOVEMENT_TYPE_VOID_REFUND = "ANULACION_DEVOLUCION";
     /**
      * @var list<string>
      */
@@ -46,6 +48,8 @@ class WarehouseStockHistory extends Model
                 return $this->belongsTo(WarehouseRefund::class, 'type_id');
             case "ENTREGA_SUCURSAL":
                 return $this->belongsTo(WarehouseDelivery::class, 'type_id');
+            case "ANULACION_ENTREGA_SUCURSAL":
+                return $this->belongsTo(WarehouseDelivery::class, 'type_id');
 
         }
     }
@@ -65,6 +69,9 @@ class WarehouseStockHistory extends Model
                         $date = $this->warehouseRefund()->first()?->created_at;
                         break;
                     case "ENTREGA_SUCURSAL":
+                        $date = $this->warehouseDelivery()->first()?->created_at;
+                        break;
+                    case "ANULACION_ENTREGA_SUCURSAL":
                         $date = $this->warehouseDelivery()->first()?->created_at;
                         break;
                     default:
