@@ -72,15 +72,15 @@ class VoidWharehouseIncomeModal extends Component
             return;
         }
 
-        if(!$this->warehouseInvoice->base_code){
-            Notification::make()
-            ->title('Error')
-            ->body('El registro de ingreso tiene productos diferentes a productos OPTICOS.')
-            ->danger()
-            ->send();
-            $this->closeVoidWherhouseIncomeModal();
-            return;
-        }
+        // if(!$this->warehouseInvoice->base_code){
+        //     Notification::make()
+        //     ->title('Error')
+        //     ->body('El registro de ingreso tiene productos diferentes a productos OPTICOS.')
+        //     ->danger()
+        //     ->send();
+        //     $this->closeVoidWherhouseIncomeModal();
+        //     return;
+        // }
         
         $warehouseStockHistories = WarehouseStockHistory::where('movement_type', "INGRESO")
             ->where('type_id', $this->warehouseInvoice->id)->get();
@@ -112,6 +112,7 @@ class VoidWharehouseIncomeModal extends Component
 
                 $this->closeVoidWherhouseIncomeModal();
                 $this->dispatch('sphere-updated');
+                $this->dispatch('history_movement-show-updated');
             });
         } catch (Exception $e){
             dd($e->getMessage());

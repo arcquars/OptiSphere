@@ -12,6 +12,7 @@ use App\Filament\Resources\Warehouses\Pages\ViewWarehouse;
 use App\Models\Warehouse;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -80,22 +81,27 @@ class WarehouseResource extends Resource
                 //
             ])
             ->recordActions([
-                Action::make('create-base-code')
-                    ->label('Matriz')
-                    // ->icon('c-square-3-stack-3d')
-                    // ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.matrix', ['warehouse_id' => $record->id]))
-                    ->url(fn (Warehouse $record): string => static::getUrl('matrix', ['warehouse_id' => $record->id]))
-                    ->color('success'),
-                Action::make('create-base-code')
-                    ->label('Inventario')
-                    // ->icon('c-square-3-stack-3d')
-                    // ->url(fn (Warehouse $record): string => route('filament.admin.resources.warehouses.inventory', ['warehouse_id' => $record->id]))
-                    ->url(fn (Warehouse $record): string => static::getUrl('inventory', ['warehouse_id' => $record->id]))
-                    ->color('success'),
-                EditAction::make()
-                    ->visible(auth()->user()->hasRole('admin')),
-                DeleteAction::make()
-                    ->visible(auth()->user()->hasRole('admin')),
+                ActionGroup::make([
+                    Action::make('history-list')
+                        ->label('Hist. de movimientos')
+                        ->icon('heroicon-s-circle-stack')
+                        ->url(fn (Warehouse $record): string => static::getUrl('history.all', ['warehouse_id' => $record->id]))
+                        ->color('primary'),
+                    Action::make('create-base-code')
+                        ->label('Matriz')
+                        ->icon('heroicon-s-table-cells')
+                        ->url(fn (Warehouse $record): string => static::getUrl('matrix', ['warehouse_id' => $record->id]))
+                        ->color('primary'),
+                    Action::make('create-base-code')
+                        ->label('Inventario')
+                        ->icon('heroicon-s-list-bullet')
+                        ->url(fn (Warehouse $record): string => static::getUrl('inventory', ['warehouse_id' => $record->id]))
+                        ->color('primary'),
+                    EditAction::make()
+                        ->visible(auth()->user()->hasRole('admin')),
+                    DeleteAction::make()
+                        ->visible(auth()->user()->hasRole('admin')),
+                ]),
             ])
             ->toolbarActions([
                 // BulkActionGroup::make([
@@ -110,8 +116,8 @@ class WarehouseResource extends Resource
             'index' => ManageWarehouses::route('/'),
             'matrix' => ViewWarehouse::route('/{warehouse_id}/matrix'),
             'inventory' => InventoryWarehouse::route('/{warehouse_id}/inventory'),
-            'history' => HistoryMovement::route('/{wharehouse_id}/{type}/{code}/history'),
-            'history.all' => HistoryAllMovement::route('/{wharehouse_id}/history/all'),
+            'history' => HistoryMovement::route('/{warehouse_id}/{type}/{code}/history'),
+            'history.all' => HistoryAllMovement::route('/{warehouse_id}/history/all'),
             'history.show' => HistoryShow::route('/{history_id}/{action}/{type}/{code}/history/show'),
             'history.movement.show' => HistoryMovementShow::route('/{history_id}/{action}/history/movement/show'),
         ];

@@ -6,7 +6,7 @@
             <div class="flex flex-wrap gap-3 mt-3">
                 <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
                     <i class="fa-solid fa-warehouse"></i>
-                    <span>Almacén: {{ $wharehouse->name }}</span>
+                    <span>Almacén: {{ $warehouse->name }}</span>
                 </div>
             </div>
         </div>

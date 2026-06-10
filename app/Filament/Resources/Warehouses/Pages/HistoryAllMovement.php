@@ -27,13 +27,13 @@ class HistoryAllMovement extends Page implements HasTable
     public string $view = 'filament.resources.warehouses.pages.history-all-movement';
 
     // Parámetros recibidos por la URL
-    public $wharehouse;
-    public $wharehouse_id;
+    public Warehouse $warehouse;
+    public int $warehouse_id;
 
-    public function mount($wharehouse_id): void
+    public function mount(int $warehouse_id): void
     {
-        $this->wharehouse_id = $wharehouse_id;
-        $this->wharehouse = Warehouse::find($wharehouse_id);
+        $this->warehouse_id = $warehouse_id;
+        $this->warehouse = Warehouse::find($warehouse_id);
     }
 
     /**
@@ -46,7 +46,7 @@ class HistoryAllMovement extends Page implements HasTable
 
     public function table(Table $table): Table
     {
-        $wh_id = $this->wharehouse_id;
+        $wh_id = $this->warehouse_id;
 
         /**
          * Construimos un UNION de las tres fuentes principales de movimientos.

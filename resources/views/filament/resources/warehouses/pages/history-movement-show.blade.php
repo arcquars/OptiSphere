@@ -8,7 +8,8 @@ use App\Models\WarehouseIncome;
                 <h2 class="text-lg font-bold text-gray-400 uppercase tracking-wider">Detalles de la Consulta</h2>
             </div>
             <div>
-                {{-- @if(strcmp($action, "INGRESO") == 0 && auth()->user()->hasRole('admin')) --}}
+                @if(strcmp($action, "INGRESO") == 0 && auth()->user()->hasRole('admin'))
+                    @livewire('warehouse.void-wharehouse-income-modal', ['warehouseInvoiceId' => $warehouseM->id])
                     <x-filament::button 
                         color="danger" 
                         size="xs"
@@ -29,7 +30,7 @@ use App\Models\WarehouseIncome;
                     >
                         Enviar a Sucursal
                     </x-filament::button>
-                {{-- @endif --}}
+                @endif
                 <x-filament::button 
                     color="primary" 
                     size="xs"

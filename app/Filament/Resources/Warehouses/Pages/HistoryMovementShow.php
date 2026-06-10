@@ -16,7 +16,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
 
 // use Filament\Resources\Pages\Page;
 
@@ -119,19 +121,30 @@ class HistoryMovementShow extends Page implements HasTable
              ])
              ->recordActions([
                 Action::make('updateDiference')
-                ->label("Actualizar")
-                    ->schema([
-                        TextInput::make('difference')
-                            ->label('Diferencia')
-                            ->default(fn (WarehouseStockHistory $record) => $record->difference)
-                            ->numeric()
-                            ->required(),
-                        
-                    ])
-                    ->action(function (array $data, WarehouseStockHistory $record): void {
-                        $record->difference = $data['difference'];
-                        $record->save();
-                    })
+                    ->label("Actualizar")
+                    // Deshabilitamos el comportamiento por defecto del formulario de Filament
+                    ->form([]) 
+                    ->disabled(fn (WarehouseStockHistory $record) => 
+                        $record->movement_type !== "INGRESO" 
+                        || strcmp($record->warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0
+                    )
+                    // Aquí inyectamos mágicamente tu componente Livewire dentro del cuerpo del modal
+                    ->modalContent(fn (WarehouseStockHistory $record): View => view(
+                        'filament.resources.warehouses.pages.partials.edit-stock-modal-container',
+                        ['record' => $record]
+                    ))
+                    // Ocultamos los botones por defecto de "Aceptar" y "Cancelar" de Filament 
+                    // para que tu propio componente maneje sus botones de guardar/cerrar
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false)
              ]);
+    }
+
+    // Define el listener en una función limpia y separada
+    #[On('history_movement-show-updated')]
+    public function refreshMovementHistoryTable(): void
+    {
+        // Esto fuerza a Livewire a re-renderizar los componentes de la vista, incluyendo la tabla
+        $this->render(); 
     }
 }

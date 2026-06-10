@@ -32,6 +32,13 @@ class EditWarehouseStockItemModal extends Component
         ];
     }
 
+    public function mount(?int $historyId = null, ?string $action = null, ?int $productId = null, ?int $warehouseId = null)
+    {
+        if($historyId && $action && $productId && $warehouseId){
+            $this->loadProduct($historyId, $action, $productId, $warehouseId);
+        }
+    }
+
     #[On('open-edit-warehouse-stock-modal')]
     public function loadProduct($historyId, $action, $productId, $warehouseId)
     {
@@ -103,5 +110,6 @@ class EditWarehouseStockItemModal extends Component
             ->send();
         $this->closeModal();
         $this->dispatch('sphere-updated');
+        $this->dispatch('close-modal', id: 'table-action-modal');
     }
 }
