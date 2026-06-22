@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\Warehouses\Pages;
+namespace App\Filament\Resources\Branches\Pages;
 
+use App\Filament\Resources\Branches\BranchResource;
 use App\Filament\Resources\Warehouses\WarehouseResource;
+use App\Models\Branch;
+use App\Models\InventoryMovement;
 use App\Models\Warehouse;
 use App\Models\WarehouseIncome;
-use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -13,29 +15,28 @@ use Filament\Resources\Pages\Page;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
-class HistoryAllMovement extends Page implements HasTable
+class HistoryBranchAllMovement extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static string $resource = WarehouseResource::class;
+    protected static string $resource = BranchResource::class;
 
-    public string $view = 'filament.resources.warehouses.pages.history-all-movement';
+    public string $view = 'filament.resources.branches.pages.history-branch-all-movement';
 
     // Parámetros recibidos por la URL
-    public Warehouse $warehouse;
-    public int $warehouse_id;
+    public Branch $branch;
+    public int $branch_id;
 
-    public function mount(int $warehouse_id): void
+    public function mount(int $branch_id): void
     {
-        $this->warehouse_id = $warehouse_id;
-        $this->warehouse = Warehouse::find($warehouse_id);
+        $this->branch_id = $branch_id;
+        $this->branch = Branch::find($branch_id);
     }
 
     /**
@@ -48,24 +49,7 @@ class HistoryAllMovement extends Page implements HasTable
 
     public function table(Table $table): Table
     {
-        $wh_id = $this->warehouse_id;
-
-        /**
-         * Construimos un UNION de las tres fuentes principales de movimientos.
-         * Esto nos da exactamente 1 fila por cada movimiento único en la base de datos,
-         * eliminando la necesidad de usar 'groupBy' y previniendo el error 'only_full_group_by'.
-         */
-        $incomes = DB::table('warehouse_incomes')
-            ->select(
-                'id', 
-                'income_date as date_movement', 
-                DB::raw("'INGRESO' as movement_type"), 
-                'user_id', 
-                'warehouse_id',
-                DB::raw("NULL as branch_id"),
-                'status'
-            )
-            ->where('warehouse_id', $wh_id);
+        $branch_id = $this->branch_id;
 
         $deliveries = DB::table('warehouse_deliveries')
             ->select(
@@ -77,7 +61,7 @@ class HistoryAllMovement extends Page implements HasTable
                 'branch_id',
                 'status'
             )
-            ->where('warehouse_id', $wh_id);
+            ->where('branch_id', $branch_id);
 
         $refunds = DB::table('warehouse_refunds')
             ->select(
@@ -89,10 +73,10 @@ class HistoryAllMovement extends Page implements HasTable
                 'branch_id',
                 'status'
             )
-            ->where('warehouse_id', $wh_id);
+            ->where('branch_id', $branch_id);
 
         // Unimos todas las tablas en una sola consulta virtual
-        $unionQuery = $incomes->unionAll($deliveries)->unionAll($refunds);
+        $unionQuery = $deliveries->unionAll($refunds);
 
         return $table
             ->query(function () use ($unionQuery) {
@@ -149,7 +133,7 @@ class HistoryAllMovement extends Page implements HasTable
                 // Filtros opcionales movement_type
                 SelectFilter::make('movement_type')
                 ->options([
-                    'INGRESO' => 'INGRESO',
+                    // 'INGRESO' => 'INGRESO',
                     'ENTREGA_SUCURSAL' => 'ENTREGA_SUCURSAL',
                     'DEVOLUCION' => 'DEVOLUCION',
                 ]),

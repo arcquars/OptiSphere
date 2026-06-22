@@ -142,6 +142,7 @@ class VoidWharehouseDeliveryModal extends Component
                             'new_quantity' => $newQuantity,
                             'difference' => $amount,
                             'type' => WarehouseStockHistory::MOVEMENT_TYPE_VOID_DELIVERY,
+                            'type_id' => $this->warehouseDelivery->id,
                             'user_id' => Auth::id(),
                         ]);
                     }

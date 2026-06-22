@@ -83,7 +83,7 @@
                                             wire:click="addToCart(
                                                 {{ $product->id }}, 
                                                 'product', 
-                                                '{{ $product->name }}', 
+                                                '{{ $product->name . "(" . $product->code .")" }}', 
                                                 {{ $product->getPriceByType($branch->id, $saleType) }}, 
                                                  {{ $product->stockByBranch($branch->id) }})"
                                             wire:key="prod-row-{{ $product->id }}"
@@ -183,7 +183,7 @@
                             <div wire:key="cart-item-{{ $key }}" class="gap-2 p-2 rounded-lg bg-neutral-100">
                             <div class="flex items-center">
                                 <div class="flex-grow">
-                                    <p class="font-bold">{{ $item['name'] }}
+                                    <p class="font-bold">{{ $item['name'] }} <small>()</small>
                                         @if($item['type'] === 'service')
                                             <span class="badge badge-info badge-xs ml-2">Servicio</span>
                                         @endif
@@ -557,7 +557,8 @@
             <!-- Contenedor del QR -->
             <div class="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-200 shadow-inner mb-4">
                 @if($qrImage)
-                    <img src="data:image/png;base64,{{ $qrImage }}" alt="Código QR" class="w-64 h-64 object-contain">
+                    {{-- <img src="data:image/png;base64,{{ $qrImage }}" alt="Código QR" class="w-64 h-64 object-contain"> --}}
+                    <img src="{{ $qrImage }}" alt="Código QR" class="w-64 h-64 object-contain">
                     <p class="mt-2 font-mono text-xs text-gray-400">Generado por Banco Económico</p>
                 @else
                     <div class="w-64 h-64 flex flex-col items-center justify-center text-gray-400">

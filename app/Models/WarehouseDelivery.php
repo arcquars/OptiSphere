@@ -40,4 +40,13 @@ class WarehouseDelivery extends Model
         // aumentar mevement_type para diferenciar entre ingresos, entregas y devoluciones
         return $this->hasMany(WarehouseStockHistory::class, 'type_id')->where('movement_type', WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY);
     }
+
+    public function getPropertyOpticalType(){
+        $warehouseStock = WarehouseStock::find($this->warehouseStockHistory()->first()->warehouse_stock_id);
+        $opticalProperties = $warehouseStock->product->opticalProperties ?? null;
+        if($opticalProperties){
+            return $opticalProperties->type;
+        }
+        return null;
+    }
 }

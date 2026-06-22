@@ -53,6 +53,39 @@ class SalePdfController
         return $pdf->stream($filename); // o ->download($filename)
     }
 
+    /**
+     * Genera el PDF con el historial de abonos de una venta a crédito,
+     * listo para imprimirse (se abre en una pestaña nueva del navegador).
+     */
+    public function paymentHistory(Request $request, Sale $sale)
+    {
+        $sale->loadMissing(['customer', 'branch', 'user', 'lastPayment']);
+
+        // QR de pago vigente (pendiente) para mostrar la alerta en el documento
+        $sale->load(['partialQrPayments' => function ($query) {
+            $query->wherePivot('status', 'PENDING');
+        }]);
+        $isQrActive = $sale->partialQrPayments->isNotEmpty();
+
+        $payments = $sale->payments()
+            ->with('user')
+            ->orderBy('created_at')
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.sale-payment-history', [
+            'sale' => $sale,
+            'isQrActive' => $isQrActive,
+            'payments' => $payments,
+        ])
+            ->setPaper('letter', 'portrait')
+            ->setOption('defaultFont', 'DejaVu Sans')
+            ->setOption('isRemoteEnabled', false);
+
+        $filename = 'historial-abonos-venta-' . $sale->id . '.pdf';
+
+        return $pdf->stream($filename);
+    }
+
     public function invoice(Request $request, Sale $sale)
     {
         $pSize = $pSize = $request->get('size', null);

@@ -245,6 +245,7 @@ class ManageBranch extends Component implements HasSchemas
                         'new_quantity' => $newQuantity,
                         'difference' => $amount,
                         'type' => WarehouseStockHistory::MOVEMENT_TYPE_REFUND,
+                        'type_id' => $warehouseRefund->id,
                         'user_id' => Auth::id(),
                     ]);
                 }
@@ -297,6 +298,7 @@ class ManageBranch extends Component implements HasSchemas
                         'new_quantity' => $newQuantityOrigen,
                         'difference' => $amount * -1, // La diferencia es negativa para el stock de origen
                         'type' => WarehouseStockHistory::MOVEMENT_TYPE_REFUND,
+                        'description' => "Se movio el producto de la sucursal {$this->branchId} a la sucursal {$branchId}.",
                         'user_id' => Auth::id(),
                     ]);
                 }
@@ -329,6 +331,7 @@ class ManageBranch extends Component implements HasSchemas
                         'new_quantity' => $newQuantityDestino,
                         'difference' => $amount, // La diferencia es positiva para el stock de destino
                         'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY, // O un tipo de movimiento apropiado
+                        'description' => "Se recibio el producto de la sucursal {$this->branchId} a la sucursal {$branchId}.",
                         'user_id' => Auth::id(),
                     ]);
                 }

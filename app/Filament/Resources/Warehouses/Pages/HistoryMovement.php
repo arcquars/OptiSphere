@@ -25,14 +25,14 @@ class HistoryMovement extends Page implements HasTable
 
     // Parámetros recibidos por la URL
     public $wharehouse;
-    public $wharehouse_id;
+    public $warehouse_id;
     public $type;
     public $code;
 
-    public function mount($wharehouse_id, $type, $code): void
+    public function mount($warehouse_id, $type, $code): void
     {
-        $this->wharehouse_id = $wharehouse_id;
-        $this->wharehouse = Warehouse::find($wharehouse_id);
+        $this->warehouse_id = $warehouse_id;
+        $this->wharehouse = Warehouse::find($warehouse_id);
         $this->type = $type;
         $this->code = $code;
     }
@@ -50,7 +50,7 @@ class HistoryMovement extends Page implements HasTable
      */
     public function table(Table $table): Table
     {
-        $wh_id = $this->wharehouse_id;
+        $wh_id = $this->warehouse_id;
         $type = "-";
         if(strcmp($this->type, "1") === 0){
             $type = "+";

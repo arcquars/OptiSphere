@@ -10,6 +10,7 @@
                         <thead>
                         <tr>
                             <th>ID</th>
+                            <th>N.</th>
                             <th>Fecha</th>
                             <th>Desde</th>
                             <th>Hasta</th>
@@ -24,6 +25,7 @@
                             @foreach ($movements as $movement)
                                 <tr>
                                     <th>{{ $movement->id }}</th>
+                                    <td>{{ $movement->type_id }}</td>
                                     <td>{{ $movement->created_at }}</td>
                                     <td>{{ $movement->from_location_name }}</td>
                                     <td>{{ $movement->to_location_name }}</td>

@@ -219,6 +219,7 @@ class ProductDelivery extends Component implements HasForms
                             'new_quantity' => $newQuantity,
                             'difference' => $amount,
                             'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                            'type_id' => $warehouseIncome->id,
                             'user_id' => Auth::id(),
                         ]);
                     }

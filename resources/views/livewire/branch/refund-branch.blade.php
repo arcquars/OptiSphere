@@ -69,7 +69,7 @@
                                 @else
                                     <p>
                                         {{ $product->name }}
-                                        ({{ $product->code }} q: "xx")
+                                        ({{ $product->code }} q: "Sin stock")
                                     </p>
                                 @endif
                             </li>
@@ -79,7 +79,7 @@
                 @endif
 
                 <div class="overflow-x-auto mb-4">
-                    <table class="table table-zebra w-full">
+                    <table class="table table-xs table-zebra w-full">
                         <thead>
                         <tr>
                             <th class="text-center">Producto</th>
@@ -88,9 +88,13 @@
                         </tr>
                         </thead>
                         <tbody>
+                        @php
+                        $qTotal = 0;
+                        @endphp
                         @foreach ($selectedProducts as $product)
                             @php
                             $productStock = $product->stockByStockBranch($branch->id);
+                            $qTotal += $productQuantities->get($product->id);
                             @endphp
                             <tr wire:key="{{ $product->id }}">
                                 <td>{{ $product->name }} <small>({{ $product->code }} | q: {{ ($productStock)? $productStock->quantity : "0" }})</small></td>
@@ -108,6 +112,11 @@
                                 </td>
                             </tr>
                         @endforeach
+                            <tr>
+                                <td class="text-end" colspan="2"><p class="text-base">Total: <b>{{ $qTotal }}</b></p></td>
+                                <td class="text-end"></td>
+                                <td></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

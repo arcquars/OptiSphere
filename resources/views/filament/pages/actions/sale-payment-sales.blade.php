@@ -14,15 +14,15 @@
             @foreach ($records as $record)
                 <tr>
                     <th>{{ $record->sale_id }}</th>
-                    <td>{{ $record->sale->date_sale }}</td>
-                    <td>{{ $record->sale->total_amount }}</td>
-                    <td>{{ $record->sale->due_amount }}</td>
+                    <td>{{ ($record->sale)? $record->sale->date_sale : $record->date_sale }}</td>
+                    <td>{{ ($record->sale)? $record->sale->total_amount : $record->total_amount }}</td>
+                    <td>{{ ($record->sale)? $record->sale->due_amount : $record->due_amount }}</td>
                 </tr>
             @endforeach
             </tbody>
         </table>
     </div>
     <div class="text-center m-2">
-        <h3 class="pl-4 text-success font-bold">Total a PAGAR: {{ $records->sum('sale.due_amount') }}</h3>
+        <h3 class="pl-4 text-success font-bold">Total a PAGAR: {{ ($record->sale)? $records->sum('sale.due_amount') : $records->sum('due_amount') }}</h3>
     </div>
 </div>

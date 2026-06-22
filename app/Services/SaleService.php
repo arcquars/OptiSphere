@@ -394,6 +394,7 @@ class SaleService
                 'new_quantity' => $newQuantity,
                 'difference' => -$quantityToDeduct, // La diferencia es negativa (salida)
                 'type' => 'VENTA',
+                'type_id' => $saleId,
                 'description' => "Venta registrada, movimiento de salida de la sucursal {$branchId}. Venta ID: {$saleId}",
                 'user_id' => $userId,
             ]);
@@ -505,6 +506,7 @@ class SaleService
             'new_quantity' => $qty + $oldQty,
             'difference' => $qty, // La diferencia es negativa (salida)
             'type' => $cause,
+            'type_id' => $refId,
             'description' => "Venta anulada registrada, movimiento de salida de la sucursal {$branchId}. {$refType} ID: {$refId}",
             'user_id' => Auth::id(),
         ]);

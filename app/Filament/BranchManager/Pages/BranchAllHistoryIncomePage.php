@@ -11,6 +11,7 @@ use Filament\Tables;
 use App\Models\WarehouseDelivery;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Log;
 
 class BranchAllHistoryIncomePage extends Page implements HasTable
 {
@@ -76,11 +77,65 @@ class BranchAllHistoryIncomePage extends Page implements HasTable
                 Action::make('details')
                     ->hiddenLabel(true)
                     ->icon("far-eye")
+                    ->hidden(fn (WarehouseDelivery $record): bool => ($record->getPropertyOpticalType())? true : false)
                     ->url(fn (WarehouseDelivery $record): string => route(
                         'filament.branch-manager.pages.income-details-page', 
                         [
                             "warehouseDeliveryId" => $record->id
                         ]))
+                    ->openUrlInNewTab(),
+                Action::make('print')
+                    ->hiddenLabel(true)
+                    ->icon("far-file-pdf")
+                    ->color('success')
+                    ->hidden(fn (WarehouseDelivery $record): bool => ($record->getPropertyOpticalType())? false : true)
+                    ->url(function (WarehouseDelivery $record) {
+                        $type = $record->getPropertyOpticalType();
+                        if($type != null && !empty($type)){
+                            Log::info($type);
+                            return route(
+                            'export.pdf.history.movement', 
+                            [
+                                "movement" => "ENTREGA",
+                                "movement_id" => $record->id,
+                                "type" => "+"
+                            ]);
+                        } else {
+                            return  route(
+                            'filament.branch-manager.pages.income-details-page', 
+                            [
+                                "warehouseDeliveryId" => $record->id
+                            ]);  
+                        }
+                        
+                    })
+                    ->openUrlInNewTab(),
+                Action::make('print')
+                    ->hiddenLabel(true)
+                    ->icon("far-file-pdf")
+                    ->color('danger')
+                    ->hidden(fn (WarehouseDelivery $record): bool => ($record->getPropertyOpticalType())? false : true)
+                    ->url(function (WarehouseDelivery $record) {
+                        $type = $record->getPropertyOpticalType();
+                        if($type != null && !empty($type)){
+                            Log::info($type);
+                            return route(
+                            'export.pdf.history.movement', 
+                            [
+                                "movement" => "ENTREGA",
+                                "movement_id" => $record->id,
+                                "type" => "-"
+                            ]);
+                        } else {
+                            return  route(
+                            'filament.branch-manager.pages.income-details-page', 
+                            [
+                                "warehouseDeliveryId" => $record->id
+                            ]);  
+                        }
+                        
+                    })
+                    ->openUrlInNewTab(),
             ])
             ->filters([
                 // Aquí puedes añadir filtros

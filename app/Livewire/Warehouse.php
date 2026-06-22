@@ -284,6 +284,7 @@ class Warehouse extends Component implements HasSchemas
                         'new_quantity' => $newQuantity,
                         'difference' => $amount,
                         'type' => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        'type_id' => $warehouseDelivery->id,
                         'user_id' => Auth::id(),
                     ]);
                 }

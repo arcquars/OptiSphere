@@ -33,6 +33,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Intervention\Image\Laravel\Facades\Image as InterventionImage;
 
 use function PHPUnit\Framework\isEmpty;
 use function PHPUnit\Framework\isNull;
@@ -187,7 +188,7 @@ class ManagerBranchCode extends Component
                 $this->cart[$cartKey]['limit'] = $quantity;
                 $this->cart[$cartKey]['promotion'] = null;
             } else {
-                Log::info("AddddddddCart product: cantidad en tienda: " . $quantity . " || cantidad en el carrito: " . $this->cart[$cartKey]['quantity']);
+                //Log::info("AddddddddCart product: cantidad en tienda: " . $quantity . " || cantidad en el carrito: " . $this->cart[$cartKey]['quantity']);
                 if(($this->cart[$cartKey]['quantity'] + 1) <= $quantity) {
                     $this->cart[$cartKey]['quantity'] = (is_numeric($this->cart[$cartKey]['quantity']))? $this->cart[$cartKey]['quantity']+1 : 1;
                     $this->cart[$cartKey]['limit'] = $quantity;
@@ -272,7 +273,7 @@ class ManagerBranchCode extends Component
             $this->addToCart(
                 $product->id, 
                 'product', 
-                $product->name, 
+                $product->name . "(" . $product->code . ")", 
                 $product->getPriceByType($this->branch->id, $this->saleType),
                 $product->stockByBranch($this->branch->id)
             );
@@ -985,7 +986,9 @@ class ManagerBranchCode extends Component
             $qrImage = $response->qrImage ?? $response->qrBase64 ?? null;
 
             if ($qrImage) {
-                $this->qrImage = $qrImage;
+                //$this->createQrWithAmount($qrImage, ($this->isSaleCredit)? (float) $this->partial_payment : (float) $this->total);
+                $this->qrImage = $this->createQrWithAmount($qrImage, ($this->isSaleCredit)? (float) $this->partial_payment : (float) $this->total);
+                // Log::info($qrImage);
                 $this->qrId = $response->qrId;
                 $this->showQrModal = true;
             } else {
@@ -1138,5 +1141,52 @@ class ManagerBranchCode extends Component
 
         return $total;
 
+    }
+
+    private function createQrWithAmount($qrImage, $amount){
+       $base64Original = $qrImage;
+        $monto = $amount ?? 0;
+
+        if (!$base64Original) {
+            return asset('img/cerisier-no-image.png');
+        }
+
+        try {
+            // 1. Decodificar el base64 original a datos binarios
+            $imgData = base64_decode($base64Original);
+            
+            // 2. [v3] Cargar el QR original usando read() en lugar de make()
+            $img = InterventionImage::read($imgData);
+
+            // 3. Aumentar el tamaño del lienzo
+            $nuevoAncho = $img->width();
+            $nuevoAlto = $img->height() + 40;
+            
+            // [v3] La sintaxis de resizeCanvas cambia ligeramente (cuarto parámetro es el fondo)
+            // 'top' ancla la imagen arriba, creando el espacio blanco en la parte inferior
+            $img->resizeCanvas(width: $nuevoAncho, height:$nuevoAlto, background:'ffffff', position:'top');
+            // 4. Escribir el texto
+            $texto = "CERISIER - Monto " . number_format($monto, 2, '.', '') . " Bs";
+            
+            // [v3] La escritura de texto mantiene una sintaxis muy similar
+            $img->text($texto, $nuevoAncho / 2, $nuevoAlto - 15, function($font) {
+                // Recomendado: Usa una fuente TTF real en v3 para evitar errores de renderizado
+                $font->file(public_path('fonts/roboto_mono/RobotoMono-Italic-VariableFont_wght.ttf')); 
+                $font->size(45);
+                $font->color('000000'); // Color hexadecimal sin el #
+                $font->align('center');
+                $font->valign('bottom');
+            });
+
+            // 5. [v3] Convertir a Base64 URI de forma nativa
+            // toDataUri() ya devuelve la cadena completa: "data:image/png;base64,..."
+            return $img->toPng()->toDataUri();
+
+        } catch (\Exception $e) {
+            Log::error("Error al procesar la imagen del QR: " . $e->getMessage());
+            Log::error("Error al procesar la imagen del QR: " . $e->getTraceAsString());
+            // Si falla (ej: falta la fuente tipográfica), retornamos el original concatenado
+            return 'data:image/png;base64,' . $base64Original;
+        } 
     }
 }

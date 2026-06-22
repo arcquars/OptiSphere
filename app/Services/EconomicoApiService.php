@@ -121,7 +121,7 @@ class EconomicoApiService
 
             if ($response->successful() && ($response->json('responseCode') === 0)) {
                 $data = $response->json();
-                Log::info("paymentQr data:: " . json_encode($data));
+                // Log::info("paymentQr data:: " . json_encode($data));
                 $responseData = $data['body'] ?? $data; 
                 $responseData['transactionId'] = $responseData['transactionId'] ?? $transactionId;
                 

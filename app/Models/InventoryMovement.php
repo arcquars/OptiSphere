@@ -30,6 +30,7 @@ class InventoryMovement extends Model
         'old_quantity',
         'new_quantity',
         'difference',
+        'type_id',
         'type',
         'description',
         'user_id',
@@ -43,6 +44,11 @@ class InventoryMovement extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 
     /**

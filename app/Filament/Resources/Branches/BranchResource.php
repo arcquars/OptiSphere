@@ -6,6 +6,7 @@ use App\Filament\Resources\Branches\Pages\CashBoxReport;
 use App\Filament\Resources\Branches\Pages\CashBoxView;
 use App\Filament\Resources\Branches\Pages\CreateBranch;
 use App\Filament\Resources\Branches\Pages\EditBranch;
+use App\Filament\Resources\Branches\Pages\HistoryBranchAllMovement;
 use App\Filament\Resources\Branches\Pages\InventoryBranch;
 use App\Filament\Resources\Branches\Pages\InvoiceConfig;
 use App\Filament\Resources\Branches\Pages\ListBranches;
@@ -65,6 +66,7 @@ class BranchResource extends Resource
             'invoice-config' => InvoiceConfig::route('/{branch_id}/siat/invoice-config'),
             'siat-config' => SiatConfig::route('/{branch_id}/siat/siat-config'),
             'siat-manager' => SiatManager::route('/{branch_id}/siat/siat-manager'),
+            'branch-all-history' => HistoryBranchAllMovement::route('/{branch_id}/all-history'),
         ];
     }
 }

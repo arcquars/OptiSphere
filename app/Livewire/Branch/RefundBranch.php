@@ -168,6 +168,7 @@ class RefundBranch extends Component  implements HasForms
                             'new_quantity' => $newQuantity,
                             'difference' => $amount,
                             'type' => WarehouseStockHistory::MOVEMENT_TYPE_REFUND,
+                            'type_id' => $warehouseRefund->id,
                             'user_id' => Auth::id(),
                         ]);
                     }

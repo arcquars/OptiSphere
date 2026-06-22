@@ -416,6 +416,7 @@ class CreditPaymentResource extends Page implements HasTable
             ->checkIfRecordIsSelectableUsing(
                 fn (SalePayment $record): bool => !$record->sale->is_paid,
             )
+            ->selectCurrentPageOnly()
             ->paginated();
     }
 
@@ -461,7 +462,6 @@ class CreditPaymentResource extends Page implements HasTable
         //                     $query->where('sales.branch_id', $branchId);
         //                 }
         //             });
-
         $query = Sale::query()->where('status', Sale::SALE_STATUS_CREDIT);
         if($this->branchId){
             $query->where('branch_id', $this->branchId);
@@ -745,6 +745,14 @@ class CreditPaymentResource extends Page implements HasTable
                             ['record' => $record, 'isQrActive' => $isQrActive, 'payments' => $payments],
                         );
                     })
+                    ->extraModalFooterActions([
+                        Action::make('print_history')
+                            ->label('Imprimir')
+                            ->icon('heroicon-o-printer')
+                            ->color('gray')
+                            ->url(fn (Sale $record) => route('sales.payment_history_pdf', $record))
+                            ->openUrlInNewTab(),
+                    ])
                     // Definición del esquema condicional
                     ->schema(fn (Sale $record): array => $record->is_paid 
                         ? [] 
@@ -837,6 +845,10 @@ class CreditPaymentResource extends Page implements HasTable
             ->checkIfRecordIsSelectableUsing(
                 fn (Sale $record): bool => !$record->is_paid,
             )
+            ->selectCurrentPageOnly(true)
+            ->extraAttributes([
+                'class' => 'hide-select-all-checkbox',
+            ])
             ->paginated();
     }
 }

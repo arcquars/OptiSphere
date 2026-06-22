@@ -138,6 +138,7 @@ class ViewSaleModal extends Component
             'new_quantity' => $newQuantity,
             'difference' => -$item->quantity, // La diferencia es negativa (salida)
             'type' => 'EDITAR VENTA',
+            'type_id' => $this->sale->id,
             'description' => "Venta registrada, movimiento de salida de la sucursal {$this->sale->branch->name}. Venta ID: {$this->sale->id}",
             'user_id' => Auth::id(),
         ]);
@@ -163,6 +164,7 @@ class ViewSaleModal extends Component
             'new_quantity' => $newQuantity,
             'difference' => $item->quantity, // La diferencia es positiva (entrada)
             'type' => 'EDITAR VENTA',
+            'type_id' => $this->sale->id,
             'description' => "Venta registrada, movimiento de entrada de la sucursal {$this->sale->branch->name}. Venta ID: {$this->sale->id}",
             'user_id' => Auth::id(),
         ]);

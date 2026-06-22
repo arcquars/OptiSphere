@@ -143,6 +143,7 @@ class VoidWharehouseRefundModal extends Component
                             'new_quantity' => $newQuantity,
                             'difference' => $amount,
                             'type' => WarehouseStockHistory::MOVEMENT_TYPE_VOID_REFUND,
+                            'type_id' => $this->warehouseRefund->id,
                             'user_id' => Auth::id(),
                         ]);
                     }

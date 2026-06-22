@@ -205,7 +205,7 @@
         | @if($type) <span class="text-primary">POSITIVO</span> @else <span class="text-red-500">NEGATIVO</span> @endif
         | <a 
             href="{{ route('filament.' . filament()->getCurrentPanel()->getId() . '.resources.warehouses.history', [
-                'wharehouse_id' => $warehouseId, 
+                'warehouse_id' => $warehouseId, 
                 'type' => $type ? '1' : '0', 
                 'code' => $baseCode
             ]) }}"

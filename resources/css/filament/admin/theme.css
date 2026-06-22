@@ -33,3 +33,7 @@
 .fi-width-7xl {
     max-width: 100% !important; /* o el valor que quieras */
 }
+
+.hide-select-all-checkbox table thead th:first-child input[type="checkbox"] {
+    display: none;
+}
