@@ -46,11 +46,18 @@ class EditWarehouseStockItemModal extends Component
     public function loadProduct($historyId, $action, $productId, $warehouseId)
     {
         $this->warehouseTypeId = $historyId;
-        $this->action = $action;
+        // Normalizamos a los alias cortos usados en toda la app (INGRESO / ENTREGA),
+        // sin importar si llega el alias corto (HistoryShow) o el movement_type
+        // completo (HistoryMovementShow, ej. "ENTREGA_SUCURSAL").
+        $this->action = match (true) {
+            str_contains($action, 'ENTREGA') => 'ENTREGA',
+            str_contains($action, 'INGRESO') => 'INGRESO',
+            default => $action,
+        };
         $this->warehouseId = $warehouseId;
 
         $this->warehouseStockHistory = WarehouseStockHistory::
-            where('movement_type', 'like', "%".$action."%")
+            where('movement_type', 'like', "%".$this->action."%")
             ->where('type_id', $historyId)
             ->whereHas('warehouseStock', function($query) use ($productId){
                 $query->where('product_id', $productId);
@@ -69,7 +76,7 @@ class EditWarehouseStockItemModal extends Component
             $this->amount = $this->warehouseStockHistory->difference;
             $this->quantity = $this->warehouseStockHistory->warehouseStock->quantity;
 
-            if($action === 'ENTREGA'){
+            if($this->action === 'ENTREGA'){
                 // Stock que había en el almacén ANTES de esta entrega. La cantidad
                 // actual ya tiene restada la entrega, por eso se la "devolvemos".
                 $availableBeforeThisDelivery = $currentWarehouseQty + $this->warehouseStockHistory->difference;
@@ -89,7 +96,7 @@ class EditWarehouseStockItemModal extends Component
             $this->amount = 0;
             $this->quantity = $currentWarehouseQty;
 
-            if($action === 'ENTREGA'){
+            if($this->action === 'ENTREGA'){
                 // Producto nuevo dentro de una entrega existente: el tope es
                 // todo lo disponible actualmente en el almacén.
                 $this->minAmount = 0;
@@ -152,6 +159,7 @@ class EditWarehouseStockItemModal extends Component
             ->send();
         $this->closeModal();
         $this->dispatch('sphere-updated');
+        $this->dispatch('history_movement-show-updated');
         $this->dispatch('close-modal', id: 'table-action-modal');
     }
 }
