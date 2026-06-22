@@ -16,19 +16,22 @@ class EditWarehouseStockItemModal extends Component
 {
     public bool $isOpen = false;
     public ?Product $product = null;
-    
+
     public ?WarehouseStockHistory $warehouseStockHistory = null;
 
     public $amount;
     public $minAmount = 0;
+    public $maxAmount = 100;
     public $quantity = 0;
     public $isNew = true;
     public $warehouseTypeId;
+    public $action;
+    public $warehouseId;
 
     protected function rules()
     {
         return [
-            'amount' => 'required|integer|min:'.$this->minAmount.'|max:100',
+            'amount' => ['required', 'integer', 'min:'.$this->minAmount, 'max:'.$this->maxAmount],
         ];
     }
 
@@ -43,6 +46,9 @@ class EditWarehouseStockItemModal extends Component
     public function loadProduct($historyId, $action, $productId, $warehouseId)
     {
         $this->warehouseTypeId = $historyId;
+        $this->action = $action;
+        $this->warehouseId = $warehouseId;
+
         $this->warehouseStockHistory = WarehouseStockHistory::
             where('movement_type', 'like', "%".$action."%")
             ->where('type_id', $historyId)
@@ -53,30 +59,48 @@ class EditWarehouseStockItemModal extends Component
 
         $this->product = Product::find($productId);
 
+        $warehouseStock = WarehouseStock::where('product_id', $productId)
+            ->where('warehouse_id', $warehouseId)
+            ->first();
+        $currentWarehouseQty = $warehouseStock->quantity ?? 0;
+
         if($this->warehouseStockHistory){
             $this->isNew = false;
             $this->amount = $this->warehouseStockHistory->difference;
             $this->quantity = $this->warehouseStockHistory->warehouseStock->quantity;
-            $this->minAmount = $this->warehouseStockHistory->warehouseStock->quantity - $this->warehouseStockHistory->difference;
-            if($this->minAmount <= 0){
-                $this->minAmount = ($this->minAmount * -1) + 1;
-            } else {
+
+            if($action === 'ENTREGA'){
+                // Stock que había en el almacén ANTES de esta entrega. La cantidad
+                // actual ya tiene restada la entrega, por eso se la "devolvemos".
+                $availableBeforeThisDelivery = $currentWarehouseQty + $this->warehouseStockHistory->difference;
                 $this->minAmount = 0;
+                $this->maxAmount = $availableBeforeThisDelivery;
+            } else {
+                $this->minAmount = $this->warehouseStockHistory->warehouseStock->quantity - $this->warehouseStockHistory->difference;
+                if($this->minAmount <= 0){
+                    $this->minAmount = ($this->minAmount * -1) + 1;
+                } else {
+                    $this->minAmount = 0;
+                }
+                $this->maxAmount = 100;
             }
         } else {
-            // dd("xxx: " . $productId . " || " . $warehouseId);
             $this->isNew = true;
             $this->amount = 0;
-            $warehouseStock = WarehouseStock::where('product_id', $productId)->where('warehouse_id', $warehouseId)->first();
-            if($warehouseStock){
-                $this->quantity = $warehouseStock->quantity;
+            $this->quantity = $currentWarehouseQty;
+
+            if($action === 'ENTREGA'){
+                // Producto nuevo dentro de una entrega existente: el tope es
+                // todo lo disponible actualmente en el almacén.
+                $this->minAmount = 0;
+                $this->maxAmount = $currentWarehouseQty;
             } else {
-                $this->quantity = 0;
+                $this->minAmount = 0;
+                $this->maxAmount = 100;
             }
-            
         }
         $this->isOpen = true;
-        
+
     }
 
     public function closeModal()
@@ -93,15 +117,33 @@ class EditWarehouseStockItemModal extends Component
     }
 
     public function updateRegister(){
-        $result = $this->validate();
-        // dd("xxx");
+        $this->validate();
+
         $warehouseStockHistoriService = new WarehouseStockHistoriService();
-        if($this->isNew){
-            $warehouseStockHistoriService->createSingleIncome($this->warehouseTypeId, $this->product->id, $this->amount);
-        } else {
-            $warehouseStockHistoriService->updateSingleIncome($this->warehouseStockHistory->id, $this->amount);
+
+        try {
+            if($this->action === 'ENTREGA'){
+                if($this->isNew){
+                    $warehouseStockHistoriService->createSingleDelivery($this->warehouseTypeId, $this->product->id, $this->amount);
+                } else {
+                    $warehouseStockHistoriService->updateSingleDelivery($this->warehouseStockHistory->id, $this->amount);
+                }
+            } else {
+                if($this->isNew){
+                    $warehouseStockHistoriService->createSingleIncome($this->warehouseTypeId, $this->product->id, $this->amount);
+                } else {
+                    $warehouseStockHistoriService->updateSingleIncome($this->warehouseStockHistory->id, $this->amount);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error al editar movimiento de stock: ' . $e->getMessage());
+            Notification::make()
+                ->title('Error')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+            return;
         }
-        
 
         Notification::make()
             ->title('Éxito')

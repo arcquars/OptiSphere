@@ -122,10 +122,14 @@ class HistoryMovementShow extends Page implements HasTable
              ->recordActions([
                 Action::make('updateDiference')
                     ->label("Actualizar")
+                    ->icon('heroicon-m-pencil-square')
                     // Deshabilitamos el comportamiento por defecto del formulario de Filament
                     ->form([]) 
                     ->disabled(fn (WarehouseStockHistory $record) => 
-                        $record->movement_type !== "INGRESO" 
+                        !in_array($record->movement_type, [
+                            WarehouseStockHistory::MOVEMENT_TYPE_INCOME,
+                            WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                        ])
                         || strcmp($record->warehouse_m->status, WarehouseIncome::STATUS_VOID) == 0
                     )
                     // Aquí inyectamos mágicamente tu componente Livewire dentro del cuerpo del modal

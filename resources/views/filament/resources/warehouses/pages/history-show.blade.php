@@ -5,6 +5,11 @@ use App\Models\WarehouseRefund;
 use App\Models\WarehouseStockHistory;
 ?>
 <x-filament-panels::page>
+    @php
+        $canEdit = auth()->user()->hasRole('admin')
+            && in_array($action, ['INGRESO', 'ENTREGA'])
+            && strcmp($warehouse_m->status, \App\Models\WarehouseIncome::STATUS_ACTIVE) == 0;
+    @endphp
     @livewire('warehouse.edit-warehouse-stock-item-modal')
     {{-- Cabecera con los parámetros actuales --}}
     <div class="p-4 bg-white shadow rounded-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
@@ -192,7 +197,7 @@ use App\Models\WarehouseStockHistory;
                                 "
                         >
                         @if(!empty($opticalProperty['amount']))
-                            @if(auth()->user()->hasRole('admin') && strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
+                            @if($canEdit)
                         <a 
                             href="#" 
                             title="Editar" 
@@ -205,7 +210,7 @@ use App\Models\WarehouseStockHistory;
                                 <p>{{ $opticalProperty['amount'] }}</p>
                             @endif
                         @else
-                            @if(auth()->user()->hasRole('admin') && strcmp($action, "INGRESO") == 0 && strcmp($warehouse_m->status, WarehouseIncome::STATUS_ACTIVE) == 0)
+                            @if($canEdit)
                             <a 
                                 href="#" 
                                 title="Editar" 

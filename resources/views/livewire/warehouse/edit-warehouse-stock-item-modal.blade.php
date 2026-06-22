@@ -4,14 +4,16 @@
             @if($product)
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h3 class="font-bold text-2xl text-base-content">Editar entrega ({{ $product->name }})</h3>
+                        <h3 class="font-bold text-2xl text-base-content">{{ $action === 'ENTREGA' ? 'Editar entrega' : 'Editar ingreso' }} ({{ $product->name }})</h3>
                     </div>
                     <button wire:click="closeModal" class="btn btn-sm btn-circle btn-ghost">✕</button>
                 </div>
 
                 <p>Cantidad actual en inventario: <b>{{ $this->quantity ?? 0}}</b></p>
                 <p>Cantidad registrada en esta entrada: <b>{{ $this->warehouseStockHistory->difference ?? 0}}</b></p>
-                <p>Minimo permitido segun stock actual: <b>{{ $this->minAmount }}</b> 
+                <p>Mínimo permitido segun stock actual: <b>{{ $this->minAmount }}</b> 
+                </p>
+                <p>Máximo permitido segun stock actual: <b>{{ $this->maxAmount }}</b> 
                 </p>
                 {{-- <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Cantidad</label>
                 <x-filament::input.wrapper>
