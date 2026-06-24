@@ -92,6 +92,72 @@ class ExportPdfController extends Controller
         return $pdf->stream($filename);
     }
 
+        /**
+     * Exporta a PDF el listado plano de movimientos de stock (usado por
+     * HistoryMovementShow, cuando el movimiento NO tiene matriz de
+     * esferas/cilindros, es decir base_code es null).
+     */
+    public function historyMovementList(Request $request, $movement, $movement_id)
+    {
+        // Normalizamos por si llega el movement_type completo en vez del alias corto.
+        if (strcmp($movement, "ENTREGA_SUCURSAL") === 0) {
+            $movement = "ENTREGA";
+        }
+ 
+        $warehouseM = null;
+        $bgAction = "";
+        switch ($movement) {
+            case "INGRESO":
+                $warehouseM = WarehouseIncome::find($movement_id);
+                $bgAction = "success";
+                break;
+            case "ENTREGA":
+                $warehouseM = WarehouseDelivery::find($movement_id);
+                $bgAction = "info";
+                break;
+            default:
+                $warehouseM = WarehouseRefund::find($movement_id);
+                $bgAction = "warning";
+                break;
+        }
+ 
+        abort_if(!$warehouseM, 404, 'Movimiento no encontrado.');
+ 
+        $userM = User::find($warehouseM->user_id);
+ 
+        $warehouseStockHistories = WarehouseStockHistory::where('movement_type', 'like', "%".$movement."%")
+                ->where('type_id', $warehouseM->id)
+                ->with(['warehouseStock', 'warehouseStock.product'])
+                ->get();
+ 
+        $size = $request->get('size', 'letter');
+ 
+        $paper = match ($size) {
+            'half' => [0, 0, 396, 612],
+            'roll' => [0, 0, 226, 800],
+            default => 'letter',
+        };
+ 
+        $data = [
+            'warehouseM' => $warehouseM,
+            'accion' => $movement,
+            'bgAction' => $bgAction,
+            'registrado_por' => $userM->name ?? 'N/A',
+            'fecha' => $warehouseM->created_at,
+            'warehouseStockHistories' => $warehouseStockHistories,
+        ];
+ 
+        $view = 'export-pdf.history-movement-list';
+ 
+        // Tabla plana, no requiere matriz: orientacion vertical (portrait).
+        $pdf = Pdf::loadView($view, $data)->setPaper($paper, 'portrait');
+ 
+        $filename = 'movimiento-' . $movement . '-' . $warehouseM->id . '.pdf';
+ 
+        return $pdf->stream($filename);
+    }
+
+    
     public function saldoByWarehouse(Request $request, $warehouseId, $codeBase, $type)
     {        
         $opticalProperties = OpticalProperty::where('base_code', $codeBase)

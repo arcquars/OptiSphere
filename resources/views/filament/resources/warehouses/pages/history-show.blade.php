@@ -10,7 +10,7 @@ use App\Models\WarehouseStockHistory;
             && in_array($action, ['INGRESO', 'ENTREGA'])
             && strcmp($warehouse_m->status, \App\Models\WarehouseIncome::STATUS_ACTIVE) == 0;
     @endphp
-    @livewire('warehouse.edit-warehouse-stock-item-modal')
+    @livewire('warehouse.edit-warehouse-stock-item-modal', key('edit-warehouse-stock-item-modal-'.$warehouse_m_id))
     {{-- Cabecera con los parámetros actuales --}}
     <div class="p-4 bg-white shadow rounded-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
         <div class="flex justify-between">
@@ -154,10 +154,10 @@ use App\Models\WarehouseStockHistory;
                 class="bg-white divide-y divide-gray-200"
             >
             @foreach($matrix as $j => $row)
-                <tr class="hover:bg-gray-50 @if($j == 4 || $j == 8 || $j == 16) border-b-2 border-b-zinc-600 @endif">
+                <tr wire:key="matrix-row-{{ $j }}" class="hover:bg-gray-50 @if($j == 4 || $j == 8 || $j == 16) border-b-2 border-b-zinc-600 @endif">
                     @foreach($row as $i => $opticalProperty)
                         @if($opticalProperty)
-                            <td class="px-1 py-1 whitespace-nowrap text-xs text-center font-medium text-white
+                            <td wire:key="matrix-sphere-{{ $j }}" class="px-1 py-1 whitespace-nowrap text-xs text-center font-medium text-white
                                 @if(strcmp($type, "+") == 0) bg-blue-500 @else bg-red-500 @endif
                                 " >
                                 {{ number_format($opticalProperty['sphere'], 2) }}
@@ -167,6 +167,7 @@ use App\Models\WarehouseStockHistory;
                     @endforeach
                     @foreach($row as $i => $opticalProperty)
                         <td
+                            wire:key="matrix-cell-{{ $j }}-{{ $i }}"
                             title="{{ $opticalProperty['description'] }}"
                             data-cell-id="{{ $opticalProperty['id'] }}"
                             data-cell-amount="{{ $opticalProperty['amount'] }}"
@@ -202,7 +203,7 @@ use App\Models\WarehouseStockHistory;
                             href="#" 
                             title="Editar" 
                             class="text-warning p-2 no-underline" 
-                            x-on:click="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}', warehouseId: '{{ $warehouse_id }}' })"
+                            x-on:click.stop.prevent="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}', warehouseId: '{{ $warehouse_id }}' })"
                         >
                             {{ $opticalProperty['amount'] }}
                         </a>
@@ -215,7 +216,7 @@ use App\Models\WarehouseStockHistory;
                                 href="#" 
                                 title="Editar" 
                                 class="text-primary p-2 no-underline" 
-                                x-on:click="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}', warehouseId: '{{ $warehouse_id }}' })"
+                                x-on:click.stop.prevent="$dispatch('open-edit-warehouse-stock-modal', { historyId: '{{ $this->warehouse_m_id }}', action: '{{ $this->action }}', productId: '{{ $opticalProperty['id'] }}', warehouseId: '{{ $warehouse_id }}' })"
                             >
                                 <i class="fa-solid fa-plus"></i>
                             </a>

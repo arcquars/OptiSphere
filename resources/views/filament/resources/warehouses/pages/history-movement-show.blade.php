@@ -39,6 +39,7 @@ use App\Models\WarehouseIncome;
                     target="_blank"
                     :disabled="(strcmp($warehouseM->status, WarehouseIncome::STATUS_VOID) == 0)"
                     {{-- href="{{ route('export.pdf.history.movement', ['movement' => $action, 'movement_id' => $warehouseM->id, 'type' => $type]) }}" --}}
+                    href="{{ route('export.pdf.history.movement.list', ['movement' => $action, 'movement_id' => $warehouseM->id]) }}"
                 >
                     Imprimir
                 </x-filament::button>
@@ -86,4 +87,49 @@ use App\Models\WarehouseIncome;
         {{ $this->table }}
     </div>
     
+
+    {{-- Definición del Modal Enviar a Sucursal --}}
+    <x-filament::modal id="send-to-branch-modal" width="md">
+        <x-slot name="heading">
+            Enviar a Sucursal
+        </x-slot>
+
+        <x-slot name="description">
+            Selecciona la sucursal de destino para el código.
+        </x-slot>
+
+        <div class="space-y-4 py-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Sucursal Destino</label>
+                <x-filament::input.wrapper size="xs">
+                    <x-filament::input.select wire:model="selectedBranchId" size="xs">
+                        <option value="">Seleccione una sucursal...</option>
+                        @foreach(\App\Models\Branch::where('is_active', 1)->pluck('name', 'id') as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+                
+                @error('selectedBranchId') <span class="text-danger-600 text-xs">{{ $message }}</span> @enderror
+            </div>
+        </div>
+
+        <x-slot name="footerActions">
+            <x-filament::button 
+                    color="gray" 
+                    size="sm"
+                    x-on:click="close"
+                >
+                    Cancelar
+                </x-filament::button>
+
+                <x-filament::button 
+                    color="primary" 
+                    size="sm"
+                    wire:click="sendToBranch"
+                >
+                    Confirmar Envío
+                </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
 </x-filament-panels::page>
