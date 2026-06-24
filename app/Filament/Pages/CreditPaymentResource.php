@@ -819,9 +819,9 @@ class CreditPaymentResource extends Page implements HasTable
                             $creditService = new CreditService();
                             foreach($records as $record){
                                 $creditService->registerPayment(
-                                    $record->residue,
-                                    $record->residue,
-                                    $record->sale,
+                                    $record->due_amount,
+                                    $record->due_amount,
+                                    $record,
                                     SalePayment::METHOD_CASH,
                                     auth()->id(),
                                     "Registrado mediante por: Grupo de Pagos"
