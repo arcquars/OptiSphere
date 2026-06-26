@@ -110,6 +110,11 @@
                                 </td>
                             </tr>
                         @endforeach
+                        <tr>
+                            <td class="text-right">Total:</td>
+                            <td class="text-center">{{ $this->totalProductsCount }}</td>
+                            <td></td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>

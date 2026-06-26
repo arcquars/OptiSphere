@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -263,5 +264,16 @@ class ProductDelivery extends Component implements HasForms
             'searchResults' => $searchResults,
             'branches' => $branches
         ]);
+    }
+    
+    // $this->productQuantities
+    #[Computed]
+    public function totalProductsCount(): int
+    {
+        $q = 0;
+        foreach ($this->productQuantities as $productId => $quantity){
+            $q += $quantity;
+        }
+        return $q; 
     }
 }
