@@ -32,7 +32,7 @@ use App\Models\Warehouse;
                                     <td>{{ $movement->new_quantity }}</td>
                                     <td>{{ $movement->difference }}</td>
                                     <td>{{ $movement->branch_name }}</td>
-                                    <td>{{ $movement->user? $movement->user->name : "-" }}</td>
+                                    <td>{{ $movement->user_name?? "--" }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

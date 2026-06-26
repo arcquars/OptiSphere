@@ -25,7 +25,7 @@
                             @foreach ($movements as $movement)
                                 <tr>
                                     <th>{{ $movement->id }}</th>
-                                    <td>{{ $movement->type_id }}</td>
+                                    <td>{{ $movement->type_id?? "--" }}</td>
                                     <td>{{ $movement->created_at }}</td>
                                     <td>{{ $movement->from_location_name }}</td>
                                     <td>{{ $movement->to_location_name }}</td>
