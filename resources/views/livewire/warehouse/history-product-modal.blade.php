@@ -12,7 +12,8 @@ use App\Models\Warehouse;
                     <table class="table table-xs">
                         <thead>
                         <tr>
-                            <th>N°</th>
+                            <th>ID</th>
+                            <th>N.</th>
                             <th>Fecha</th>
                             <th>Movimiento</th>
                             <th>Q. anterior</th>
@@ -26,6 +27,7 @@ use App\Models\Warehouse;
                             @foreach ($movements as $i => $movement)
                                 <tr>
                                     <th>{{ $i }}</th>
+                                    <td>{{ $movement->id?? "--" }}</td>
                                     <td>{{ $movement->date }}</td>
                                     <td>{{ $movement->movement_label }}</td>
                                     <td>{{ $movement->old_quantity }}</td>
