@@ -109,9 +109,10 @@ class HistoryMovementShow extends Page implements HasTable
                     ->with(['warehouseStock', 'warehouseStock.product', 'warehouseStock.product.opticalProperties'])
             )
             ->columns([
-                // Aquí defines las columnas de tu tabla basadas en los datos de $this->warehouseM
-                // Por ejemplo:
                 TextColumn::make('id')->label('ID'),
+                TextColumn::make('warehouseStock.product.code')->label('Codigo')->formatStateUsing(function ($state, $record) {
+                    return $record->warehouseStock->product->code ?? 'N/A';
+                }),
                 TextColumn::make('warehouseStock.product')->label('Producto')->formatStateUsing(function ($state, $record) {
                     return $record->warehouseStock->product->name ?? 'N/A';
                 }),

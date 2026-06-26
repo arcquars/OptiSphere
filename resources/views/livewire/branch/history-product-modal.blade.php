@@ -33,7 +33,7 @@
                                     <td>{{ $movement->old_quantity }}</td>
                                     <td>{{ $movement->new_quantity }}</td>
                                     <td>{{ $movement->difference }}</td>
-                                    <td>{{ $movement->user->name }}</td>
+                                    <td>{{ $movement->user? $movement->user->name : "-" }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
