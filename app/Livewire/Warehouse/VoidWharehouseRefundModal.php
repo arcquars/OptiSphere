@@ -79,19 +79,20 @@ class VoidWharehouseRefundModal extends Component
             return;
         }
 
-        if(!$this->warehouseRefund->base_code){
-            Notification::make()
-            ->title('Error')
-            ->body('El registro de entrega tiene productos diferentes a productos OPTICOS.')
-            ->danger()
-            ->send();
-            $this->closeVoidWherhouseRefundModal();
-            return;
-        }
+        // if(!$this->warehouseRefund->base_code){
+        //     Notification::make()
+        //     ->title('Error')
+        //     ->body('El registro de entrega tiene productos diferentes a productos OPTICOS.')
+        //     ->danger()
+        //     ->send();
+        //     $this->closeVoidWherhouseRefundModal();
+        //     return;
+        // }
         
         $warehouseStockHistories = WarehouseStockHistory::where('movement_type', WarehouseStockHistory::MOVEMENT_TYPE_REFUND)
             ->where('type_id', $this->warehouseRefund->id)->get();
         $warehouseMid = $this->warehouseRefund->warehouse_id;
+
 
         try{
             DB::transaction(function () use ($warehouseStockHistories, $warehouseMid) {

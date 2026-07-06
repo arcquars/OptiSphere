@@ -1,5 +1,6 @@
 <?php
 use App\Models\WarehouseIncome;
+use App\Models\WarehouseRefund;
 ?>
 <x-filament-panels::page>
     <div class="p-4 bg-white shadow rounded-xl dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
@@ -31,6 +32,21 @@ use App\Models\WarehouseIncome;
                         Enviar a Sucursal
                     </x-filament::button>
                 @endif
+
+                @if(strcmp($action, "DEVOLUCION") == 0 && auth()->user()->hasRole('admin'))
+                    @livewire('warehouse.void-wharehouse-refund-modal', ['warehouseRefundId' => $warehouseM->id])
+                    <x-filament::button 
+                        color="danger" 
+                        size="xs"
+                        icon="heroicon-s-no-symbol"
+                        tag="button"
+                        :disabled="(strcmp($warehouseM->status, WarehouseRefund::STATUS_VOID) == 0)"
+                        x-on:click="$dispatch('open-void-warehouse-refund-modal')"
+                    >
+                        Anular Devolucion
+                    </x-filament::button>
+                @endif
+
                 <x-filament::button 
                     color="primary" 
                     size="xs"
