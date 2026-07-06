@@ -11,7 +11,9 @@ use App\Models\WarehouseIncome;
 use App\Models\WarehouseRefund;
 use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
+use App\Rules\CheckBranchSendProducts;
 use App\Rules\CheckSendProducts;
+use App\Services\WarehouseStockHistoriService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -46,6 +48,9 @@ class HistoryMovementShow extends Page implements HasTable
     public $warehouseM;
 
     public $selectedBranchId;
+
+    // Sucursal destino para el traslado sucursal -> sucursal (contexto ENTREGA)
+    public $destinationBranchId;
 
     protected static ?string $title = 'Ver Historial de Movimiento';
     public function mount(int $history_id, string $action): void
@@ -262,6 +267,50 @@ class HistoryMovementShow extends Page implements HasTable
         
         \Filament\Notifications\Notification::make()
             ->title('Envío registrado con éxito')
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Traslada los productos de esta ENTREGA hacia otra sucursal.
+     * La sucursal origen es la del registro actual ($warehouseM->branch_id).
+     */
+    public function transferToBranch(WarehouseStockHistoriService $service): void
+    {
+        // Validar destino y que la sucursal origen tenga stock suficiente
+        $this->validate(
+            [
+                'destinationBranchId' => ['required', 'exists:branches,id', new CheckBranchSendProducts($this->warehouseM->id)],
+            ],
+            [
+                'destinationBranchId.required' => 'Debes seleccionar una sucursal destino.',
+                'destinationBranchId.exists'   => 'La sucursal seleccionada no es válida.',
+            ]
+        );
+
+        // La sucursal destino no puede ser la misma que la de origen
+        if ((int) $this->destinationBranchId === (int) $this->warehouseM->branch_id) {
+            $this->addError('destinationBranchId', 'La sucursal destino debe ser diferente a la sucursal origen.');
+            return;
+        }
+
+        try {
+            $service->transferBranchToBranch($this->warehouseM->id, (int) $this->destinationBranchId);
+        } catch (\Throwable $e) {
+            Log::error('Error al trasladar entre sucursales: ' . $e->getMessage());
+            \Filament\Notifications\Notification::make()
+                ->title('Error al realizar el traslado')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $this->destinationBranchId = null;
+        $this->dispatch('close-modal', id: 'transfer-to-branch-modal');
+
+        \Filament\Notifications\Notification::make()
+            ->title('Traslado entre sucursales registrado con éxito')
             ->success()
             ->send();
     }

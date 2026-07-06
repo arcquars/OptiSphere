@@ -43,8 +43,8 @@ use App\Models\WarehouseStockHistory;
                 @endif
                 @if(strcmp($action, "ENTREGA") == 0 && auth()->user()->hasRole('admin'))
                     @livewire('warehouse.void-wharehouse-delivery-modal', ['warehouseDeliveryId' => $warehouse_m_id])
-                    <x-filament::button 
-                        color="danger" 
+                    <x-filament::button
+                        color="danger"
                         size="xs"
                         icon="heroicon-s-no-symbol"
                         tag="button"
@@ -52,6 +52,16 @@ use App\Models\WarehouseStockHistory;
                         x-on:click="$dispatch('open-void-warehouse-delivery-modal')"
                     >
                         Anular Entrega
+                    </x-filament::button>
+                    <x-filament::button
+                        color="primary"
+                        size="xs"
+                        icon="heroicon-m-arrows-right-left"
+                        tag="button"
+                        :disabled="(strcmp($warehouse_m->status, WarehouseDelivery::STATUS_VOID) == 0)"
+                        x-on:click="$dispatch('open-modal', { id: 'transfer-to-branch-modal' })"
+                    >
+                        Enviar a Sucursal
                     </x-filament::button>
                 @endif
                 @if(strcmp($action, "DEVOLUCION") == 0 && auth()->user()->hasRole('admin'))
@@ -266,8 +276,8 @@ use App\Models\WarehouseStockHistory;
                     Cancelar
                 </x-filament::button>
 
-                <x-filament::button 
-                    color="primary" 
+                <x-filament::button
+                    color="primary"
                     size="sm"
                     wire:click="sendToBranch"
                 >
@@ -276,7 +286,55 @@ use App\Models\WarehouseStockHistory;
         </x-slot>
     </x-filament::modal>
 
-    <div wire:loading.flex 
+    {{-- Modal Enviar a Sucursal (traslado sucursal origen -> sucursal destino, sobre una ENTREGA) --}}
+    @if(strcmp($action, "ENTREGA") == 0 && auth()->user()->hasRole('admin'))
+    <x-filament::modal id="transfer-to-branch-modal" width="md">
+        <x-slot name="heading">
+            Enviar a otra Sucursal
+        </x-slot>
+
+        <x-slot name="description">
+            Se trasladarán los productos del código <b>{{ $baseCode }}</b> desde la sucursal
+            <b>{{ $warehouse_m->branch?->name ?? '' }}</b> a la sucursal destino seleccionada.
+        </x-slot>
+
+        <div class="space-y-4 py-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Sucursal Destino</label>
+                <x-filament::input.wrapper size="xs">
+                    <x-filament::input.select wire:model="destinationBranchId" size="xs">
+                        <option value="">Seleccione una sucursal...</option>
+                        @foreach(\App\Models\Branch::where('is_active', 1)->where('id', '!=', $warehouse_m->branch_id)->pluck('name', 'id') as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+
+                @error('destinationBranchId') <span class="text-danger-600 text-xs">{{ $message }}</span> @enderror
+            </div>
+        </div>
+
+        <x-slot name="footerActions">
+            <x-filament::button
+                    color="gray"
+                    size="sm"
+                    x-on:click="close"
+                >
+                    Cancelar
+                </x-filament::button>
+
+                <x-filament::button
+                    color="primary"
+                    size="sm"
+                    wire:click="transferToBranch"
+                >
+                    Confirmar Traslado
+                </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
+    @endif
+
+    <div wire:loading.flex
         class="fixed inset-0 z-[10000] items-center justify-center bg-slate-900/60 backdrop-blur-md">
         
         <div class="bg-base-100 p-10 rounded-3xl shadow-2xl flex flex-col items-center gap-6 border border-white/10">

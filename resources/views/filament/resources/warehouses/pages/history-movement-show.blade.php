@@ -33,6 +33,18 @@ use App\Models\WarehouseRefund;
                     </x-filament::button>
                 @endif
 
+                @if(strcmp($action, "ENTREGA") == 0 && auth()->user()->hasRole('admin'))
+                    <x-filament::button
+                        color="primary"
+                        size="xs"
+                        icon="heroicon-m-arrows-right-left"
+                        tag="button"
+                        x-on:click="$dispatch('open-modal', { id: 'transfer-to-branch-modal' })"
+                    >
+                        Enviar a Sucursal
+                    </x-filament::button>
+                @endif
+
                 @if(strcmp($action, "DEVOLUCION") == 0 && auth()->user()->hasRole('admin'))
                     @livewire('warehouse.void-wharehouse-refund-modal', ['warehouseRefundId' => $warehouseM->id])
                     <x-filament::button 
@@ -139,8 +151,8 @@ use App\Models\WarehouseRefund;
                     Cancelar
                 </x-filament::button>
 
-                <x-filament::button 
-                    color="primary" 
+                <x-filament::button
+                    color="primary"
                     size="sm"
                     wire:click="sendToBranch"
                 >
@@ -148,4 +160,52 @@ use App\Models\WarehouseRefund;
                 </x-filament::button>
         </x-slot>
     </x-filament::modal>
+
+    {{-- Modal Enviar a Sucursal (traslado sucursal origen -> sucursal destino, sobre una ENTREGA) --}}
+    @if(strcmp($action, "ENTREGA") == 0 && auth()->user()->hasRole('admin'))
+    <x-filament::modal id="transfer-to-branch-modal" width="md">
+        <x-slot name="heading">
+            Enviar a otra Sucursal
+        </x-slot>
+
+        <x-slot name="description">
+            Se trasladarán todos los productos de esta entrega desde la sucursal
+            <b>{{ $warehouseM->branch?->name ?? '' }}</b> a la sucursal destino seleccionada.
+        </x-slot>
+
+        <div class="space-y-4 py-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Sucursal Destino</label>
+                <x-filament::input.wrapper size="xs">
+                    <x-filament::input.select wire:model="destinationBranchId" size="xs">
+                        <option value="">Seleccione una sucursal...</option>
+                        @foreach(\App\Models\Branch::where('is_active', 1)->where('id', '!=', $warehouseM->branch_id)->pluck('name', 'id') as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </x-filament::input.select>
+                </x-filament::input.wrapper>
+
+                @error('destinationBranchId') <span class="text-danger-600 text-xs">{{ $message }}</span> @enderror
+            </div>
+        </div>
+
+        <x-slot name="footerActions">
+            <x-filament::button
+                    color="gray"
+                    size="sm"
+                    x-on:click="close"
+                >
+                    Cancelar
+                </x-filament::button>
+
+                <x-filament::button
+                    color="primary"
+                    size="sm"
+                    wire:click="transferToBranch"
+                >
+                    Confirmar Traslado
+                </x-filament::button>
+        </x-slot>
+    </x-filament::modal>
+    @endif
 </x-filament-panels::page>

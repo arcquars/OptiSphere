@@ -15,6 +15,7 @@ use App\Models\WarehouseRefund;
 use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
 use App\Rules\CheckSendProducts;
+use App\Services\WarehouseStockHistoriService;
 use Carbon\Carbon;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +46,9 @@ class HistoryShow extends Page
 
     // Propiedades para el modal
     public $selectedBranchId;
+
+    // Sucursal destino para el traslado sucursal -> sucursal (contexto ENTREGA)
+    public $destinationBranchId;
 
 
     public $warehouseStockHistories;
@@ -256,9 +260,54 @@ class HistoryShow extends Page
 
         $this->selectedBranchId = null;
         $this->dispatch('close-modal', id: 'send-to-branch-modal');
-        
+
         \Filament\Notifications\Notification::make()
             ->title('Envío registrado con éxito')
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Traslada los productos de este código óptico (base_code) desde la sucursal
+     * de esta ENTREGA hacia otra sucursal, pasando por el almacén.
+     */
+    public function transferToBranch(WarehouseStockHistoriService $service): void
+    {
+        $this->validate(
+            [
+                'destinationBranchId' => ['required', 'exists:branches,id'],
+            ],
+            [
+                'destinationBranchId.required' => 'Debes seleccionar una sucursal destino.',
+                'destinationBranchId.exists'   => 'La sucursal seleccionada no es válida.',
+            ]
+        );
+
+        // La sucursal destino no puede ser la misma que la de origen
+        if ((int) $this->destinationBranchId === (int) $this->warehouse_m->branch_id) {
+            $this->addError('destinationBranchId', 'La sucursal destino debe ser diferente a la sucursal origen.');
+            return;
+        }
+
+        try {
+            // Se acota por base_code para trasladar solo los productos de este código óptico
+            $service->transferBranchToBranch($this->warehouse_m_id, (int) $this->destinationBranchId, $this->baseCode);
+        } catch (\Throwable $e) {
+            Log::error('Error al trasladar entre sucursales: ' . $e->getMessage());
+            \Filament\Notifications\Notification::make()
+                ->title('Error al realizar el traslado')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $this->destinationBranchId = null;
+        $this->dispatch('close-modal', id: 'transfer-to-branch-modal');
+        $this->dispatch('sphere-updated');
+
+        \Filament\Notifications\Notification::make()
+            ->title('Traslado entre sucursales registrado con éxito')
             ->success()
             ->send();
     }

@@ -110,7 +110,7 @@ class VoidWharehouseRefundModal extends Component
                     // Buscar el registro de stock por su ID.
                     $warehouseStock = WarehouseStock::firstOrCreate($attributes, [
                         'quantity' => 0 // Inicializa la cantidad en 0 si es un nuevo registro
-                    ]);;
+                    ]);
 
                     $oldQuantity = $warehouseStock->quantity;
                     $newQuantity = $oldQuantity - $amount;

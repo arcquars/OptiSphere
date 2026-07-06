@@ -2,11 +2,14 @@
 namespace App\Services;
 
 use App\Models\InventoryMovement;
+use App\Models\OpticalProperty;
 use App\Models\ProductStock;
 use App\Models\WarehouseDelivery;
 use App\Models\WarehouseIncome;
+use App\Models\WarehouseRefund;
 use App\Models\WarehouseStock;
 use App\Models\WarehouseStockHistory;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -187,6 +190,176 @@ class WarehouseStockHistoriService
                     'user_id' => Auth::id(),
                 ]);
             }
+        });
+    }
+
+    /**
+     * Traslada TODOS los productos de una ENTREGA desde su sucursal origen
+     * hacia una sucursal destino, pasando por el almacén de origen.
+     *
+     * El traslado se modela en dos tramos para mantener consistente el ledger:
+     *   Tramo 1 (DEVOLUCION): sucursal origen -> almacén.
+     *   Tramo 2 (ENTREGA):    almacén -> sucursal destino.
+     * El stock neto del almacén no cambia (entra y sale la misma cantidad).
+     *
+     * @param  int $originDeliveryId   ID del registro de ENTREGA (WarehouseDelivery) de origen.
+     * @param  int $destinationBranchId ID de la sucursal destino.
+     * @param  string|null $baseCode    Si se indica, solo se trasladan los productos de ese código óptico.
+     * @return WarehouseDelivery La nueva entrega generada hacia la sucursal destino.
+     * @throws Exception Si el stock de la sucursal origen es insuficiente o el destino es inválido.
+     */
+    public function transferBranchToBranch(int $originDeliveryId, int $destinationBranchId, ?string $baseCode = null): WarehouseDelivery
+    {
+        return DB::transaction(function () use ($originDeliveryId, $destinationBranchId, $baseCode) {
+            $originDelivery = WarehouseDelivery::findOrFail($originDeliveryId);
+            $originBranchId = $originDelivery->branch_id;
+            $warehouseId = $originDelivery->warehouse_id;
+
+            if ((int) $originBranchId === (int) $destinationBranchId) {
+                throw new Exception('La sucursal destino debe ser diferente a la sucursal origen.');
+            }
+
+            // Código óptico a registrar en los movimientos maestros
+            $masterBaseCode = $baseCode ?? $originDelivery->base_code;
+
+            // Líneas realmente entregadas en esta ENTREGA (una fila por producto)
+            $deliveryLines = WarehouseStockHistory::where('movement_type', WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY)
+                ->where('type_id', $originDelivery->id)
+                ->with('warehouseStock')
+                ->get();
+
+            // Registro maestro del tramo 1: DEVOLUCION (sucursal origen -> almacén)
+            $warehouseRefund = WarehouseRefund::create([
+                'warehouse_id' => $warehouseId,
+                'branch_id'    => $originBranchId,
+                'user_id'      => Auth::id(),
+                'base_code'    => $masterBaseCode,
+                'status'       => WarehouseRefund::STATUS_ACTIVE,
+                'refund_date'  => Carbon::now(),
+            ]);
+
+            // Registro maestro del tramo 2: ENTREGA (almacén -> sucursal destino)
+            $warehouseDelivery = WarehouseDelivery::create([
+                'warehouse_id'  => $warehouseId,
+                'branch_id'     => $destinationBranchId,
+                'user_id'       => Auth::id(),
+                'base_code'     => $masterBaseCode,
+                'status'        => WarehouseDelivery::STATUS_ACTIVE,
+                'delivery_date' => Carbon::now(),
+            ]);
+
+            foreach ($deliveryLines as $line) {
+                $productId = $line->warehouseStock->product_id;
+
+                // Si se especificó un base_code, solo trasladar los productos de ese código óptico
+                if ($baseCode !== null) {
+                    $op = OpticalProperty::where('product_id', $productId)->first();
+                    if (! $op || $op->base_code != $baseCode) {
+                        continue;
+                    }
+                }
+
+                $amount = (int) $line->difference;
+
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                // ===== Tramo 1: DEVOLUCION (sucursal origen -> almacén) =====
+
+                // Descontar del stock de la sucursal origen
+                $originStock = ProductStock::firstOrCreate(
+                    ['product_id' => $productId, 'branch_id' => $originBranchId],
+                    ['quantity' => 0]
+                );
+
+                if ($originStock->quantity < $amount) {
+                    throw new Exception("Stock insuficiente en la sucursal origen para el producto #{$productId} (disponible: {$originStock->quantity}, requerido: {$amount}).");
+                }
+
+                $oldOriginQty = $originStock->quantity;
+                $newOriginQty = $oldOriginQty - $amount;
+                $originStock->quantity = $newOriginQty;
+                $originStock->save();
+
+                // Ingresar al stock del almacén
+                $warehouseStock = WarehouseStock::firstOrCreate(
+                    ['product_id' => $productId, 'warehouse_id' => $warehouseId],
+                    ['quantity' => 0]
+                );
+
+                $oldWarehouseInQty = $warehouseStock->quantity;
+                $newWarehouseInQty = $oldWarehouseInQty + $amount;
+                $warehouseStock->quantity = $newWarehouseInQty;
+                $warehouseStock->save();
+
+                WarehouseStockHistory::create([
+                    'warehouse_stock_id' => $warehouseStock->id,
+                    'old_quantity'       => $oldWarehouseInQty,
+                    'new_quantity'       => $newWarehouseInQty,
+                    'difference'         => $amount,
+                    'movement_type'      => WarehouseStockHistory::MOVEMENT_TYPE_REFUND,
+                    'type_id'            => $warehouseRefund->id,
+                ]);
+
+                InventoryMovement::create([
+                    'product_id'         => $productId,
+                    'from_location_type' => InventoryMovement::LOCATION_TYPE_BRANCH,
+                    'from_location_id'   => $originBranchId,
+                    'to_location_type'   => InventoryMovement::LOCATION_TYPE_warehouse,
+                    'to_location_id'     => $warehouseId,
+                    'old_quantity'       => $oldOriginQty,
+                    'new_quantity'       => $newOriginQty,
+                    'difference'         => $amount,
+                    'type'               => WarehouseStockHistory::MOVEMENT_TYPE_REFUND,
+                    'type_id'            => $warehouseRefund->id,
+                    'user_id'            => Auth::id(),
+                ]);
+
+                // ===== Tramo 2: ENTREGA (almacén -> sucursal destino) =====
+
+                // Descontar del stock del almacén (neto 0 respecto al tramo 1)
+                $oldWarehouseOutQty = $warehouseStock->quantity;
+                $newWarehouseOutQty = $oldWarehouseOutQty - $amount;
+                $warehouseStock->quantity = $newWarehouseOutQty;
+                $warehouseStock->save();
+
+                WarehouseStockHistory::create([
+                    'warehouse_stock_id' => $warehouseStock->id,
+                    'old_quantity'       => $oldWarehouseOutQty,
+                    'new_quantity'       => $newWarehouseOutQty,
+                    'difference'         => $amount,
+                    'movement_type'      => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                    'type_id'            => $warehouseDelivery->id,
+                ]);
+
+                // Ingresar al stock de la sucursal destino
+                $destinationStock = ProductStock::firstOrCreate(
+                    ['product_id' => $productId, 'branch_id' => $destinationBranchId],
+                    ['quantity' => 0]
+                );
+
+                $oldDestinationQty = $destinationStock->quantity;
+                $newDestinationQty = $oldDestinationQty + $amount;
+                $destinationStock->quantity = $newDestinationQty;
+                $destinationStock->save();
+
+                InventoryMovement::create([
+                    'product_id'         => $productId,
+                    'from_location_type' => InventoryMovement::LOCATION_TYPE_warehouse,
+                    'from_location_id'   => $warehouseId,
+                    'to_location_type'   => InventoryMovement::LOCATION_TYPE_BRANCH,
+                    'to_location_id'     => $destinationBranchId,
+                    'old_quantity'       => $oldDestinationQty,
+                    'new_quantity'       => $newDestinationQty,
+                    'difference'         => $amount,
+                    'type'               => WarehouseStockHistory::MOVEMENT_TYPE_DELIVERY,
+                    'type_id'            => $warehouseDelivery->id,
+                    'user_id'            => Auth::id(),
+                ]);
+            }
+
+            return $warehouseDelivery;
         });
     }
 }
