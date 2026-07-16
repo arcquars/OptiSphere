@@ -17,5 +17,8 @@ class RoleSeeder extends Seeder
         Role::create(['name' => 'accountant', 'guard_name' => 'web']);
         Role::create(['name' => 'branch-manager', 'guard_name' => 'web']);
         Role::create(['name' => 'branch-coordinator', 'guard_name' => 'web']);
+        // Rol para clientes frecuentes con acceso al panel propio. Idempotente para poder
+        // sembrarlo sobre una base de datos existente sin duplicar los roles previos.
+        Role::firstOrCreate(['name' => 'frequent-customer', 'guard_name' => 'web']);
     }
 }

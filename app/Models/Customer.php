@@ -48,6 +48,14 @@ class Customer extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    /**
+     * Usuario del sistema vinculado a este cliente (cliente frecuente), si existe.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     // ----------------------------------------------------
     // ACCESORES (Atributos Calculados)
     // ----------------------------------------------------

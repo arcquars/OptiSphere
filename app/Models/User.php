@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -77,6 +78,14 @@ class User extends Authenticatable implements FilamentUser
             ->where('is_active', true);
     }
 
+    /**
+     * El registro de cliente asociado a este usuario (para clientes frecuentes).
+     */
+    public function customer(): HasOne
+    {
+        return $this->hasOne(Customer::class);
+    }
+
 //    public function canAccessPanel(Panel $panel): bool
 //    {
 //        if ($panel->getId() === 'admin') {
@@ -109,6 +118,10 @@ class User extends Authenticatable implements FilamentUser
         }
 
         if ($panelId === 'branch-coordinator' && $this->hasRole('branch-coordinator')) {
+            return true;
+        }
+
+        if ($panelId === 'frequent-customer' && $this->hasRole('frequent-customer')) {
             return true;
         }
 
