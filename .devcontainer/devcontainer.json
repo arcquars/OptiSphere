@@ -29,13 +29,25 @@
 				"bradlc.vscode-tailwindcss",
 				"humao.rest-client",
 				"onecentlin.laravel-blade",
-				"laravel.vscode-laravel"
+				// "laravel.vscode-laravel",
+				"ryannaddy.laravel-artisan",
+				"anthropic.claude-code"
 			]
 		}
 	},
     "remoteUser": "www-data",
 	"features": {
-		"ghcr.io/devcontainers/features/php:1": {}
+		"ghcr.io/devcontainers/features/php:1": {},
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "20",
+			"globalPackages": [
+				"@anthropic-ai/claude-code"
+			]
+		}
+	},
+
+	"containerEnv": {
+		"ANTHROPIC_API_KEY": "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" 
 	}
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
