@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "php-pro": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/php-pro/SKILL.md",
+      "computedHash": "c163f6d5d26ddbf4a4d79e8dc95d3b41e447f1659486cf0aae8c070d950a9d86"
+    },
+    "solid": {
+      "source": "ramziddin/solid-skills",
+      "sourceType": "github",
+      "skillPath": "skills/solid/SKILL.md",
+      "computedHash": "60de610a3c143f79f69552b7da60298bb46c9e8d80ab16c4c111b025823345d1"
+    }
+  }
+}

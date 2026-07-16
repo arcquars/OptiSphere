@@ -36,3 +36,6 @@ siat-user.http
 /public/fonts/filament/
 /public/js/filament/
 /storage/**/.gitignore
+.agents/
+.claude-config
+.claude/
