@@ -14,10 +14,15 @@ final class ProductAuthentication extends Model
         'cliente',
         'fecha_compra',
         'frequent_customer_id',
+        'is_authentication',
+        'authentication_approved_date',
+        'authentication_approved_by',
     ];
 
     protected $casts = [
         'fecha_compra' => 'date',
+        'is_authentication' => 'boolean',
+        'authentication_approved_date' => 'datetime',
     ];
 
     /**

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductAuthentication;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -91,6 +92,22 @@ final class ProductAuthenticationService
                 'frequent_customer_id' => $customerId,
             ]);
         });
+    }
+
+    /**
+     * Aprueba o desaprueba una autenticación desde el panel de administración,
+     * dejando traza de quién la aprobó y cuándo.
+     */
+    public function setApproval(ProductAuthentication $authentication, bool $approved): ProductAuthentication
+    {
+        $authentication->update([
+            'is_authentication' => $approved,
+            // Al desaprobar se limpia la traza de auditoría previa
+            'authentication_approved_date' => $approved ? now() : null,
+            'authentication_approved_by' => $approved ? Auth::user()?->name : null,
+        ]);
+
+        return $authentication;
     }
 
     /**
