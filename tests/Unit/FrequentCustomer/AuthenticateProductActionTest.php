@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
-// Reproduce el bug reportado: se corre contra la BD real (MySQL) en transacción con rollback,
+// Reproduce el bug reportado: corre en MySQL (filament_testing) en transacción con rollback,
 // disparando la acción de cabecera "autentificar_producto" tal como la ejecuta el usuario en
 // el navegador (no solo el Service directamente), para verificar que al agotar el tope de
 // unidades compradas la notificación de error se muestra y no se crea el registro extra.

@@ -9,6 +9,7 @@ use App\Models\ProductAuthentication;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -108,6 +109,20 @@ final class ProductAuthenticationService
         ]);
 
         return $authentication;
+    }
+
+    /**
+     * Genera la URL pública del certificado de autenticidad.
+     *
+     * El ID se encripta y se hacen URL-safe los caracteres conflictivos del base64
+     * (+ y /), tal como los revierte ProductAuthenticationController::show().
+     */
+    public function buildPublicUrl(ProductAuthentication $authentication): string
+    {
+        $encrypted = Crypt::encrypt($authentication->id);
+        $urlSafeToken = str_replace(['+', '/'], ['-', '_'], $encrypted);
+
+        return route('product.authentication', ['token' => $urlSafeToken]);
     }
 
     /**

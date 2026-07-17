@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CashBoxClosingPdfController;
 use App\Http\Controllers\ExportPdfController;
+use App\Http\Controllers\ProductAuthenticationController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -53,8 +54,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-Route::get('/authentication/{token}', 'ProductAuthenticationController@show')
-     ->name('product.authentication');
+// Certificado público de autenticidad: accesible sin login mediante token encriptado
+Route::get('/authentication/{token}', [ProductAuthenticationController::class, 'show'])
+    ->name('product.authentication');
 /*
 |--------------------------------------------------------------------------
 | Rutas Autenticadas

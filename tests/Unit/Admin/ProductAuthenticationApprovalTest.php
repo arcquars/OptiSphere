@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
 
-// Se ejecuta contra la BD real (MySQL) envuelto en transacción con rollback: la suite
-// SQLite está rota por la migración preexistente de optical_properties.
-// Correr con: DB_CONNECTION=mysql DB_DATABASE=filament vendor/bin/pest ...
+// Corre en MySQL (filament_testing, ver phpunit.xml/.env.testing) con transacción y
+// rollback como capa extra de seguridad. Basta con `vendor/bin/pest` — no requiere
+// overrides manuales de DB_* (esos apuntaban por error a la BD real; nunca los repitas).
 uses(Tests\TestCase::class);
 
 beforeEach(function (): void {

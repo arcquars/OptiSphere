@@ -50,6 +50,22 @@ class ProductAuthenticationsTable
                             ->success()
                             ->send();
                     }),
+                // El enlace solo se renderiza en las filas aprobadas: visible() ocultaría
+                // la columna entera, así que la condición vive en state() y url().
+                TextColumn::make('ver_autentificacion')
+                    ->label('Ver autentificación')
+                    ->state(fn (ProductAuthentication $record): ?string => $record->is_authentication
+                        ? 'Ver autentificación'
+                        : null)
+                    ->placeholder('—')
+                    ->icon('heroicon-m-arrow-top-right-on-square')
+                    ->color('primary')
+                    ->url(
+                        fn (ProductAuthentication $record): ?string => $record->is_authentication
+                            ? app(ProductAuthenticationService::class)->buildPublicUrl($record)
+                            : null,
+                        shouldOpenInNewTab: true,
+                    ),
             ])
             ->filters([
                 //
