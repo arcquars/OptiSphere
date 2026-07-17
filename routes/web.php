@@ -53,6 +53,8 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
+Route::get('/authentication/{token}', 'ProductAuthenticationController@show')
+     ->name('product.authentication');
 /*
 |--------------------------------------------------------------------------
 | Rutas Autenticadas
