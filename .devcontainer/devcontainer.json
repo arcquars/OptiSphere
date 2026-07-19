@@ -47,7 +47,7 @@
 	},
 
 	"containerEnv": {
-		"ANTHROPIC_API_KEY": "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" 
+		"ANTHROPIC_API_KEY": "" 
 	}
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
