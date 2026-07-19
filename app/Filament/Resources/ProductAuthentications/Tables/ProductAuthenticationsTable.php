@@ -6,10 +6,15 @@ namespace App\Filament\Resources\ProductAuthentications\Tables;
 
 use App\Models\ProductAuthentication;
 use App\Services\ProductAuthenticationService;
+use chillerlan\QRCode\Output\QROutputInterface;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductAuthenticationsTable
 {
@@ -71,10 +76,93 @@ class ProductAuthenticationsTable
                 //
             ])
             ->recordActions([
-                //
+                Action::make('descargar_certificado')
+                    ->label('Descargar Certificado')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    // Coherente con la columna "Ver autentificación": solo filas aprobadas
+                    ->visible(fn (ProductAuthentication $record): bool => $record->is_authentication)
+                    ->action(fn (ProductAuthentication $record) => self::generarCertificado($record)),
             ])
             ->toolbarActions([
                 //
             ]);
+    }
+
+    /**
+     * Genera el certificado de autenticidad como PNG combinando la plantilla,
+     * los datos del registro y un código QR con la URL pública de verificación.
+     * Fuerza la descarga inmediata en el navegador.
+     */
+    private static function generarCertificado(ProductAuthentication $record): ?StreamedResponse
+    {
+        // ------------------------------------------------------------------
+        // Coordenadas y ajustes (px sobre la plantilla de 1521x1034).
+        // Ajustar estos valores para calzar el texto/QR sobre la plantilla.
+        // ------------------------------------------------------------------
+        $clienteX = 150;   // "Nombres del cliente" (X)
+        $clienteY = 440;   // "Nombres del cliente" (Y, línea base del texto)
+        $serieX   = 150;   // "Número de serie" (X)
+        $serieY   = 700;   // "Número de serie" (Y, línea base del texto)
+        $qrX      = 1095;  // Esquina superior izquierda del QR (X)
+        $qrY      = 575;   // Esquina superior izquierda del QR (Y)
+        $qrSize   = 285;   // Lado del QR en px (se escala a este tamaño)
+        $fontSize = 34;    // Tamaño del texto TTF
+        $fontPath = public_path('fonts/roboto_mono/static/RobotoMono-Bold.ttf');
+        $plantilla = public_path('img/certification_template.png');
+
+        // Guarda: si falta la plantilla o la fuente, avisar en vez de un 500 opaco
+        if (! is_file($plantilla) || ! is_file($fontPath)) {
+            Notification::make()
+                ->title('No se pudo generar el certificado: falta la plantilla o la fuente.')
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
+        $base = @imagecreatefrompng($plantilla);
+        if ($base === false) {
+            Notification::make()
+                ->title('No se pudo cargar la plantilla del certificado.')
+                ->danger()
+                ->send();
+
+            return null;
+        }
+
+        // Texto blanco: las zonas de escritura de la plantilla tienen fondo oscuro
+        $blanco = imagecolorallocate($base, 255, 255, 255);
+
+        // Datos del registro. La plantilla ya rotula los campos, así que se plasma
+        // solo el valor. product?->code protege ante un producto eliminado.
+        $cliente = (string) $record->cliente;
+        $serie = $record->product?->code ?? '—';
+
+        imagettftext($base, $fontSize, 0, $clienteX, $clienteY, $blanco, $fontPath, $cliente);
+        imagettftext($base, $fontSize, 0, $serieX, $serieY, $blanco, $fontPath, $serie);
+
+        // QR local (chillerlan) devuelto como recurso GD nativo, sin red ni archivos temporales
+        $qrOptions = new QROptions([
+            'outputType' => QROutputInterface::GDIMAGE_PNG,
+            'returnResource' => true,
+            'scale' => 10,
+        ]);
+        $urlPublica = app(ProductAuthenticationService::class)->buildPublicUrl($record);
+        $qr = (new QRCode($qrOptions))->render($urlPublica);
+
+        // Escala el QR al tamaño destino y lo superpone sobre la plantilla
+        $qrEscalado = imagescale($qr, $qrSize, $qrSize);
+        imagecopy($base, $qrEscalado, $qrX, $qrY, 0, 0, $qrSize, $qrSize);
+
+        // Libera los buffers intermedios del QR
+        imagedestroy($qr);
+        imagedestroy($qrEscalado);
+
+        // Descarga con limpieza del buffer de la imagen tras emitirla
+        return response()->streamDownload(function () use ($base): void {
+            imagepng($base);
+            imagedestroy($base);
+        }, 'certificado-' . $record->id . '.png', ['Content-Type' => 'image/png']);
     }
 }

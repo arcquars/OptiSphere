@@ -56,6 +56,8 @@ class Login extends Component
                 $this->redirectRoute('filament.branch-manager.pages.dashboard');
             } elseif ($user->hasRole('branch-coordinator')) {
                 $this->redirectRoute('filament.branch-coordinator.pages.dashboard');
+            } elseif ($user->hasRole('frequent-customer')) {
+                $this->redirectRoute('filament.frequent-customer.pages.dashboard');
             }
         }
     }
