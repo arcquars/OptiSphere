@@ -82,7 +82,8 @@ class ProductAuthenticationsTable
                     ->color('gray')
                     // Coherente con la columna "Ver autentificación": solo filas aprobadas
                     ->visible(fn (ProductAuthentication $record): bool => $record->is_authentication)
-                    ->action(fn (ProductAuthentication $record) => self::generarCertificado($record)),
+                    //->action(fn (ProductAuthentication $record) => self::generarCertificado($record))
+                    ,
             ])
             ->toolbarActions([
                 //
