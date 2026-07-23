@@ -23,7 +23,7 @@ class ProductAuthenticationController extends Controller
         }
 
         // 3. Buscamos el registro por su ID (si no existe, lanza un 404 automáticamente)
-        $auth = ProductAuthentication::findOrFail($id);
+        $auth = ProductAuthentication::with('frequentCustomer.user')->findOrFail($id);
 
         // 4. Regla de negocio: Solo accesible si 'is_authentication' es igual a 1
         if ($auth->is_authentication != 1) {

@@ -25,6 +25,9 @@ class SaleHistoryTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label('Venta')
+                    ->numeric(),
                 TextColumn::make('date_sale')
                     ->label('Fecha')
                     ->date()
@@ -85,7 +88,9 @@ class SaleHistoryTable
                                     ->required(),
                                 DatePicker::make('fecha_compra')
                                     ->label('Fecha de compra')
-                                    ->required(),
+                                    ->required()
+                                    ->default(fn (): ?string => app(ProductAuthenticationService::class)
+                                        ->lastPurchaseDate((int) Auth::user()->customer->id)),
                             ]),
                         // Receta óptica: opcional, no todos los productos la llevan.
                         // Se agrupa en una Section colapsable para no alargar el modal cuando

@@ -60,6 +60,18 @@ final class ProductAuthenticationService
     }
 
     /**
+     * Fecha de la compra más reciente del cliente (excluyendo ventas anuladas),
+     * para precargar el campo "fecha_compra" del formulario de autentificación.
+     */
+    public function lastPurchaseDate(int $customerId): ?string
+    {
+        return Sale::query()
+            ->where('customer_id', $customerId)
+            ->where('status', '!=', Sale::SALE_STATUS_VOIDED)
+            ->max('date_sale');
+    }
+
+    /**
      * Registra la autenticación de un producto validando que no se supere
      * la cantidad total de unidades compradas por el cliente.
      *

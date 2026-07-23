@@ -14,7 +14,7 @@
         <div class="card-body">
             <div class="text-center">
                 <div class="badge badge-success badge-lg gap-2 py-4">
-                    ¡Producto Auténtico Verificado!
+                    ¡Producto Auténtenico Verificado!
                 </div>
                 <h1 class="card-title justify-center mt-4 text-2xl">
                     {{ $auth->product?->name ?? 'Producto no disponible' }}
@@ -35,9 +35,13 @@
                     <p class="text-sm text-base-content/60">Fecha de compra</p>
                     <p class="font-semibold">{{ $auth->fecha_compra?->format('d/m/Y') ?? '—' }}</p>
                 </div>
-                <div class="sm:col-span-2">
+                <div class="">
                     <p class="text-sm text-base-content/60">Cliente</p>
                     <p class="font-semibold">{{ $auth->cliente }}</p>
+                </div>
+                <div class="">
+                    <p class="text-sm text-base-content/60">Optica</p>
+                    <p class="font-semibold">{{ $auth->frequentCustomer?->user?->name ?? '—' }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-base-content/60">Autenticado el</p>

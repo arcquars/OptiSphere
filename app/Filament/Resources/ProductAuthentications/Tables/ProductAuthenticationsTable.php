@@ -35,6 +35,9 @@ class ProductAuthenticationsTable
                 TextColumn::make('product.name')
                     ->label('Producto')
                     ->searchable(),
+                TextColumn::make('product.id')
+                    ->label('Cod')
+                    ,
                 TextColumn::make('fecha_compra')
                     ->label('Fecha de compra')
                     ->date()
