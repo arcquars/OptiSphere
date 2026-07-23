@@ -10,7 +10,11 @@ use Filament\Tables\Table;
 
 class FrequentCustomersTable
 {
-    public static function configure(Table $table): Table
+    /**
+     * @param bool $readOnly Sin acciones de edición/eliminación. El panel branch-manager
+     *                       reutiliza esta misma tabla en modo solo consulta.
+     */
+    public static function configure(Table $table, bool $readOnly = false): Table
     {
         return $table
             ->recordUrl(null)
@@ -31,7 +35,7 @@ class FrequentCustomersTable
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->recordActions($readOnly ? [] : [
                 EditAction::make(),
                 DeleteAction::make(),
             ])

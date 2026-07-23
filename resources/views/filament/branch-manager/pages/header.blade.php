@@ -34,6 +34,12 @@
                     class="btn btn-sm btn-primary mt-1 mx-1">
                     Productos Autentificados
                 </a>
+                <a
+                    href="{{ App\Filament\BranchManager\Resources\FrequentCustomers\FrequentCustomerResource::getUrl('index', ['branchId' => $branch->id]) }}"
+                    target="_blank"
+                    class="btn btn-sm btn-primary mt-1 mx-1">
+                    Clientes frecuentes
+                </a>
                 @if($isFacturable)
                 <livewire:branch.siat-connection-status :branch="$branch" />
                 @endif
