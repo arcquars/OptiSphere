@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\ProductAuthentications\Tables;
 
+use App\Filament\FrequentCustomer\Resources\SaleHistory\Tables\SaleHistoryTable;
 use App\Models\ProductAuthentication;
 use App\Services\ProductAuthenticationService;
 use chillerlan\QRCode\Output\QROutputInterface;
@@ -79,6 +80,30 @@ class ProductAuthenticationsTable
                 //
             ])
             ->recordActions([
+                Action::make('editar')
+                    ->label('Editar')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('gray')
+                    ->modalHeading('Editar autentificación')
+                    // Reutiliza los mismos campos del modal "Autentificar Producto" del
+                    // panel Cliente Frecuente, escopados al cliente frecuente del registro.
+                    ->schema(fn (ProductAuthentication $record): array => SaleHistoryTable::productAuthenticationFields(
+                        (int) $record->frequent_customer_id
+                    ))
+                    ->fillForm(fn (ProductAuthentication $record): array => $record->only([
+                        'product_id', 'cliente', 'fecha_compra',
+                        'od_sphere', 'od_cylinder', 'od_axis',
+                        'oi_sphere', 'oi_cylinder', 'oi_axis',
+                        'add', 'dip',
+                    ]))
+                    ->action(function (ProductAuthentication $record, array $data): void {
+                        app(ProductAuthenticationService::class)->update($record, $data);
+
+                        Notification::make()
+                            ->title('Autentificación actualizada')
+                            ->success()
+                            ->send();
+                    }),
                 Action::make('descargar_certificado')
                     ->label('Descargar Certificado')
                     ->icon('heroicon-o-arrow-down-tray')

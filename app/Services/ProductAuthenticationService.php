@@ -117,6 +117,30 @@ final class ProductAuthenticationService
     }
 
     /**
+     * Actualiza los datos de una autenticación existente (producto, datos de
+     * compra y receta óptica) desde el panel de administración.
+     */
+    public function update(ProductAuthentication $authentication, array $data): ProductAuthentication
+    {
+        $authentication->update([
+            'product_id' => $data['product_id'],
+            'cliente' => $data['cliente'],
+            'fecha_compra' => $data['fecha_compra'],
+            // Receta óptica (Lejos): opcional, puede llegar vacía
+            'od_sphere' => $data['od_sphere'] ?? null,
+            'od_cylinder' => $data['od_cylinder'] ?? null,
+            'od_axis' => $data['od_axis'] ?? null,
+            'oi_sphere' => $data['oi_sphere'] ?? null,
+            'oi_cylinder' => $data['oi_cylinder'] ?? null,
+            'oi_axis' => $data['oi_axis'] ?? null,
+            'add' => $data['add'] ?? null,
+            'dip' => $data['dip'] ?? null,
+        ]);
+
+        return $authentication;
+    }
+
+    /**
      * Aprueba o desaprueba una autenticación desde el panel de administración,
      * dejando traza de quién la aprobó y cuándo.
      */

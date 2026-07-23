@@ -21,6 +21,107 @@ use Illuminate\Validation\ValidationException;
 
 class SaleHistoryTable
 {
+    /**
+     * Campos del formulario "Autentificar Producto" (producto, datos de compra y
+     * receta óptica opcional). Se extrae como método reutilizable para que el
+     * recurso Admin de ProductAuthentication pueda reabrirlo en modo edición.
+     *
+     * @return array<int, \Filament\Schemas\Components\Component>
+     */
+    public static function productAuthenticationFields(int $customerId): array
+    {
+        return [
+            Select::make('product_id')
+                ->label('Producto')
+                ->searchable()
+                ->required()
+                ->live()
+                // Solo los productos comprados por el cliente, con su cantidad acumulada
+                ->options(fn (): array => app(ProductAuthenticationService::class)
+                    ->purchasedProductOptions($customerId)),
+            Grid::make(2)
+                ->dense()
+                ->visible(fn (Get $get): bool => filled($get('product_id')))
+                ->schema([
+                    TextInput::make('cliente')
+                        ->label('Datos del cliente que compró')
+                        ->required(),
+                    DatePicker::make('fecha_compra')
+                        ->label('Fecha de compra')
+                        ->required()
+                        ->default(fn (): ?string => app(ProductAuthenticationService::class)
+                            ->lastPurchaseDate($customerId)),
+                ]),
+            // Receta óptica: opcional, no todos los productos la llevan.
+            // Se agrupa en una Section colapsable para no alargar el modal cuando
+            // el producto autentificado no requiere fórmula (armazón, accesorio).
+            Section::make('Receta óptica')
+                ->description('Opcional: solo si el producto autentificado es un lente con fórmula')
+                ->icon('heroicon-o-eye')
+                ->iconColor('primary')
+                ->collapsible()
+                ->collapsed()
+                ->compact()
+                ->dense()
+                ->visible(fn (Get $get): bool => filled($get('product_id')))
+                ->schema([
+                    // Un Fieldset por ojo: la etiqueta del campo ya no repite "OD"/"OI",
+                    // el layout mismo (fila = ojo, columna = Esfera/Cilindro/Eje) reproduce
+                    // la tabla clínica de la receta.
+                    Grid::make(2)
+                        ->dense()
+                        ->schema([
+                            Fieldset::make('OD (ojo derecho)')
+                                ->columns(3)
+                                ->dense()
+                                ->schema([
+                                    TextInput::make('od_sphere')
+                                        ->label('Esfera')
+                                        ->numeric()
+                                        ->suffix('D'),
+                                    TextInput::make('od_cylinder')
+                                        ->label('Cilindro')
+                                        ->numeric()
+                                        ->suffix('D'),
+                                    TextInput::make('od_axis')
+                                        ->label('Eje')
+                                        ->numeric()
+                                        ->suffix('°'),
+                                ]),
+                            Fieldset::make('OI (ojo izquierdo)')
+                                ->columns(3)
+                                ->dense()
+                                ->schema([
+                                    TextInput::make('oi_sphere')
+                                        ->label('Esfera')
+                                        ->numeric()
+                                        ->suffix('D'),
+                                    TextInput::make('oi_cylinder')
+                                        ->label('Cilindro')
+                                        ->numeric()
+                                        ->suffix('D'),
+                                    TextInput::make('oi_axis')
+                                        ->label('Eje')
+                                        ->numeric()
+                                        ->suffix('°'),
+                                ]),
+                        ]),
+                    Grid::make(2)
+                        ->dense()
+                        ->schema([
+                            TextInput::make('add')
+                                ->label('ADD')
+                                ->numeric()
+                                ->suffix('D'),
+                            TextInput::make('dip')
+                                ->label('DIP')
+                                ->numeric()
+                                ->suffix('mm'),
+                        ]),
+                ]),
+        ];
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -70,96 +171,7 @@ class SaleHistoryTable
                     ->modalHeading('Autentificar Producto')
                     // Solo disponible si el usuario tiene un cliente vinculado
                     ->visible(fn (): bool => Auth::user()?->customer !== null)
-                    ->schema([
-                        Select::make('product_id')
-                            ->label('Producto')
-                            ->searchable()
-                            ->required()
-                            ->live()
-                            // Solo los productos comprados por el cliente, con su cantidad acumulada
-                            ->options(fn (): array => app(ProductAuthenticationService::class)
-                                ->purchasedProductOptions((int) Auth::user()->customer->id)),
-                        Grid::make(2)
-                            ->dense()
-                            ->visible(fn (Get $get): bool => filled($get('product_id')))
-                            ->schema([
-                                TextInput::make('cliente')
-                                    ->label('Datos del cliente que compró')
-                                    ->required(),
-                                DatePicker::make('fecha_compra')
-                                    ->label('Fecha de compra')
-                                    ->required()
-                                    ->default(fn (): ?string => app(ProductAuthenticationService::class)
-                                        ->lastPurchaseDate((int) Auth::user()->customer->id)),
-                            ]),
-                        // Receta óptica: opcional, no todos los productos la llevan.
-                        // Se agrupa en una Section colapsable para no alargar el modal cuando
-                        // el producto autentificado no requiere fórmula (armazón, accesorio).
-                        Section::make('Receta óptica')
-                            ->description('Opcional: solo si el producto autentificado es un lente con fórmula')
-                            ->icon('heroicon-o-eye')
-                            ->iconColor('primary')
-                            ->collapsible()
-                            ->collapsed()
-                            ->compact()
-                            ->dense()
-                            ->visible(fn (Get $get): bool => filled($get('product_id')))
-                            ->schema([
-                                // Un Fieldset por ojo: la etiqueta del campo ya no repite "OD"/"OI",
-                                // el layout mismo (fila = ojo, columna = Esfera/Cilindro/Eje) reproduce
-                                // la tabla clínica de la receta.
-                                Grid::make(2)
-                                    ->dense()
-                                    ->schema([
-                                        Fieldset::make('OD (ojo derecho)')
-                                            ->columns(3)
-                                            ->dense()
-                                            ->schema([
-                                                TextInput::make('od_sphere')
-                                                    ->label('Esfera')
-                                                    ->numeric()
-                                                    ->suffix('D'),
-                                                TextInput::make('od_cylinder')
-                                                    ->label('Cilindro')
-                                                    ->numeric()
-                                                    ->suffix('D'),
-                                                TextInput::make('od_axis')
-                                                    ->label('Eje')
-                                                    ->numeric()
-                                                    ->suffix('°'),
-                                            ]),
-                                        Fieldset::make('OI (ojo izquierdo)')
-                                            ->columns(3)
-                                            ->dense()
-                                            ->schema([
-                                                TextInput::make('oi_sphere')
-                                                    ->label('Esfera')
-                                                    ->numeric()
-                                                    ->suffix('D'),
-                                                TextInput::make('oi_cylinder')
-                                                    ->label('Cilindro')
-                                                    ->numeric()
-                                                    ->suffix('D'),
-                                                TextInput::make('oi_axis')
-                                                    ->label('Eje')
-                                                    ->numeric()
-                                                    ->suffix('°'),
-                                            ]),
-                                    ]),
-                                Grid::make(2)
-                                    ->dense()
-                                    ->schema([
-                                        TextInput::make('add')
-                                            ->label('ADD')
-                                            ->numeric()
-                                            ->suffix('D'),
-                                        TextInput::make('dip')
-                                            ->label('DIP')
-                                            ->numeric()
-                                            ->suffix('mm'),
-                                    ]),
-                            ]),
-                    ])
+                    ->schema(fn (): array => self::productAuthenticationFields((int) Auth::user()->customer->id))
                     ->action(function (array $data): void {
                         // La validación del tope vive en el Service (ValidationException con
                         // clave 'product_id'). Esa clave no coincide con el statePath real del
