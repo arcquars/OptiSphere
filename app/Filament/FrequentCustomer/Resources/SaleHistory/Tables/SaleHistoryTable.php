@@ -10,6 +10,9 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -73,14 +76,84 @@ class SaleHistoryTable
                             // Solo los productos comprados por el cliente, con su cantidad acumulada
                             ->options(fn (): array => app(ProductAuthenticationService::class)
                                 ->purchasedProductOptions((int) Auth::user()->customer->id)),
-                        TextInput::make('cliente')
-                            ->label('Datos del cliente que compró')
-                            ->required()
-                            ->visible(fn (Get $get): bool => filled($get('product_id'))),
-                        DatePicker::make('fecha_compra')
-                            ->label('Fecha de compra')
-                            ->required()
-                            ->visible(fn (Get $get): bool => filled($get('product_id'))),
+                        Grid::make(2)
+                            ->dense()
+                            ->visible(fn (Get $get): bool => filled($get('product_id')))
+                            ->schema([
+                                TextInput::make('cliente')
+                                    ->label('Datos del cliente que compró')
+                                    ->required(),
+                                DatePicker::make('fecha_compra')
+                                    ->label('Fecha de compra')
+                                    ->required(),
+                            ]),
+                        // Receta óptica: opcional, no todos los productos la llevan.
+                        // Se agrupa en una Section colapsable para no alargar el modal cuando
+                        // el producto autentificado no requiere fórmula (armazón, accesorio).
+                        Section::make('Receta óptica')
+                            ->description('Opcional: solo si el producto autentificado es un lente con fórmula')
+                            ->icon('heroicon-o-eye')
+                            ->iconColor('primary')
+                            ->collapsible()
+                            ->collapsed()
+                            ->compact()
+                            ->dense()
+                            ->visible(fn (Get $get): bool => filled($get('product_id')))
+                            ->schema([
+                                // Un Fieldset por ojo: la etiqueta del campo ya no repite "OD"/"OI",
+                                // el layout mismo (fila = ojo, columna = Esfera/Cilindro/Eje) reproduce
+                                // la tabla clínica de la receta.
+                                Grid::make(2)
+                                    ->dense()
+                                    ->schema([
+                                        Fieldset::make('OD (ojo derecho)')
+                                            ->columns(3)
+                                            ->dense()
+                                            ->schema([
+                                                TextInput::make('od_sphere')
+                                                    ->label('Esfera')
+                                                    ->numeric()
+                                                    ->suffix('D'),
+                                                TextInput::make('od_cylinder')
+                                                    ->label('Cilindro')
+                                                    ->numeric()
+                                                    ->suffix('D'),
+                                                TextInput::make('od_axis')
+                                                    ->label('Eje')
+                                                    ->numeric()
+                                                    ->suffix('°'),
+                                            ]),
+                                        Fieldset::make('OI (ojo izquierdo)')
+                                            ->columns(3)
+                                            ->dense()
+                                            ->schema([
+                                                TextInput::make('oi_sphere')
+                                                    ->label('Esfera')
+                                                    ->numeric()
+                                                    ->suffix('D'),
+                                                TextInput::make('oi_cylinder')
+                                                    ->label('Cilindro')
+                                                    ->numeric()
+                                                    ->suffix('D'),
+                                                TextInput::make('oi_axis')
+                                                    ->label('Eje')
+                                                    ->numeric()
+                                                    ->suffix('°'),
+                                            ]),
+                                    ]),
+                                Grid::make(2)
+                                    ->dense()
+                                    ->schema([
+                                        TextInput::make('add')
+                                            ->label('ADD')
+                                            ->numeric()
+                                            ->suffix('D'),
+                                        TextInput::make('dip')
+                                            ->label('DIP')
+                                            ->numeric()
+                                            ->suffix('mm'),
+                                    ]),
+                            ]),
                     ])
                     ->action(function (array $data): void {
                         // La validación del tope vive en el Service (ValidationException con

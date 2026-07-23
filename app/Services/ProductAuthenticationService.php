@@ -91,6 +91,15 @@ final class ProductAuthenticationService
                 'cliente' => $data['cliente'],
                 'fecha_compra' => $data['fecha_compra'],
                 'frequent_customer_id' => $customerId,
+                // Receta óptica (Lejos): opcional, puede llegar vacía
+                'od_sphere' => $data['od_sphere'] ?? null,
+                'od_cylinder' => $data['od_cylinder'] ?? null,
+                'od_axis' => $data['od_axis'] ?? null,
+                'oi_sphere' => $data['oi_sphere'] ?? null,
+                'oi_cylinder' => $data['oi_cylinder'] ?? null,
+                'oi_axis' => $data['oi_axis'] ?? null,
+                'add' => $data['add'] ?? null,
+                'dip' => $data['dip'] ?? null,
             ]);
         });
     }

@@ -17,12 +17,29 @@ final class ProductAuthentication extends Model
         'is_authentication',
         'authentication_approved_date',
         'authentication_approved_by',
+        // Receta óptica (Lejos)
+        'od_sphere',
+        'od_cylinder',
+        'od_axis',
+        'oi_sphere',
+        'oi_cylinder',
+        'oi_axis',
+        'add',
+        'dip',
     ];
 
     protected $casts = [
         'fecha_compra' => 'date',
         'is_authentication' => 'boolean',
         'authentication_approved_date' => 'datetime',
+        'od_sphere' => 'float',
+        'od_cylinder' => 'float',
+        'od_axis' => 'integer',
+        'oi_sphere' => 'float',
+        'oi_cylinder' => 'float',
+        'oi_axis' => 'integer',
+        'add' => 'float',
+        'dip' => 'float',
     ];
 
     /**
