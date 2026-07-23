@@ -29,8 +29,15 @@ class OpenSiatEventModal extends Component
     public function mount($branchId)
     {
         $this->branch = Branch::find($branchId);
-        $invoiceApiService = new MonoInvoiceApiService($this->branch);
-        $this->buildCufds($invoiceApiService->getCufds());
+
+        try {
+            $invoiceApiService = new MonoInvoiceApiService($this->branch);
+            $this->buildCufds($invoiceApiService->getCufds());
+        } catch (\Exception $e) {
+            // Un token AMYR inválido/expirado no debe tumbar toda la página del POS
+            Log::error("Error al obtener CUFDs SIAT para la sucursal {$branchId}: " . $e->getMessage());
+            $this->cufds = [];
+        }
     }
 
     protected function rules()

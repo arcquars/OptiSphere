@@ -23,10 +23,16 @@
                     class="btn btn-sm btn-primary mt-1 mx-1">
                     Adm. Clientes
                 </a>
-                <a 
-                    href="{{ url('branch-manager/credit-payment-resource/'. $branch->id) }}" 
+                <a
+                    href="{{ url('branch-manager/credit-payment-resource/'. $branch->id) }}"
                     class="btn btn-sm btn-primary mt-1 mx-1">
                     Adm. Ventas a credito
+                </a>
+                <a
+                    href="{{ App\Filament\BranchManager\Resources\ProductAuthentications\ProductAuthenticationResource::getUrl('index', ['branchId' => $branch->id]) }}"
+                    target="_blank"
+                    class="btn btn-sm btn-primary mt-1 mx-1">
+                    Productos Autentificados
                 </a>
                 @if($isFacturable)
                 <livewire:branch.siat-connection-status :branch="$branch" />

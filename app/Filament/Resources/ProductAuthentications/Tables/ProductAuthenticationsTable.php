@@ -19,63 +19,74 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductAuthenticationsTable
 {
-    public static function configure(Table $table): Table
+    /**
+     * @param bool $includeApprovalColumn Incluye el toggle "Aprobar Autentificación".
+     *                                     El panel branch-manager reutiliza esta misma tabla
+     *                                     en modo solo consulta, sin la opción de aprobar.
+     */
+    public static function configure(Table $table, bool $includeApprovalColumn = true): Table
     {
+        $columns = [
+            TextColumn::make('id')
+                ->label('ID')
+                ->sortable(),
+            TextColumn::make('frequentCustomer.user.name')
+                ->label('Cliente frecuente')
+                ->searchable(),
+            TextColumn::make('cliente')
+                ->label('Datos del cliente que compró')
+                ->searchable(),
+            TextColumn::make('product.name')
+                ->label('Producto')
+                ->searchable(),
+            TextColumn::make('product.id')
+                ->label('Cod')
+                ,
+            TextColumn::make('fecha_compra')
+                ->label('Fecha de compra')
+                ->date()
+                ->sortable(),
+            TextColumn::make('created_at')
+                ->label('Solicitado el')
+                ->dateTime()
+                ->sortable(),
+        ];
+
+        if ($includeApprovalColumn) {
+            $columns[] = ToggleColumn::make('is_authentication')
+                ->label('Aprobar Autentificación')
+                // La escritura se delega al Service: actualiza el booleano y la
+                // traza de auditoría (fecha y admin) en un solo save.
+                ->updateStateUsing(fn (ProductAuthentication $record, $state): ProductAuthentication => app(ProductAuthenticationService::class)
+                    ->setApproval($record, (bool) $state))
+                ->afterStateUpdated(function (): void {
+                    Notification::make()
+                        ->title('Autenticación actualizada correctamente')
+                        ->success()
+                        ->send();
+                });
+        }
+
+        // El enlace solo se renderiza en las filas aprobadas: visible() ocultaría
+        // la columna entera, así que la condición vive en state() y url().
+        $columns[] = TextColumn::make('ver_autentificacion')
+            ->label('Ver autentificación')
+            ->state(fn (ProductAuthentication $record): ?string => $record->is_authentication
+                ? 'Ver autentificación'
+                : null)
+            ->placeholder('—')
+            ->icon('heroicon-m-arrow-top-right-on-square')
+            ->color('primary')
+            ->url(
+                fn (ProductAuthentication $record): ?string => $record->is_authentication
+                    ? app(ProductAuthenticationService::class)->buildPublicUrl($record)
+                    : null,
+                shouldOpenInNewTab: true,
+            );
+
         return $table
             ->recordUrl(null)
-            ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable(),
-                TextColumn::make('frequentCustomer.user.name')
-                    ->label('Cliente frecuente')
-                    ->searchable(),
-                TextColumn::make('cliente')
-                    ->label('Datos del cliente que compró')
-                    ->searchable(),
-                TextColumn::make('product.name')
-                    ->label('Producto')
-                    ->searchable(),
-                TextColumn::make('product.id')
-                    ->label('Cod')
-                    ,
-                TextColumn::make('fecha_compra')
-                    ->label('Fecha de compra')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->label('Solicitado el')
-                    ->dateTime()
-                    ->sortable(),
-                ToggleColumn::make('is_authentication')
-                    ->label('Aprobar Autentificación')
-                    // La escritura se delega al Service: actualiza el booleano y la
-                    // traza de auditoría (fecha y admin) en un solo save.
-                    ->updateStateUsing(fn (ProductAuthentication $record, $state): ProductAuthentication => app(ProductAuthenticationService::class)
-                        ->setApproval($record, (bool) $state))
-                    ->afterStateUpdated(function (): void {
-                        Notification::make()
-                            ->title('Autenticación actualizada correctamente')
-                            ->success()
-                            ->send();
-                    }),
-                // El enlace solo se renderiza en las filas aprobadas: visible() ocultaría
-                // la columna entera, así que la condición vive en state() y url().
-                TextColumn::make('ver_autentificacion')
-                    ->label('Ver autentificación')
-                    ->state(fn (ProductAuthentication $record): ?string => $record->is_authentication
-                        ? 'Ver autentificación'
-                        : null)
-                    ->placeholder('—')
-                    ->icon('heroicon-m-arrow-top-right-on-square')
-                    ->color('primary')
-                    ->url(
-                        fn (ProductAuthentication $record): ?string => $record->is_authentication
-                            ? app(ProductAuthenticationService::class)->buildPublicUrl($record)
-                            : null,
-                        shouldOpenInNewTab: true,
-                    ),
-            ])
+            ->columns($columns)
             ->filters([
                 //
             ])
